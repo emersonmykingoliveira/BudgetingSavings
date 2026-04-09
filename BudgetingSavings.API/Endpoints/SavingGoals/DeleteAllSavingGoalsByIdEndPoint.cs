@@ -3,11 +3,11 @@ using BudgetingSavings.Shared.Models.Requests;
 
 namespace BudgetingSavings.API.Endpoints.SavingGoals
 {
-    public class DeleteSavingGoalByIdEndPoint : IEndpointDiscovery
+    public class DeleteAllSavingGoalsByIdEndPoint : IEndpointDiscovery
     {
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
-            app.MapDelete("/api/savinggoal/{goalId}", async (HttpContext context, int goalId) =>
+            app.MapDelete("/api/savinggoals", async (HttpContext context) =>
             {
 
             });
