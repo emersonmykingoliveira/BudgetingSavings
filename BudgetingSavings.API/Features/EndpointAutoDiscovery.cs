@@ -2,11 +2,6 @@
 
 namespace BudgetingSavings.API.Features
 {
-    public interface IEndpointDiscovery
-    {
-        void MapEndpoint(IEndpointRouteBuilder app);
-    }
-
     public static class EndpointExtensions
     {
         public static IServiceCollection AddEndpointAutoDiscovery(this IServiceCollection services)
