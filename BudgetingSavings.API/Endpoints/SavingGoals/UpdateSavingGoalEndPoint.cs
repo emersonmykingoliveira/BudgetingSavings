@@ -7,7 +7,7 @@ namespace BudgetingSavings.API.Endpoints.SavingGoals
     {
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
-            app.MapPost("/api/updatesavinggoal", async (HttpContext context, UpdateSavingGoalRequest request) =>
+            app.MapPut("/api/updatesavinggoal", async (HttpContext context, UpdateSavingGoalRequest request) =>
             {
 
             });
