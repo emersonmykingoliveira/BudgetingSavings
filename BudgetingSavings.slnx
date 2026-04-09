@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="BudgetingSavings.API/BudgetingSavings.API.csproj" />
+  <Project Path="BudgetingSavings.Shared/BudgetingSavings.Shared.csproj" />
 </Solution>
