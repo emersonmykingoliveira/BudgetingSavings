@@ -18,4 +18,8 @@
     <Folder Include="Services\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BudgetingSavings.Shared\BudgetingSavings.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

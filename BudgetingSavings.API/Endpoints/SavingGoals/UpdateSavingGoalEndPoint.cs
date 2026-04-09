@@ -3,11 +3,11 @@ using BudgetingSavings.Shared.Models.Requests;
 
 namespace BudgetingSavings.API.Endpoints.SavingGoals
 {
-    public class CreateSavingGoalEndPoint : IEndpointDiscovery
+    public class UpdateSavingGoalEndPoint : IEndpointDiscovery
     {
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
-            app.MapPost("/api/createsavinggoal", async (HttpContext context, CreateSavingGoalRequest request) =>
+            app.MapPost("/api/updatesavinggoal", async (HttpContext context, UpdateSavingGoalRequest request) =>
             {
 
             });
