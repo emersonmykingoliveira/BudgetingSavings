@@ -3,7 +3,7 @@ using BudgetingSavings.Shared.Models.Requests;
 
 namespace BudgetingSavings.API.Endpoints.SavingGoals
 {
-    public class DeleteSavingGoalsByIdEndPoint : IEndpointDiscovery
+    public class DeleteSavingGoalByIdEndPoint : IEndpointDiscovery
     {
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
