@@ -10,19 +10,20 @@ namespace BudgetingSavings.API.Controllers
     public class TransactionsController(ITransactionsService service) : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetAllTransactions()
+        public async Task<IActionResult> GetAllTransactions(CancellationToken cancellationToken)
         {
-            return Ok();
+            var transactions = await service.GetAllTransactionsAsync(cancellationToken);
+            return Ok(transactions);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTransaction(int id)
+        public async Task<IActionResult> GetTransaction(int id, CancellationToken cancellationToken)
         {
             return Ok();
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTransaction([FromBody] CreateTransactionRequest request)
+        public async Task<IActionResult> CreateTransaction([FromBody] CreateTransactionRequest request, CancellationToken cancellationToken)
         {
             return Ok();
         }
