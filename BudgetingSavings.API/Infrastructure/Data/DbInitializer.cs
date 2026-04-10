@@ -13,10 +13,10 @@ public static class DbInitializer
         if (dbContext.Accounts.Any())
             return;
 
-        var customer1 = Guid.Parse("f964035a-73d8-4f8e-a9d0-111111111111");
-        var customer2 = Guid.Parse("f964035a-73d8-4f8e-a9d0-222222222222");
-        var customer3 = Guid.Parse("f964035a-73d8-4f8e-a9d0-333333333333");
-        var customer4 = Guid.Parse("f964035a-73d8-4f8e-a9d0-444444444444");
+        var customer1 = Guid.Parse("21429693-768b-4a76-9364-ca9441c434c9");
+        var customer2 = Guid.Parse("87fb436a-533c-4a03-a79d-98aef377fddd");
+        var customer3 = Guid.Parse("09481c1d-111f-46d8-8c10-e1bce9ce95b6");
+        var customer4 = Guid.Parse("bdd09e52-1327-40d8-8d67-2b6382db8f3e");
 
         dbContext.Customers.AddRange(
             new Customer { Id = customer1, Name = "Alice Johnson", Email = "alice@example.com", DateOfBirth = new DateTime(1990, 5, 20) },
