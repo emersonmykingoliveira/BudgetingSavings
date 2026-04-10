@@ -8,5 +8,6 @@ namespace BudgetingSavings.API.Services
         Task<List<Account>> GetAllAccountsAsync(CancellationToken cancellationToken);
         Task<Account> GetAccountAsync(Guid id, CancellationToken cancellationToken);
         Task<Account> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken);
+        Task DeleteAccountAsync(Guid id, CancellationToken cancellationToken);
     }
 }

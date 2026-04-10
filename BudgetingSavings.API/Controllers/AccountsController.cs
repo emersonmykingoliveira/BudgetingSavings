@@ -39,8 +39,9 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteAccount(int id)
+        public async Task<IActionResult> DeleteAccount(Guid id, CancellationToken cancellationToken)
         {
+            await service.DeleteAccountAsync(id, cancellationToken);
             return Ok();
         }
     }

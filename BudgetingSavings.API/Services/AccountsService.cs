@@ -2,6 +2,7 @@
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.Shared.Models.Requests;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace BudgetingSavings.API.Services
 {
@@ -22,6 +23,18 @@ namespace BudgetingSavings.API.Services
             await db.Accounts.AddAsync(account, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return account;
+        }
+
+        public async Task DeleteAccountAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var account = await GetAccountAsync(id, cancellationToken);
+
+            if (account.Id != Guid.Empty)
+            {
+                db.Accounts.Remove(account);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            //TODO: Handle case when account is not found (e.g., throw an exception or return a result indicating failure)
         }
 
         public async Task<Account> GetAccountAsync(Guid id, CancellationToken cancellationToken)
