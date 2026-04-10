@@ -25,9 +25,9 @@ namespace BudgetingSavings.API.Services
             return savingGoal;
         }
 
-        public async Task DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken)
+        public async Task DeleteSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(id, cancellationToken);
+            var savingGoal = await GetSavingGoalAsync(customerId, id, cancellationToken);
 
             if (savingGoal is not null)
             {
@@ -38,19 +38,19 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<List<SavingGoal>> GetAllSavingGoalsAsync(CancellationToken cancellationToken)
+        public async Task<List<SavingGoal>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            return await db.SavingGoals.ToListAsync(cancellationToken);
+            return await db.SavingGoals.Where(s => s.CustomerId == customerId).ToListAsync(cancellationToken);
         }
 
-        public async Task<SavingGoal> GetSavingGoalAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<SavingGoal> GetSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new SavingGoal();
+            return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new SavingGoal();
         }
 
         public async Task<SavingGoal> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(request.Id, cancellationToken);
+            var savingGoal = await GetSavingGoalAsync(request.CustomerId, request.Id, cancellationToken);
             
             if (savingGoal is not null)
             {

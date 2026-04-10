@@ -8,17 +8,17 @@ namespace BudgetingSavings.API.Controllers
     [Route("api/[controller]")]
     public class SavingGoalsController(ISavingGoalsService service) : ControllerBase
     {
-        [HttpGet("{accountId}")]
-        public async Task<IActionResult> GetAllSavingGoals(Guid accountId, CancellationToken cancellationToken)
+        [HttpGet("{customerId}")]
+        public async Task<IActionResult> GetAllSavingGoals(Guid customerId, CancellationToken cancellationToken)
         {
-            var savingGoals = await service.GetAllSavingGoalsAsync(cancellationToken);
+            var savingGoals = await service.GetAllSavingGoalsAsync(customerId, cancellationToken);
             return Ok(savingGoals);
         }
 
-        [HttpGet("{accountId}/{id}")]
-        public async Task<IActionResult> GetSavingGoal(Guid accountId, Guid id, CancellationToken cancellationToken)
+        [HttpGet("{customerId}/{id}")]
+        public async Task<IActionResult> GetSavingGoal(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.GetSavingGoalAsync(id, cancellationToken);
+            var savingGoal = await service.GetSavingGoalAsync(customerId, id, cancellationToken);
             return Ok(savingGoal);
         }
 
@@ -29,17 +29,17 @@ namespace BudgetingSavings.API.Controllers
             return Ok(savingGoal);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> UpdateSavingGoal([FromBody] UpdateSavingGoalRequest request)
         {
             var savingGoal = await service.UpdateSavingGoalAsync(request, CancellationToken.None);
             return Ok(savingGoal);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSavingGoal(Guid accountId, Guid id, CancellationToken cancellationToken)
+        [HttpDelete("{customerId}/{id}")]
+        public async Task<IActionResult> DeleteSavingGoal(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteSavingGoalAsync(id, cancellationToken);
+            await service.DeleteSavingGoalAsync(customerId, id, cancellationToken);
             return Ok();
         }
     }

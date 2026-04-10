@@ -31,13 +31,6 @@ namespace BudgetingSavings.API.Controllers
             return Ok(account);
         }
 
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAccount(int id, [FromBody] UpdateAccountRequest request)
-        {
-            return Ok();
-        }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAccount(Guid id, CancellationToken cancellationToken)
         {

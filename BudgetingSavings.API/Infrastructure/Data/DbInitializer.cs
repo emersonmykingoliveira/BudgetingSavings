@@ -11,9 +11,7 @@ public static class DbInitializer
         dbContext.Database.EnsureCreated();
 
         if (dbContext.Accounts.Any())
-        {
             return;
-        }
 
         var customer1 = Guid.Parse("f964035a-73d8-4f8e-a9d0-111111111111");
         var customer2 = Guid.Parse("f964035a-73d8-4f8e-a9d0-222222222222");
@@ -147,6 +145,36 @@ public static class DbInitializer
                 Amount = 1000.0m,
                 Currency = CurrencyType.NOK,
                 AccountId = account4
+            }
+        );
+
+        dbContext.SavingGoals.AddRange(
+            new SavingGoal
+            {
+                Id = Guid.NewGuid(),
+                Name = "Summer Vacation",
+                TargetAmount = 20000.0m,
+                StartDate = DateTime.Parse("2023-01-01"),
+                TargetDate = DateTime.Parse("2023-07-01"),
+                CustomerId = customer1
+            },
+            new SavingGoal
+            {
+                Id = Guid.NewGuid(),
+                Name = "New Laptop",
+                TargetAmount = 15000.0m,
+                StartDate = DateTime.Parse("2023-05-10"),
+                TargetDate = DateTime.Parse("2023-12-31"),
+                CustomerId = customer2
+            },
+            new SavingGoal
+            {
+                Id = Guid.NewGuid(),
+                Name = "Emergency Fund",
+                TargetAmount = 50000.0m,
+                StartDate = DateTime.Parse("2023-01-01"),
+                TargetDate = DateTime.Parse("2024-01-01"),
+                CustomerId = customer3
             }
         );
 
