@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BudgetingSavings.Shared.Models.Requests;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace BudgetingSavings.API.Controllers
@@ -14,13 +15,13 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTransactionById(int id)
+        public async Task<IActionResult> GetTransaction(int id)
         {
             return Ok();
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTransaction([FromBody] object transactionDto)
+        public async Task<IActionResult> CreateTransaction([FromBody] CreateTransactionRequest request)
         {
             return Ok();
         }

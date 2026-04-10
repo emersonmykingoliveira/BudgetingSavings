@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BudgetingSavings.Shared.Models.Requests;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetingSavings.API.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class BudgetingController : ControllerBase
     {
         [HttpGet("{id}")]
@@ -11,7 +14,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBudget([FromBody] object savingGoal)
+        public async Task<IActionResult> CreateBudget([FromBody] CreateBudgetRequest request)
         {
             return Ok();
         }
