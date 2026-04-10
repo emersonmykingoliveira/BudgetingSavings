@@ -1,4 +1,5 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
+using BudgetingSavings.API.Services;
 using BudgetingSavings.Shared.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,19 +8,20 @@ namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountsController(ApiDbContext db) : ControllerBase
+    public class AccountsController(IAccountsService service) : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetAllAccounts()
+        public async Task<IActionResult> GetAllAccounts(CancellationToken cancellationToken)
         {
-            var accounts = await db.Accounts.ToListAsync();
+            var accounts = await service.GetAllAccountsAsync(cancellationToken);
             return Ok(accounts);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetAccount(int id)
+        public async Task<IActionResult> GetAccount(CancellationToken cancellationToken, Guid id)
         {
-            return Ok();
+            var account = await service.GetAccountAsync(cancellationToken, id);
+            return Ok(account);
         }
 
         [HttpPost]

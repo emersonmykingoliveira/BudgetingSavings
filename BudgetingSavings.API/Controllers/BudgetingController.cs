@@ -1,11 +1,12 @@
-﻿using BudgetingSavings.Shared.Models.Requests;
+﻿using BudgetingSavings.API.Services;
+using BudgetingSavings.Shared.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BudgetingController : ControllerBase
+    public class BudgetingController(IBudgetingService service) : ControllerBase
     {
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBudget(int id)

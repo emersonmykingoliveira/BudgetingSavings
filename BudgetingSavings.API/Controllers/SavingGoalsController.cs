@@ -1,11 +1,12 @@
-﻿using BudgetingSavings.Shared.Models.Requests;
+﻿using BudgetingSavings.API.Services;
+using BudgetingSavings.Shared.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class SavingGoalsController() : ControllerBase
+    public class SavingGoalsController(ISavingGoalsService service) : ControllerBase
     {
         [HttpGet]
         public async Task<IActionResult> GetAllSavingGoals()
