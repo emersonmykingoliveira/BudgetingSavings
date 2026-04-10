@@ -1,4 +1,5 @@
-﻿using BudgetingSavings.Shared.Models;
+﻿using System.Text.Json.Serialization;
+using BudgetingSavings.Shared.Models;
 
 namespace BudgetingSavings.API.Infrastructure.Entities
 {
@@ -10,5 +11,8 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public decimal Amount { get; set; }
         public CurrencyType Currency { get; set; }
         public Guid AccountId { get; set; }
+
+        [JsonIgnore]
+        public Account? Account { get; set; }
     }
 }
