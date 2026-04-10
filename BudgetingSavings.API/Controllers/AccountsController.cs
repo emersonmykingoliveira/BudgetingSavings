@@ -1,16 +1,19 @@
-﻿using BudgetingSavings.Shared.Models.Requests;
+﻿using BudgetingSavings.API.Infrastructure.Data;
+using BudgetingSavings.Shared.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountsController : ControllerBase
+    public class AccountsController(ApiDbContext db) : ControllerBase
     {
         [HttpGet]
         public async Task<IActionResult> GetAllAccounts()
         {
-            return Ok();
+            var accounts = await db.Accounts.ToListAsync();
+            return Ok(accounts);
         }
 
         [HttpGet("{id}")]
