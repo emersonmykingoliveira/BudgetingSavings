@@ -14,7 +14,7 @@ namespace BudgetingSavings.API.Services
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var account = await accountsService.GetAccountAsync(request.AccountId, cancellationToken);
+                var account = await accountsService.GetAccountAsync(request.CustomerId, request.AccountId, cancellationToken);
 
                 if (account is null || account.Id == Guid.Empty)
                     throw new ArgumentException($"Account with Id {request.AccountId} not found.");
@@ -31,7 +31,7 @@ namespace BudgetingSavings.API.Services
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
-                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.Amount, transactionDate, cancellationToken);
+                await accountsService.UpdateAccountBalanceAsync(request.CustomerId, request.AccountId, request.Amount, transactionDate, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return transaction;
             }

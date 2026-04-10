@@ -10,5 +10,6 @@ namespace BudgetingSavings.Shared.Models.Requests
         public decimal Amount { get; set; }
         public CurrencyType Currency { get; set; }
         public Guid AccountId { get; set; }
+        public Guid CustomerId { get; set; }
     }
 }

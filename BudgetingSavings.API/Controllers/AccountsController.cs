@@ -17,10 +17,17 @@ namespace BudgetingSavings.API.Controllers
             return Ok(accounts);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetAccount(Guid id, CancellationToken cancellationToken)
+        [HttpGet("{customerId}")]
+        public async Task<IActionResult> GetAllAccountsForCustomer(Guid customerId, CancellationToken cancellationToken)
         {
-            var account = await service.GetAccountAsync(id, cancellationToken);
+            var accounts = await service.GetAllAccountsForCustomerAsync(customerId, cancellationToken);
+            return Ok(accounts);
+        }
+
+        [HttpGet("{customerId}/{id}")]
+        public async Task<IActionResult> GetAccount(Guid customerId, Guid id, CancellationToken cancellationToken)
+        {
+            var account = await service.GetAccountAsync(customerId, id, cancellationToken);
             return Ok(account);
         }
 
@@ -31,10 +38,10 @@ namespace BudgetingSavings.API.Controllers
             return Ok(account);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAccount(Guid id, CancellationToken cancellationToken)
+        [HttpDelete("{customerId}/{id}")]
+        public async Task<IActionResult> DeleteAccount(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteAccountAsync(id, cancellationToken);
+            await service.DeleteAccountAsync(customerId, id, cancellationToken);
             return Ok();
         }
     }

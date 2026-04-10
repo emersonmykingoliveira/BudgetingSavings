@@ -26,9 +26,9 @@ namespace BudgetingSavings.API.Services
             return account;
         }
 
-        public async Task DeleteAccountAsync(Guid id, CancellationToken cancellationToken)
+        public async Task DeleteAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            var account = await GetAccountAsync(id, cancellationToken);
+            var account = await GetAccountAsync(customerId, id, cancellationToken);
 
             if (account is not null)
             {
@@ -38,9 +38,9 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<Account> GetAccountAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Account> GetAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            return await db.Accounts.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Account();
+            return await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new Account();
         }
 
         public async Task<List<Account>> GetAllAccountsAsync(CancellationToken cancellationToken)
@@ -48,9 +48,14 @@ namespace BudgetingSavings.API.Services
             return await db.Accounts.ToListAsync(cancellationToken);
         }
 
-        public async Task UpdateAccountBalanceAsync(Guid accountId, decimal amount, DateTime transactionDate, CancellationToken cancellationToken)
+        public async Task<List<Account>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == accountId);
+            return await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+        }
+
+        public async Task UpdateAccountBalanceAsync(Guid customerId, Guid id, decimal amount, DateTime transactionDate, CancellationToken cancellationToken)
+        {
+            var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken);
 
             if (account is not null)
             {
