@@ -12,7 +12,7 @@ namespace BudgetingSavings.API.Services
             var account = new Account
             {
                 Id = Guid.NewGuid(),
-                AccountNumber = GenerateUniqueAccountNumber(),
+                AccountNumber = await GenerateUniqueAccountNumberAsync(cancellationToken),
                 AccountType = request.AccountType,
                 Currency = request.Currency,
                 Owner = request.Owner,
@@ -34,13 +34,16 @@ namespace BudgetingSavings.API.Services
             return await db.Accounts.ToListAsync(cancellationToken);
         }
 
-        private string GenerateUniqueAccountNumber()
+        private async Task<string> GenerateUniqueAccountNumberAsync(CancellationToken cancellationToken)
         {
-            //generate a unique account number, in the format "1234.56.78901"
-            //ensure that the generated account number is unique by checking against the database
+            int finalNumber = Random.Shared.Next(1000, 10000);
 
-               
+            var number = string.Concat("********", finalNumber);
 
+            if(await db.Accounts.AnyAsync(a => a.AccountNumber == number, cancellationToken))
+                return await GenerateUniqueAccountNumberAsync(cancellationToken);
+
+            return number;
         }
     }
 }

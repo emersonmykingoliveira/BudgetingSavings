@@ -6,8 +6,8 @@ namespace BudgetingSavings.Shared.Models.Requests
 {
     public class CreateAccountRequest
     {
-        public string? AccountType { get; set; }
-        public string? Currency { get; set; }
+        public AccountType AccountType { get; set; }
+        public CurrencyType Currency { get; set; }
         public string? Owner { get; set; }
     }
 }

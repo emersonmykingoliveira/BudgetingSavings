@@ -1,4 +1,5 @@
 using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Infrastructure.Data;
@@ -7,7 +8,7 @@ public static class DbInitializer
 {
     public static void Initialize(ApiDbContext dbContext)
     {
-        dbContext.Database.Migrate();
+        dbContext.Database.EnsureCreated();
 
         if (dbContext.Accounts.Any())
         {
@@ -18,37 +19,37 @@ public static class DbInitializer
             new Account
             {
                 Id = Guid.NewGuid(),
-                AccountNumber = "1234.56.78901",
-                AccountType = "Checking",
+                AccountNumber = "********1234",
+                AccountType = AccountType.Checking,
                 Balance = 15000.25m,
-                Currency = "NOK",
+                Currency = CurrencyType.NOK,
                 Owner = "Alice Johnson"
             },
             new Account
             {
                 Id = Guid.NewGuid(),
-                AccountNumber = "9876.54.32109",
-                AccountType = "Savings",
+                AccountNumber = "********5678",
+                AccountType = AccountType.Savings,
                 Balance = 25000.75m,
-                Currency = "NOK",
+                Currency = CurrencyType.NOK,
                 Owner = "Bob Smith"
             },
             new Account
             {
                 Id = Guid.NewGuid(),
-                AccountNumber = "1122.33.44556",
-                AccountType = "Checking",
+                AccountNumber = "********9876",
+                AccountType = AccountType.Checking,
                 Balance = 2000.50m,
-                Currency = "NOK",
+                Currency = CurrencyType.NOK,
                 Owner = "Charlie Brown"
             },
             new Account
             {
                 Id = Guid.NewGuid(),
-                AccountNumber = "5544.33.22110",
-                AccountType = "Savings",
+                AccountNumber = "********2109",
+                AccountType = AccountType.Savings,
                 Balance = 8000.00m,
-                Currency = "NOK",
+                Currency = CurrencyType.NOK,
                 Owner = "David Wilson"
             }
         );

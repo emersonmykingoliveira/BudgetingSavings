@@ -28,7 +28,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
         {
             var account = await service.CreateAccountAsync(request, cancellationToken);
-            return Ok();
+            return Ok(account);
         }
 
 

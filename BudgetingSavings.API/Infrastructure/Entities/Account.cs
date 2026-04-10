@@ -1,12 +1,16 @@
-﻿namespace BudgetingSavings.API.Infrastructure.Entities
+﻿using BudgetingSavings.Shared.Models;
+
+namespace BudgetingSavings.API.Infrastructure.Entities
 {
     public class Account
     {
         public Guid Id { get; set; }
         public string? AccountNumber { get; set; }
-        public string? AccountType { get; set; }
+        public AccountType AccountType { get; set; }
         public decimal Balance { get; set; }
-        public string? Currency { get; set; }
+        public CurrencyType Currency { get; set; }
         public string? Owner { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? LastTransactionDate { get; set; }
     }
 }
