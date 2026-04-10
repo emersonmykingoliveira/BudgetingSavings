@@ -47,6 +47,21 @@ namespace BudgetingSavings.API.Services
             return await db.Accounts.ToListAsync(cancellationToken);
         }
 
+        public async Task UpdateAccountBalanceAsync(Guid accountId, decimal amount, DateTime transactionDate, CancellationToken cancellationToken)
+        {
+            var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == accountId);
+
+            if (account is not null)
+            {
+                account.Balance += amount;
+                account.LastTransactionDate = transactionDate;
+                db.Accounts.Update(account);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            //TODO: Handle case when account is not found (e.g., throw an exception or return a result indicating failure)
+        }
+
         private async Task<string> GenerateUniqueAccountNumberAsync(CancellationToken cancellationToken)
         {
             int finalNumber = Random.Shared.Next(1000, 10000);
