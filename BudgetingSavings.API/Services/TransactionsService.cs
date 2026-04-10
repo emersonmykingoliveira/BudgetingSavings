@@ -10,5 +10,10 @@ namespace BudgetingSavings.API.Services
         {
             return await db.Transactions.ToListAsync(cancellationToken);
         }
+
+        public async Task<Transaction> GetTransactionAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Transaction();
+        }
     }
 }
