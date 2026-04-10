@@ -1,4 +1,4 @@
-﻿namespace BudgetingSavings.API.Features
+﻿namespace BudgetingSavings.API.Interfaces
 {
     public interface IEndpointDiscovery
     {

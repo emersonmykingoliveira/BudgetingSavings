@@ -1,6 +1,7 @@
-﻿using System.Reflection;
+﻿using BudgetingSavings.API.Interfaces;
+using System.Reflection;
 
-namespace BudgetingSavings.API.Features
+namespace BudgetingSavings.API.Services
 {
     public static class EndpointExtensions
     {

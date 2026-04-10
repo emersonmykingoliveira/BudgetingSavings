@@ -1,4 +1,4 @@
-﻿using BudgetingSavings.API.Features;
+﻿using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.Shared.Models.Requests;
 
 namespace BudgetingSavings.API.Endpoints.Transactions
