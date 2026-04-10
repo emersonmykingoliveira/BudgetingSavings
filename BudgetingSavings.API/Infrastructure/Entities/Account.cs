@@ -3,10 +3,10 @@
     public class Account
     {
         public Guid Id { get; set; }
-        public string AccountNumber { get; set; } = default!;
-        public string AccountType { get; set; } = default!;
+        public string? AccountNumber { get; set; }
+        public string? AccountType { get; set; }
         public decimal Balance { get; set; }
-        public string Currency { get; set; } = default!;
-        public string Owner { get; set; } = default!;
+        public string? Currency { get; set; }
+        public string? Owner { get; set; }
     }
 }

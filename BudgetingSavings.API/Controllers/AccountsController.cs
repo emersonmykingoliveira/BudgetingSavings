@@ -18,15 +18,16 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetAccount(CancellationToken cancellationToken, Guid id)
+        public async Task<IActionResult> GetAccount(Guid id, CancellationToken cancellationToken)
         {
-            var account = await service.GetAccountAsync(cancellationToken, id);
+            var account = await service.GetAccountAsync(id, cancellationToken);
             return Ok(account);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
+        public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
         {
+            var account = await service.CreateAccountAsync(request, cancellationToken);
             return Ok();
         }
 
