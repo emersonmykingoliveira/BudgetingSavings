@@ -59,7 +59,7 @@ public class ApiDbContext : DbContext
             builder.HasOne(a => a.Customer)
                 .WithMany(c => c.Accounts)
                 .HasForeignKey(a => a.CustomerId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .IsRequired();
         });
 
         modelBuilder.Entity<Transaction>(builder =>
@@ -81,7 +81,8 @@ public class ApiDbContext : DbContext
             builder.HasOne(t => t.Account)
                 .WithMany(a => a.Transactions)
                 .HasForeignKey(t => t.AccountId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .IsRequired();
+
         });
 
         modelBuilder.Entity<SavingGoal>(builder =>
@@ -100,7 +101,7 @@ public class ApiDbContext : DbContext
             builder.HasOne(s => s.Customer)
                 .WithMany(c => c.SavingGoals)
                 .HasForeignKey(s => s.CustomerId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .IsRequired();
         });
     }
 }
