@@ -8,13 +8,14 @@ namespace BudgetingSavings.API.Controllers
     [Route("api/[controller]")]
     public class SavingGoalsController(ISavingGoalsService service) : ControllerBase
     {
-        [HttpGet]
-        public async Task<IActionResult> GetAllSavingGoals()
+        [HttpGet("{accountId}")]
+        public async Task<IActionResult> GetAllSavingGoals(Guid accountId, CancellationToken cancellationToken)
         {
-            return Ok();
+            var savingGoals = await service.GetAllSavingGoalsAsync(accountId, cancellationToken);
+            return Ok(savingGoals);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{accountId}/{id}")]
         public async Task<IActionResult> GetSavingGoal(int id)
         {
             return Ok();

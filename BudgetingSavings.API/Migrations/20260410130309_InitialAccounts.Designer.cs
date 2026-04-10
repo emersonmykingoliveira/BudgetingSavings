@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingSavings.API.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20260410123932_InitialAccounts")]
+    [Migration("20260410130309_InitialAccounts")]
     partial class InitialAccounts
     {
         /// <inheritdoc />
@@ -58,6 +58,39 @@ namespace BudgetingSavings.API.Migrations
                     b.ToTable("Accounts", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.SavingGoal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CurrentAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TargetAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("TargetDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("SavingGoals", (string)null);
+                });
+
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -88,6 +121,17 @@ namespace BudgetingSavings.API.Migrations
                     b.ToTable("Transactions", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.SavingGoal", b =>
+                {
+                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Account", "Account")
+                        .WithMany("SavingGoals")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Transaction", b =>
                 {
                     b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Account", "Account")
@@ -101,6 +145,8 @@ namespace BudgetingSavings.API.Migrations
 
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Account", b =>
                 {
+                    b.Navigation("SavingGoals");
+
                     b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618

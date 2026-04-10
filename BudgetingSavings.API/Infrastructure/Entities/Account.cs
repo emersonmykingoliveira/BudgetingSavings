@@ -16,5 +16,8 @@ namespace BudgetingSavings.API.Infrastructure.Entities
 
         [JsonIgnore]
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+        [JsonIgnore]
+        public List<SavingGoal> SavingGoals { get; set; } = new List<SavingGoal>();
     }
 }

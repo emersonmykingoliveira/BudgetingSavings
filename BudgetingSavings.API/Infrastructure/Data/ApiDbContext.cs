@@ -12,6 +12,7 @@ public class ApiDbContext : DbContext
 
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +62,28 @@ public class ApiDbContext : DbContext
             builder.HasOne(t => t.Account)
                 .WithMany(a => a.Transactions)
                 .HasForeignKey(t => t.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SavingGoal>(builder =>
+        {
+            builder.ToTable("SavingGoals");
+
+            builder.HasKey(s => s.Id);
+
+            builder.Property(s => s.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder.Property(s => s.TargetAmount)
+                .IsRequired();
+
+            builder.Property(s => s.CurrentAmount)
+                .IsRequired();
+
+            builder.HasOne(s => s.Account)
+                .WithMany(a => a.SavingGoals)
+                .HasForeignKey(s => s.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

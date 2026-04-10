@@ -30,6 +30,29 @@ namespace BudgetingSavings.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SavingGoals",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    TargetAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    CurrentAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    TargetDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    AccountId = table.Column<Guid>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SavingGoals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SavingGoals_Accounts_AccountId",
+                        column: x => x.AccountId,
+                        principalTable: "Accounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Transactions",
                 columns: table => new
                 {
@@ -52,6 +75,11 @@ namespace BudgetingSavings.API.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_SavingGoals_AccountId",
+                table: "SavingGoals",
+                column: "AccountId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Transactions_AccountId",
                 table: "Transactions",
                 column: "AccountId");
@@ -60,6 +88,9 @@ namespace BudgetingSavings.API.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "SavingGoals");
+
             migrationBuilder.DropTable(
                 name: "Transactions");
 
