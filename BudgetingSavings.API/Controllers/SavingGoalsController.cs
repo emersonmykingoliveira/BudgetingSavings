@@ -7,25 +7,25 @@ namespace BudgetingSavings.API.Controllers
     public class SavingGoalsController() : ControllerBase
     {
         [HttpGet]
-        public IActionResult GetSavingGoals()
+        public async Task<IActionResult> GetSavingGoals()
         {
             return Ok();
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetSavingGoal(int id)
+        public async Task<IActionResult> GetSavingGoal(int id)
         {
             return Ok();
         }
 
         [HttpPost]
-        public IActionResult CreateSavingGoal([FromBody] object savingGoal)
+        public async Task<IActionResult> CreateSavingGoal([FromBody] object savingGoal)
         {
             return Ok();
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateSavingGoal(int id, [FromBody] object savingGoal)
+        public async Task<IActionResult> UpdateSavingGoal(int id, [FromBody] object savingGoal)
         {
             return Ok();
         }
