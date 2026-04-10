@@ -77,14 +77,6 @@ public class ApiDbContext : DbContext
 
             builder.Property(s => s.TargetAmount)
                 .IsRequired();
-
-            builder.Property(s => s.CurrentAmount)
-                .IsRequired();
-
-            builder.HasOne(s => s.Account)
-                .WithMany(a => a.SavingGoals)
-                .HasForeignKey(s => s.AccountId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

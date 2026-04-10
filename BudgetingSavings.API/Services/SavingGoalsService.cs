@@ -7,14 +7,26 @@ namespace BudgetingSavings.API.Services
 {
     public class SavingGoalsService(ApiDbContext db) : ISavingGoalsService
     {
-        public Task<SavingGoal> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<SavingGoal> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var savingGoal = new SavingGoal
+            {
+                Id = Guid.NewGuid(),
+                Name = request.Name,
+                TargetAmount = request.TargetAmount,
+                StartDate = DateTime.Now,    
+                TargetDate = request.TargetDate
+            };
+
+            await db.SavingGoals.AddAsync(savingGoal, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return savingGoal;
         }
 
-        public async Task DeleteSavingGoalAsync(Guid accountId, Guid id, CancellationToken cancellationToken)
+        public async Task DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(accountId, id, cancellationToken);
+            var savingGoal = await GetSavingGoalAsync(id, cancellationToken);
 
             if (savingGoal is not null)
             {
@@ -25,19 +37,31 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<List<SavingGoal>> GetAllSavingGoalsAsync(Guid accountId, CancellationToken cancellationToken)
+        public async Task<List<SavingGoal>> GetAllSavingGoalsAsync(CancellationToken cancellationToken)
         {
-            return await db.SavingGoals.Where(s => s.AccountId == accountId).ToListAsync(cancellationToken);
+            return await db.SavingGoals.ToListAsync(cancellationToken);
         }
 
-        public async Task<SavingGoal> GetSavingGoalAsync(Guid accountId, Guid id, CancellationToken cancellationToken)
+        public async Task<SavingGoal> GetSavingGoalAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.SavingGoals.FirstOrDefaultAsync(s => s.AccountId == accountId && s.Id == id, cancellationToken) ?? new SavingGoal();
+            return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new SavingGoal();
         }
 
-        public Task<SavingGoal> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<SavingGoal> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var savingGoal = await GetSavingGoalAsync(request.Id, cancellationToken);
+            
+            if (savingGoal is not null)
+            {
+                savingGoal.Name = request.Name;
+                savingGoal.TargetAmount = request.TargetAmount;
+                savingGoal.TargetDate = request.TargetDate;
+
+                db.SavingGoals.Update(savingGoal);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            return savingGoal ?? new SavingGoal();
         }
     }
 }

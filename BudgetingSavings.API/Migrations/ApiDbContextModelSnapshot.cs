@@ -61,10 +61,7 @@ namespace BudgetingSavings.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("CurrentAmount")
+                    b.Property<Guid?>("AccountId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -120,13 +117,9 @@ namespace BudgetingSavings.API.Migrations
 
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.SavingGoal", b =>
                 {
-                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Account", "Account")
+                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Account", null)
                         .WithMany("SavingGoals")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Account");
+                        .HasForeignKey("AccountId");
                 });
 
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Transaction", b =>

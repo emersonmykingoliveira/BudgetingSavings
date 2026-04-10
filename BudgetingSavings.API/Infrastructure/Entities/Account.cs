@@ -11,7 +11,7 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public decimal Balance { get; set; }
         public CurrencyType Currency { get; set; }
         public string? Owner { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; }
         public DateTime? LastTransactionDate { get; set; }
 
         [JsonIgnore]

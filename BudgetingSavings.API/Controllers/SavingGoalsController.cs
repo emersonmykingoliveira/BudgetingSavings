@@ -11,14 +11,14 @@ namespace BudgetingSavings.API.Controllers
         [HttpGet("{accountId}")]
         public async Task<IActionResult> GetAllSavingGoals(Guid accountId, CancellationToken cancellationToken)
         {
-            var savingGoals = await service.GetAllSavingGoalsAsync(accountId, cancellationToken);
+            var savingGoals = await service.GetAllSavingGoalsAsync(cancellationToken);
             return Ok(savingGoals);
         }
 
         [HttpGet("{accountId}/{id}")]
         public async Task<IActionResult> GetSavingGoal(Guid accountId, Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.GetSavingGoalAsync(accountId, id, cancellationToken);
+            var savingGoal = await service.GetSavingGoalAsync(id, cancellationToken);
             return Ok(savingGoal);
         }
 
@@ -39,7 +39,7 @@ namespace BudgetingSavings.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSavingGoal(Guid accountId, Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteSavingGoalAsync(accountId, id, cancellationToken);
+            await service.DeleteSavingGoalAsync(id, cancellationToken);
             return Ok();
         }
     }

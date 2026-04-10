@@ -13,6 +13,7 @@ namespace BudgetingSavings.API.Services
             var account = new Account
             {
                 Id = Guid.NewGuid(),
+                CreatedDate = DateTime.Now,
                 AccountNumber = await GenerateUniqueAccountNumberAsync(cancellationToken),
                 AccountType = request.AccountType,
                 Currency = request.Currency,
