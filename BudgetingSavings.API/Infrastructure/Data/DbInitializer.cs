@@ -28,7 +28,8 @@ public static class DbInitializer
                 AccountType = AccountType.Checking,
                 Balance = 15000.25m,
                 Currency = CurrencyType.NOK,
-                Owner = "Alice Johnson"
+                Owner = "Alice Johnson",
+                LastTransactionDate = DateTime.Parse("2023-08-15")
             },
             new Account
             {
@@ -37,7 +38,8 @@ public static class DbInitializer
                 AccountType = AccountType.Savings,
                 Balance = 25000.75m,
                 Currency = CurrencyType.NOK,
-                Owner = "Bob Smith"
+                Owner = "Bob Smith",
+                LastTransactionDate = DateTime.Parse("2023-08-15")
             },
             new Account
             {
@@ -46,7 +48,8 @@ public static class DbInitializer
                 AccountType = AccountType.Checking,
                 Balance = 2000.50m,
                 Currency = CurrencyType.NOK,
-                Owner = "Charlie Brown"
+                Owner = "Charlie Brown",
+                LastTransactionDate = DateTime.Parse("2023-08-15")
             },
             new Account
             {
@@ -55,7 +58,8 @@ public static class DbInitializer
                 AccountType = AccountType.Savings,
                 Balance = 8000.00m,
                 Currency = CurrencyType.NOK,
-                Owner = "David Wilson"
+                Owner = "David Wilson",
+                LastTransactionDate = DateTime.Parse("2023-08-15")
             }
         );
 
