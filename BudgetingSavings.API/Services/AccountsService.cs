@@ -1,6 +1,7 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.Shared.Models.Requests;
+using BudgetingSavings.Shared.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -8,7 +9,7 @@ namespace BudgetingSavings.API.Services
 {
     public class AccountsService(ApiDbContext db) : IAccountsService
     {
-        public async Task<Account> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken)
+        public async Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken)
         {
             var account = new Account
             {
@@ -23,12 +24,12 @@ namespace BudgetingSavings.API.Services
 
             await db.Accounts.AddAsync(account, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
-            return account;
+            return MapAccountResponse(account);
         }
 
         public async Task DeleteAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
-            var account = await GetAccountAsync(customerId, id, cancellationToken);
+            var account = await GetSpecificAccountAsync(customerId, id, cancellationToken);
 
             if (account is not null)
             {
@@ -38,19 +39,27 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<Account> GetAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task<AccountResponse> GetAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        {
+            var account = await GetSpecificAccountAsync(customerId, id, cancellationToken);
+            return MapAccountResponse(account);
+        }
+
+        private async Task<Account> GetSpecificAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
             return await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new Account();
         }
 
-        public async Task<List<Account>> GetAllAccountsAsync(CancellationToken cancellationToken)
+        public async Task<List<AccountResponse>> GetAllAccountsAsync(CancellationToken cancellationToken)
         {
-            return await db.Accounts.ToListAsync(cancellationToken);
+            var accounts = await db.Accounts.ToListAsync(cancellationToken);
+            return accounts.Select(MapAccountResponse).ToList();
         }
 
-        public async Task<List<Account>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<List<AccountResponse>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            return await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+            var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+            return accounts.Select(MapAccountResponse).ToList();
         }
 
         public async Task UpdateAccountBalanceAsync(Guid customerId, Guid id, decimal amount, DateTime transactionDate, CancellationToken cancellationToken)
@@ -78,6 +87,21 @@ namespace BudgetingSavings.API.Services
                 return await GenerateUniqueAccountNumberAsync(cancellationToken);
 
             return number;
+        }
+
+        private AccountResponse MapAccountResponse(Account account)
+        {
+            return new AccountResponse
+            {
+                Id = account.Id,
+                AccountNumber = account.AccountNumber,
+                AccountType = account.AccountType,
+                Balance = account.Balance,
+                Currency = account.Currency,
+                CreatedDate = account.CreatedDate,
+                LastTransactionDate = account.LastTransactionDate,
+                CustomerId = account.CustomerId
+            };
         }
     }
 }

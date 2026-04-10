@@ -14,18 +14,12 @@ namespace BudgetingSavings.API.Services
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var account = await accountsService.GetAccountAsync(request.CustomerId, request.AccountId, cancellationToken);
-
-                if (account is null || account.Id == Guid.Empty)
-                    throw new ArgumentException($"Account with Id {request.AccountId} not found.");
-
                 var transaction = new Transaction
                 {
                     AccountId = request.AccountId,
                     Amount = request.Amount,
                     Currency = request.Currency,
                     Description = request.Description,
-                    Account = account,
                     Date = transactionDate
                 };
 
