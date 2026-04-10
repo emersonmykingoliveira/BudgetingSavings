@@ -11,20 +11,35 @@ namespace BudgetingSavings.API.Services
         {
             var transactionDate = DateTime.Now;
 
-            var transaction = new Transaction
+            await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            try
             {
-                AccountId = request.AccountId,
-                Amount = request.Amount,
-                Currency = request.Currency,
-                Description = request.Description,
-                Account = await accountsService.GetAccountAsync(request.AccountId, cancellationToken),
-                Date = transactionDate
-            };
+                var account = await accountsService.GetAccountAsync(request.AccountId, cancellationToken);
 
-            await db.Transactions.AddAsync(transaction, cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
-            await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.Amount, transactionDate, cancellationToken);
-            return transaction;
+                if (account is null || account.Id == Guid.Empty)
+                    throw new ArgumentException($"Account with Id {request.AccountId} not found.");
+
+                var transaction = new Transaction
+                {
+                    AccountId = request.AccountId,
+                    Amount = request.Amount,
+                    Currency = request.Currency,
+                    Description = request.Description,
+                    Account = account,
+                    Date = transactionDate
+                };
+
+                await db.Transactions.AddAsync(transaction, cancellationToken);
+                await db.SaveChangesAsync(cancellationToken);
+                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.Amount, transactionDate, cancellationToken);
+                await dbTransaction.CommitAsync(cancellationToken);
+                return transaction;
+            }
+            catch (Exception)
+            {
+                await dbTransaction.RollbackAsync(cancellationToken);
+                throw;
+            }
         }
 
         public async Task<List<Transaction>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
