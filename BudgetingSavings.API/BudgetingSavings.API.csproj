@@ -17,8 +17,4 @@
     <ProjectReference Include="..\BudgetingSavings.Shared\BudgetingSavings.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
-  </ItemGroup>
-
 </Project>

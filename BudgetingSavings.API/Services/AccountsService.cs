@@ -1,6 +1,6 @@
 ﻿namespace BudgetingSavings.API.Services
 {
-    public class AccountsService
+    public class AccountsService : IAccountsService
     {
     }
 }
