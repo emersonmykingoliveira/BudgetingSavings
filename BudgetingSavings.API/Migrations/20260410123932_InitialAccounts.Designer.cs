@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingSavings.API.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20260410120155_InitialAccounts")]
+    [Migration("20260410123932_InitialAccounts")]
     partial class InitialAccounts
     {
         /// <inheritdoc />

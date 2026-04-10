@@ -15,10 +15,10 @@ public static class DbInitializer
             return;
         }
 
-        var account1 = Guid.NewGuid();
-        var account2 = Guid.NewGuid();
-        var account3 = Guid.NewGuid();
-        var account4 = Guid.NewGuid();
+        var account1 = Guid.Parse("3e8bd3ed-b0fb-49db-b332-3815686054ee");
+        var account2 = Guid.Parse("a3d8ae09-b4c7-4c1f-9bac-166bb26b0d2b");
+        var account3 = Guid.Parse("af79b5af-cf9c-4ade-996e-92538089a180");
+        var account4 = Guid.Parse("34b04500-2eb3-4f7a-8e9f-c2f0c9d3df32");
 
         dbContext.Accounts.AddRange(
             new Account
