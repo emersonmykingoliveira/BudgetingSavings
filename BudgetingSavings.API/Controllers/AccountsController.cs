@@ -27,7 +27,7 @@ namespace BudgetingSavings.API.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAccount(int id, [FromBody] UpdateSavingGoalRequest request)
+        public async Task<IActionResult> UpdateAccount(int id, [FromBody] UpdateAccountRequest request)
         {
             return Ok();
         }
