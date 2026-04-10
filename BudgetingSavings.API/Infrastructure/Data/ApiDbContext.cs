@@ -11,6 +11,7 @@ public class ApiDbContext : DbContext
     }
 
     public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +40,28 @@ public class ApiDbContext : DbContext
             builder.Property(a => a.Owner)
                 .IsRequired()
                 .HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Transaction>(builder =>
+        {
+            builder.ToTable("Transactions");
+
+            builder.HasKey(t => t.Id);
+
+            builder.Property(t => t.Description)
+                .HasMaxLength(250);
+
+            builder.Property(t => t.Amount)
+                .IsRequired();
+
+            builder.Property(t => t.Currency)
+                .IsRequired()
+                .HasMaxLength(10);
+
+            builder.HasOne(t => t.Account)
+                .WithMany(a => a.Transactions)
+                .HasForeignKey(t => t.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -12,5 +12,7 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public string? Owner { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? LastTransactionDate { get; set; }
+
+        public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }
