@@ -26,51 +26,7 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
-    dbContext.Database.Migrate();
-
-    if (!dbContext.Accounts.Any())
-    {
-        dbContext.Accounts.AddRange(
-            new Account
-            {
-                Id = Guid.NewGuid(),
-                AccountNumber = "********1234",
-                AccountType = "Checking",
-                Balance = 15000.25m,
-                Currency = "NOK",
-                Owner = "Alice"
-            },
-            new Account
-            {
-                Id = Guid.NewGuid(),
-                AccountNumber = "********5678",
-                AccountType = "Savings",
-                Balance = 25000.75m,
-                Currency = "NOK",
-                Owner = "Bob"
-            },
-            new Account
-            {
-                Id = Guid.NewGuid(),
-                AccountNumber = "********9876",
-                AccountType = "Checking",
-                Balance = 2000.50m,
-                Currency = "NOK",
-                Owner = "Charlie"
-            },
-            new Account
-            {
-                Id = Guid.NewGuid(),
-                AccountNumber = "********2109",
-                AccountType = "Savings",
-                Balance = 8000.00m,
-                Currency = "NOK",
-                Owner = "David"
-            }
-        );
-
-        dbContext.SaveChanges();
-    }
+    DbInitializer.Initialize(dbContext);
 }
 
 app.UseHttpsRedirection();
