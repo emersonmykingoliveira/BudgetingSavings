@@ -10,14 +10,10 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public AccountType AccountType { get; set; }
         public decimal Balance { get; set; }
         public CurrencyType Currency { get; set; }
-        public string? Owner { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? LastTransactionDate { get; set; }
-
-        [JsonIgnore]
-        public List<Transaction> Transactions { get; set; } = new List<Transaction>();
-
-        [JsonIgnore]
-        public List<SavingGoal> SavingGoals { get; set; } = new List<SavingGoal>();
+        public Guid CustomerId { get; set; }
+        public Customer? Customer { get; set; }
+        public List<Transaction>? Transactions { get; set; }
     }
 }

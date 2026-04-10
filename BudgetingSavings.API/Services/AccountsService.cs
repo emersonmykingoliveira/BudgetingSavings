@@ -17,7 +17,7 @@ namespace BudgetingSavings.API.Services
                 AccountNumber = await GenerateUniqueAccountNumberAsync(cancellationToken),
                 AccountType = request.AccountType,
                 Currency = request.Currency,
-                Owner = request.Owner,
+                CustomerId = request.CustomerId,
                 Balance = 0m
             };
 

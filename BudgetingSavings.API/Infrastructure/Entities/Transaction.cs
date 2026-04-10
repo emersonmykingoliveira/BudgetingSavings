@@ -11,8 +11,6 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public decimal Amount { get; set; }
         public CurrencyType Currency { get; set; }
         public Guid AccountId { get; set; }
-
-        [JsonIgnore]
         public Account? Account { get; set; }
     }
 }

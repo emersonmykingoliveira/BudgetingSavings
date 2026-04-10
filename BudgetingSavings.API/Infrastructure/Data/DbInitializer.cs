@@ -15,6 +15,18 @@ public static class DbInitializer
             return;
         }
 
+        var customer1 = Guid.Parse("f964035a-73d8-4f8e-a9d0-111111111111");
+        var customer2 = Guid.Parse("f964035a-73d8-4f8e-a9d0-222222222222");
+        var customer3 = Guid.Parse("f964035a-73d8-4f8e-a9d0-333333333333");
+        var customer4 = Guid.Parse("f964035a-73d8-4f8e-a9d0-444444444444");
+
+        dbContext.Customers.AddRange(
+            new Customer { Id = customer1, Name = "Alice Johnson", Email = "alice@example.com", DateOfBirth = new DateTime(1990, 5, 20) },
+            new Customer { Id = customer2, Name = "Bob Smith", Email = "bob@example.com", DateOfBirth = new DateTime(1985, 12, 10) },
+            new Customer { Id = customer3, Name = "Charlie Brown", Email = "charlie@example.com", DateOfBirth = new DateTime(1995, 3, 15) },
+            new Customer { Id = customer4, Name = "David Wilson", Email = "david@example.com", DateOfBirth = new DateTime(1982, 7, 30) }
+        );
+
         var account1 = Guid.Parse("3e8bd3ed-b0fb-49db-b332-3815686054ee");
         var account2 = Guid.Parse("a3d8ae09-b4c7-4c1f-9bac-166bb26b0d2b");
         var account3 = Guid.Parse("af79b5af-cf9c-4ade-996e-92538089a180");
@@ -28,7 +40,7 @@ public static class DbInitializer
                 AccountType = AccountType.Checking,
                 Balance = 15000.25m,
                 Currency = CurrencyType.NOK,
-                Owner = "Alice Johnson",
+                CustomerId = customer1,
                 LastTransactionDate = DateTime.Parse("2023-08-15")
             },
             new Account
@@ -38,7 +50,7 @@ public static class DbInitializer
                 AccountType = AccountType.Savings,
                 Balance = 25000.75m,
                 Currency = CurrencyType.NOK,
-                Owner = "Bob Smith",
+                CustomerId = customer2,
                 LastTransactionDate = DateTime.Parse("2023-08-15")
             },
             new Account
@@ -48,7 +60,7 @@ public static class DbInitializer
                 AccountType = AccountType.Checking,
                 Balance = 2000.50m,
                 Currency = CurrencyType.NOK,
-                Owner = "Charlie Brown",
+                CustomerId = customer3,
                 LastTransactionDate = DateTime.Parse("2023-08-15")
             },
             new Account
@@ -58,7 +70,7 @@ public static class DbInitializer
                 AccountType = AccountType.Savings,
                 Balance = 8000.00m,
                 Currency = CurrencyType.NOK,
-                Owner = "David Wilson",
+                CustomerId = customer4,
                 LastTransactionDate = DateTime.Parse("2023-08-15")
             }
         );

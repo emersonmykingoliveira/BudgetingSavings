@@ -13,10 +13,28 @@ public class ApiDbContext : DbContext
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
+    public DbSet<Customer> Customers => Set<Customer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Customer>(builder =>
+        {
+            builder.ToTable("Customers");
+
+            builder.HasKey(c => c.Id);
+
+            builder.Property(c => c.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder.Property(c => c.Email)
+                .HasMaxLength(150);
+
+            builder.Property(c => c.PhoneNumber)
+                .HasMaxLength(20);
+        });
 
         modelBuilder.Entity<Account>(builder =>
         {
@@ -38,9 +56,10 @@ public class ApiDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(10);
 
-            builder.Property(a => a.Owner)
-                .IsRequired()
-                .HasMaxLength(100);
+            builder.HasOne(a => a.Customer)
+                .WithMany(c => c.Accounts)
+                .HasForeignKey(a => a.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Transaction>(builder =>
@@ -77,6 +96,11 @@ public class ApiDbContext : DbContext
 
             builder.Property(s => s.TargetAmount)
                 .IsRequired();
+
+            builder.HasOne(s => s.Customer)
+                .WithMany(c => c.SavingGoals)
+                .HasForeignKey(s => s.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

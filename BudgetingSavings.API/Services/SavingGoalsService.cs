@@ -15,7 +15,8 @@ namespace BudgetingSavings.API.Services
                 Name = request.Name,
                 TargetAmount = request.TargetAmount,
                 StartDate = DateTime.Now,    
-                TargetDate = request.TargetDate
+                TargetDate = request.TargetDate,
+                CustomerId = request.CustomerId
             };
 
             await db.SavingGoals.AddAsync(savingGoal, cancellationToken);

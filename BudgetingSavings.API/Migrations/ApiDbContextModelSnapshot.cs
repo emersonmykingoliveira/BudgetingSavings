@@ -42,17 +42,44 @@ namespace BudgetingSavings.API.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("LastTransactionDate")
+                    b.Property<Guid>("CustomerId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Owner")
-                        .IsRequired()
-                        .HasMaxLength(100)
+                    b.Property<DateTime?>("LastTransactionDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CustomerId");
+
                     b.ToTable("Accounts", (string)null);
+                });
+
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Customer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.SavingGoal", b =>
@@ -61,7 +88,7 @@ namespace BudgetingSavings.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("AccountId")
+                    b.Property<Guid>("CustomerId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -80,7 +107,7 @@ namespace BudgetingSavings.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("SavingGoals", (string)null);
                 });
@@ -115,11 +142,26 @@ namespace BudgetingSavings.API.Migrations
                     b.ToTable("Transactions", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Account", b =>
+                {
+                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Customer", "Customer")
+                        .WithMany("Accounts")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.SavingGoal", b =>
                 {
-                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Account", null)
+                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Customer", "Customer")
                         .WithMany("SavingGoals")
-                        .HasForeignKey("AccountId");
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Transaction", b =>
@@ -135,9 +177,14 @@ namespace BudgetingSavings.API.Migrations
 
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Account", b =>
                 {
-                    b.Navigation("SavingGoals");
-
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Customer", b =>
+                {
+                    b.Navigation("Accounts");
+
+                    b.Navigation("SavingGoals");
                 });
 #pragma warning restore 612, 618
         }

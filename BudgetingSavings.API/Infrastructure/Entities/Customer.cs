@@ -1,4 +1,6 @@
-﻿namespace BudgetingSavings.API.Infrastructure.Entities
+﻿using System.Text.Json.Serialization;
+
+namespace BudgetingSavings.API.Infrastructure.Entities
 {
     public class Customer
     {
@@ -7,5 +9,7 @@
         public DateTime DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Email { get; set; }
+        public List<Account>? Accounts { get; set; }
+        public List<SavingGoal>? SavingGoals { get; set; }
     }
 }

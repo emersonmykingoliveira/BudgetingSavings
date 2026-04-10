@@ -8,6 +8,6 @@ namespace BudgetingSavings.Shared.Models.Requests
     {
         public AccountType AccountType { get; set; }
         public CurrencyType Currency { get; set; }
-        public string? Owner { get; set; }
+        public Guid CustomerId { get; set; }
     }
 }
