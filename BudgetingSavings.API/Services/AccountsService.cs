@@ -29,12 +29,12 @@ namespace BudgetingSavings.API.Services
         {
             var account = await GetAccountAsync(id, cancellationToken);
 
-            if (account.Id != Guid.Empty)
+            if (account is not null)
             {
                 db.Accounts.Remove(account);
                 await db.SaveChangesAsync(cancellationToken);
             }
-            //TODO: Handle case when account is not found (e.g., throw an exception or return a result indicating failure)
+            //todo: handle not found case
         }
 
         public async Task<Account> GetAccountAsync(Guid id, CancellationToken cancellationToken)

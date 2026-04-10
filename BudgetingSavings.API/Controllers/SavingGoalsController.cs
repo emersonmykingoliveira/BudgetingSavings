@@ -16,26 +16,30 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{accountId}/{id}")]
-        public async Task<IActionResult> GetSavingGoal(int id)
+        public async Task<IActionResult> GetSavingGoal(Guid accountId, Guid id, CancellationToken cancellationToken)
         {
-            return Ok();
+            var savingGoal = await service.GetSavingGoalAsync(accountId, id, cancellationToken);
+            return Ok(savingGoal);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateSavingGoal([FromBody] CreateSavingGoalRequest request)
         {
-            return Ok();
+            var savingGoal = await service.CreateSavingGoalAsync(request, CancellationToken.None);
+            return Ok(savingGoal);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSavingGoal(int id, [FromBody] UpdateSavingGoalRequest request)
+        public async Task<IActionResult> UpdateSavingGoal([FromBody] UpdateSavingGoalRequest request)
         {
-            return Ok();
+            var savingGoal = await service.UpdateSavingGoalAsync(request, CancellationToken.None);
+            return Ok(savingGoal);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteSavingGoal(int id)
+        public async Task<IActionResult> DeleteSavingGoal(Guid accountId, Guid id, CancellationToken cancellationToken)
         {
+            await service.DeleteSavingGoalAsync(accountId, id, cancellationToken);
             return Ok();
         }
     }
