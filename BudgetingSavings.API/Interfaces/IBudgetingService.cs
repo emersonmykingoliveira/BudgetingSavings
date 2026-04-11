@@ -5,11 +5,11 @@ namespace BudgetingSavings.API.Services
 {
     public interface IBudgetingService
     {
-        Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request);
-        Task<BudgetResponse> UpdateBudgetAsync(UpdateBudgetRequest request);
-        Task<bool> DeleteBudgetAsync(Guid customerId, Guid id);
-        Task<BudgetResponse> GetBudgetAsync(Guid customerId, Guid id);
-        Task<List<BudgetResponse>> GetBudgetsAsync(Guid customerId);
-        Task<Bud>
+        Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken);
+        Task<BudgetResponse> UpdateBudgetAsync(UpdateBudgetRequest request, CancellationToken cancellationToken);
+        Task DeleteBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
+        Task<BudgetResponse> GetBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
+        Task<List<BudgetResponse>> GetBudgetsAsync(Guid customerId, CancellationToken cancellationToken);
+        Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
     }
 }

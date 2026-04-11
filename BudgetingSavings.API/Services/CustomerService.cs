@@ -27,7 +27,7 @@ namespace BudgetingSavings.API.Services
 
         public async Task DeleteCustomerAsync(Guid id, CancellationToken cancellationToken)
         {
-            var customer = await db.Customers.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+            var customer = await GetSpecificCustomerAsync(id, cancellationToken);
 
             if (customer is not null)
             {
