@@ -9,14 +9,14 @@ namespace BudgetingSavings.API.Controllers
     [Route("api/[controller]")]
     public class TransactionsController(ITransactionService service) : ControllerBase
     {
-        [HttpGet("{accountId}")]
+        [HttpGet("account/{accountId}")]
         public async Task<IActionResult> GetAccountTransactions(Guid accountId, CancellationToken cancellationToken)
         {
             var transactions = await service.GetAllTransactionsAsync(accountId, cancellationToken);
             return Ok(transactions);
         }
 
-        [HttpGet("{accountId}/{id}")]
+        [HttpGet("{id}/account/{accountId}")]
         public async Task<IActionResult> GetTransaction(Guid accountId, Guid id, CancellationToken cancellationToken)
         {
             var transaction = await service.GetTransactionAsync(accountId, id, cancellationToken);

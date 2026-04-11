@@ -1,5 +1,6 @@
 ﻿using BudgetingSavings.API.Services;
 using BudgetingSavings.Shared.Models.Requests;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetingSavings.API.Controllers
@@ -8,15 +9,15 @@ namespace BudgetingSavings.API.Controllers
     [Route("api/[controller]")]
     public class SavingGoalsController(ISavingGoalService service) : ControllerBase
     {
-        [HttpGet("{customerId}")]
-        public async Task<IActionResult> GetAllSavingGoals(Guid customerId, CancellationToken cancellationToken)
+        [HttpGet("customer/{id}")]
+        public async Task<IActionResult> GetAllSavingGoals(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoals = await service.GetAllSavingGoalsAsync(customerId, cancellationToken);
+            var savingGoals = await service.GetAllSavingGoalsAsync(id, cancellationToken);
             return Ok(savingGoals);
         }
 
-        [HttpGet("{customerId}/{id}")]
-        public async Task<IActionResult> GetSavingGoal(Guid customerId, Guid id, CancellationToken cancellationToken)
+        [HttpGet("{id}/customer/{customerId}")]
+        public async Task<IActionResult> GetSavingGoal(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             var savingGoal = await service.GetSavingGoalAsync(customerId, id, cancellationToken);
             return Ok(savingGoal);
@@ -29,15 +30,15 @@ namespace BudgetingSavings.API.Controllers
             return Ok(savingGoal);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateSavingGoal([FromBody] UpdateSavingGoalRequest request)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateSavingGoal(Guid Id, [FromBody] UpdateSavingGoalRequest request)
         {
-            var savingGoal = await service.UpdateSavingGoalAsync(request, CancellationToken.None);
+            var savingGoal = await service.UpdateSavingGoalAsync(Id, request, CancellationToken.None);
             return Ok(savingGoal);
         }
 
-        [HttpDelete("{customerId}/{id}")]
-        public async Task<IActionResult> DeleteSavingGoal(Guid customerId, Guid id, CancellationToken cancellationToken)
+        [HttpDelete("{id}/customer/{customerId}")]
+        public async Task<IActionResult> DeleteSavingGoal(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             await service.DeleteSavingGoalAsync(customerId, id, cancellationToken);
             return NoContent();

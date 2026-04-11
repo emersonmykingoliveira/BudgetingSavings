@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class BudgetingService(ApiDbContext db) : IBudgetingService
+    public class BudgetService(ApiDbContext db) : IBudgetService
     {
         public async Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
         {
@@ -60,9 +60,9 @@ namespace BudgetingSavings.API.Services
             throw new NotImplementedException();
         }
 
-        public async Task<BudgetResponse> UpdateBudgetAsync(UpdateBudgetRequest request, CancellationToken cancellationToken)
+        public async Task<BudgetResponse> UpdateBudgetAsync(Guid id, UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(request.CustomerId, request.Id, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(request.CustomerId, id, cancellationToken);
 
             if(budget is not null)
             {

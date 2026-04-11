@@ -9,6 +9,6 @@ namespace BudgetingSavings.API.Services
         Task<SavingGoal> GetSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
         Task<SavingGoal> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken);
         Task DeleteSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
-        Task<SavingGoal> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken);
+        Task<SavingGoal> UpdateSavingGoalAsync(Guid id, UpdateSavingGoalRequest request, CancellationToken cancellationToken);
     }
 }

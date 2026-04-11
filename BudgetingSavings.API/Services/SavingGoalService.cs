@@ -48,9 +48,9 @@ namespace BudgetingSavings.API.Services
             return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new SavingGoal();
         }
 
-        public async Task<SavingGoal> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<SavingGoal> UpdateSavingGoalAsync(Guid id, UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(request.CustomerId, request.Id, cancellationToken);
+            var savingGoal = await GetSavingGoalAsync(request.CustomerId, id, cancellationToken);
             
             if (savingGoal is not null)
             {
