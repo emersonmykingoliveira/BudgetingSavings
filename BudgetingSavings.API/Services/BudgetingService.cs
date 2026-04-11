@@ -8,9 +8,21 @@ namespace BudgetingSavings.API.Services
 {
     public class BudgetingService(ApiDbContext db) : IBudgetingService
     {
-        public Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
+        public async Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var budget = new Budget
+            {
+                Id = Guid.NewGuid(),
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                LimitAmount = request.LimitAmount,
+                Currency = request.Currency,
+                CustomerId = request.CustomerId
+            };
+
+            await db.Budgets.AddAsync(budget, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+            return MapBudgetResponse(budget);
         }
 
         public async Task DeleteBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
