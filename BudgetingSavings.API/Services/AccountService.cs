@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace BudgetingSavings.API.Services
 {
-    public class AccountsService(ApiDbContext db) : IAccountsService
+    public class AccountService(ApiDbContext db) : IAccountService
     {
         public async Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken)
         {

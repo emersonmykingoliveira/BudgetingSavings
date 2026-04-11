@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class SavingGoalsService(ApiDbContext db) : ISavingGoalsService
+    public class SavingGoalService(ApiDbContext db) : ISavingGoalService
     {
         public async Task<SavingGoal> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {

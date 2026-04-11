@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class TransactionsService(ApiDbContext db, IAccountsService accountsService) : ITransactionsService
+    public class TransactionService(ApiDbContext db, IAccountService accountsService) : ITransactionService
     {
         public async Task<Transaction> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {

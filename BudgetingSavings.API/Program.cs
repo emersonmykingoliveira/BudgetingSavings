@@ -1,5 +1,6 @@
 using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.API.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -15,10 +16,11 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddDbContext<ApiDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<IAccountsService, AccountsService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IBudgetingService, BudgetingService>();
-builder.Services.AddScoped<ISavingGoalsService, SavingGoalsService>();
-builder.Services.AddScoped<ITransactionsService, TransactionsService>();
+builder.Services.AddScoped<ISavingGoalService, SavingGoalService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 var app = builder.Build();
 

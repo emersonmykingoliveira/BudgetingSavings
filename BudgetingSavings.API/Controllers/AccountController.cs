@@ -8,7 +8,7 @@ namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountsController(IAccountsService service) : ControllerBase
+    public class AccountController(IAccountService service) : ControllerBase
     {
         [HttpGet]
         public async Task<IActionResult> GetAllAccounts(CancellationToken cancellationToken)
@@ -42,7 +42,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> DeleteAccount(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
             await service.DeleteAccountAsync(customerId, id, cancellationToken);
-            return Ok();
+            return NoContent();
         }
     }
 }

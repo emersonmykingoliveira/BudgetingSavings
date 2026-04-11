@@ -3,7 +3,7 @@ using BudgetingSavings.Shared.Models.Requests;
 
 namespace BudgetingSavings.API.Services
 {
-    public interface ISavingGoalsService
+    public interface ISavingGoalService
     {
         Task<List<SavingGoal>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken);
         Task<SavingGoal> GetSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken);

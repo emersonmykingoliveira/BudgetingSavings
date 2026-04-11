@@ -6,7 +6,7 @@ namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class SavingGoalsController(ISavingGoalsService service) : ControllerBase
+    public class SavingGoalController(ISavingGoalService service) : ControllerBase
     {
         [HttpGet("{customerId}")]
         public async Task<IActionResult> GetAllSavingGoals(Guid customerId, CancellationToken cancellationToken)
@@ -40,7 +40,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> DeleteSavingGoal(Guid customerId, Guid id, CancellationToken cancellationToken)
         {
             await service.DeleteSavingGoalAsync(customerId, id, cancellationToken);
-            return Ok();
+            return NoContent();
         }
     }
 }
