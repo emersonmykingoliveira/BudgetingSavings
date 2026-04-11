@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BudgetingSavings.Shared.Models.Requests
+namespace BudgetingSavings.Shared.Models.Responses
 {
-    public class CreateBudgetRequest
+    public class BudgetResponse
     {
+        public Guid Id { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal LimitAmount { get; set; }
