@@ -9,6 +9,6 @@ namespace BudgetingSavings.API.Interfaces
         Task<CustomerResponse> GetCustomerAsync(Guid id, CancellationToken cancellationToken);
         Task<CustomerResponse> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken);
         Task DeleteCustomerAsync(Guid id, CancellationToken cancellationToken);
-        Task<CustomerResponse> UpdateCustomerAsync(UpdateCustomerRequest request, CancellationToken cancellationToken);
+        Task<CustomerResponse> UpdateCustomerAsync(Guid Id, UpdateCustomerRequest request, CancellationToken cancellationToken);
     }
 }

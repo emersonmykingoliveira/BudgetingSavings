@@ -54,9 +54,9 @@ namespace BudgetingSavings.API.Services
             return await db.Customers.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Customer();
         }
 
-        public async Task<CustomerResponse> UpdateCustomerAsync(UpdateCustomerRequest request, CancellationToken cancellationToken)
+        public async Task<CustomerResponse> UpdateCustomerAsync(Guid id, UpdateCustomerRequest request, CancellationToken cancellationToken)
         {
-            var customer = await GetSpecificCustomerAsync(request.Id, cancellationToken);
+            var customer = await GetSpecificCustomerAsync(id, cancellationToken);
 
             if(customer is not null)
             {
