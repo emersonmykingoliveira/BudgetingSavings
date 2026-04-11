@@ -11,5 +11,6 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public string? Email { get; set; }
         public List<Account>? Accounts { get; set; }
         public List<SavingGoal>? SavingGoals { get; set; }
+        public List<Budget>? Budgets { get; set; }
     }
 }

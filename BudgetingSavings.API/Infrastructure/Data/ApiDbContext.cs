@@ -14,6 +14,7 @@ public class ApiDbContext : DbContext
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Budget> Budgets => Set<Budget>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -101,6 +102,24 @@ public class ApiDbContext : DbContext
             builder.HasOne(s => s.Customer)
                 .WithMany(c => c.SavingGoals)
                 .HasForeignKey(s => s.CustomerId)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<Budget>(builder =>
+        {
+            builder.ToTable("Budgets");
+
+            builder.HasKey(b => b.Id);
+
+            builder.Property(b => b.LimitAmount)
+                .IsRequired();
+
+            builder.Property(b => b.Currency)
+                .IsRequired();
+
+            builder.HasOne(b => b.Customer)
+                .WithMany(c => c.Budgets)
+                .HasForeignKey(b => b.CustomerId)
                 .IsRequired();
         });
     }

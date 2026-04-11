@@ -1,5 +1,4 @@
 ﻿using BudgetingSavings.Shared.Models;
-using System.ComponentModel;
 
 namespace BudgetingSavings.API.Infrastructure.Entities
 {
@@ -10,5 +9,7 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public DateTime EndTime { get; set; }
         public decimal LimitAmount { get; set; }
         public CurrencyType Currency { get; set; }
+        public Guid CustomerId { get; set; }
+        public Customer? Customer { get; set; }
     }
 }
