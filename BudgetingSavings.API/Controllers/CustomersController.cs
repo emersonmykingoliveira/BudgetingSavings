@@ -6,7 +6,7 @@ namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CustomerController(ICustomerService service) : ControllerBase
+    public class CustomersController(ICustomerService service) : ControllerBase
     {
         [HttpGet]
         public async Task<IActionResult> GetAllCustomer(CancellationToken cancellationToken)

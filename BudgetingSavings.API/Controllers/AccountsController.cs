@@ -8,7 +8,7 @@ namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountController(IAccountService service) : ControllerBase
+    public class AccountsController(IAccountService service) : ControllerBase
     {
         [HttpGet]
         public async Task<IActionResult> GetAllAccounts(CancellationToken cancellationToken)

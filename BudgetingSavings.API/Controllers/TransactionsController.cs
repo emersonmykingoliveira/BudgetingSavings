@@ -7,7 +7,7 @@ namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TransactionController(ITransactionService service) : ControllerBase
+    public class TransactionsController(ITransactionService service) : ControllerBase
     {
         [HttpGet("{accountId}")]
         public async Task<IActionResult> GetAccountTransactions(Guid accountId, CancellationToken cancellationToken)
