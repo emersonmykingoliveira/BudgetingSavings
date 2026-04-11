@@ -89,8 +89,10 @@ namespace BudgetingSavings.API.Services
             return number;
         }
 
-        private AccountResponse MapAccountResponse(Account account)
+        private AccountResponse MapAccountResponse(Account? account)
         {
+            if(account is null) return new AccountResponse();
+
             return new AccountResponse
             {
                 Id = account.Id,
