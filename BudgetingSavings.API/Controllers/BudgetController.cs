@@ -6,7 +6,7 @@ namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BudgetingController(IBudgetingService service) : ControllerBase
+    public class BudgetController(IBudgetingService service) : ControllerBase
     {
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBudget(int id)
