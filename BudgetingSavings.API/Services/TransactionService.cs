@@ -20,7 +20,7 @@ namespace BudgetingSavings.API.Services
                     Amount = request.Amount,
                     Currency = request.Currency,
                     Description = request.Description,
-                    Date = transactionDate
+                    TransactionDateTime = transactionDate
                 };
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);

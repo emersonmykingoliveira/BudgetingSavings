@@ -55,9 +55,17 @@ namespace BudgetingSavings.API.Services
             return budgets.Select(b => MapBudgetResponse(b)).ToList();
         }
 
-        public Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
+            
+            var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+
+            var transactions = await db.Transactions.Where(t => accounts.Select(a => a.Id).Contains(t.AccountId) && t.TransactionDateTime >= budget.StartTime && t.TransactionDateTime <= budget.EndTime).ToListAsync(cancellationToken);
+
+            var spentAmount = transactions.Where(t => t.Amount > 0).Sum(t => t.Amount);
+
+            return MapBudgetStatusResponse(budget, spentAmount);
         }
 
         public async Task<BudgetResponse> UpdateBudgetAsync(Guid id, Guid customerId, UpdateBudgetRequest request, CancellationToken cancellationToken)
@@ -89,6 +97,22 @@ namespace BudgetingSavings.API.Services
                 LimitAmount = budget.LimitAmount,
                 Currency = budget.Currency,
                 CustomerId = budget.CustomerId
+            };
+        }
+
+        private BudgetStatusResponse MapBudgetStatusResponse(Budget budget, decimal spentAmount)
+        {
+            return new BudgetStatusResponse
+            {
+                Id = budget.Id,
+                StartTime = budget.StartTime,
+                EndTime = budget.EndTime,
+                LimitAmount = budget.LimitAmount,
+                Currency = budget.Currency,
+                CustomerId = budget.CustomerId,
+                SpentAmount = spentAmount,
+                RemainingAmount = budget.LimitAmount - spentAmount,
+                IsExceeded = spentAmount > budget.LimitAmount
             };
         }
     }

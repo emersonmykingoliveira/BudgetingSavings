@@ -77,7 +77,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-15"),
+                TransactionDateTime = DateTime.Parse("2023-08-15"),
                 Description = "Grocery Store",
                 Amount = -75.5m,
                 Currency = CurrencyType.NOK,
@@ -86,7 +86,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-14"),
+                TransactionDateTime = DateTime.Parse("2023-08-14"),
                 Description = "Paycheck Deposit",
                 Amount = 2500.0m,
                 Currency = CurrencyType.NOK,
@@ -95,7 +95,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-15"),
+                TransactionDateTime = DateTime.Parse("2023-08-15"),
                 Description = "Online Shopping",
                 Amount = -320.25m,
                 Currency = CurrencyType.NOK,
@@ -104,7 +104,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-14"),
+                TransactionDateTime = DateTime.Parse("2023-08-14"),
                 Description = "Interest Earnings",
                 Amount = 50.25m,
                 Currency = CurrencyType.NOK,
@@ -113,7 +113,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-15"),
+                TransactionDateTime = DateTime.Parse("2023-08-15"),
                 Description = "Rent Payment",
                 Amount = -1000.0m,
                 Currency = CurrencyType.NOK,
@@ -122,7 +122,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-14"),
+                TransactionDateTime = DateTime.Parse("2023-08-14"),
                 Description = "Savings Deposit",
                 Amount = 1500.0m,
                 Currency = CurrencyType.NOK,
@@ -131,7 +131,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-15"),
+                TransactionDateTime = DateTime.Parse("2023-08-15"),
                 Description = "Lunch Out",
                 Amount = -45.75m,
                 Currency = CurrencyType.NOK,
@@ -140,7 +140,7 @@ public static class DbInitializer
             new Transaction
             {
                 Id = Guid.NewGuid(),
-                Date = DateTime.Parse("2023-08-14"),
+                TransactionDateTime = DateTime.Parse("2023-08-14"),
                 Description = "Savings Deposit",
                 Amount = 1000.0m,
                 Currency = CurrencyType.NOK,
