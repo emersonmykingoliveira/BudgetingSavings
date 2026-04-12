@@ -17,9 +17,9 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id}/account/{accountId}")]
-        public async Task<IActionResult> GetTransaction(Guid accountId, Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetTransaction(Guid id, Guid accountId, CancellationToken cancellationToken)
         {
-            var transaction = await service.GetTransactionAsync(accountId, id, cancellationToken);
+            var transaction = await service.GetTransactionAsync(id, accountId, cancellationToken);
             return Ok(transaction);
         }
 

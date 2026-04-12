@@ -25,7 +25,7 @@ namespace BudgetingSavings.API.Services
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
-                await accountsService.UpdateAccountBalanceAsync(request.CustomerId, request.AccountId, request.Amount, transactionDate, cancellationToken);
+                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.CustomerId, request.Amount, transactionDate, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return transaction;
             }
@@ -41,7 +41,7 @@ namespace BudgetingSavings.API.Services
             return await db.Transactions.Where(s => s.AccountId == accountId).ToListAsync(cancellationToken);
         }
 
-        public async Task<Transaction> GetTransactionAsync(Guid accountId, Guid id, CancellationToken cancellationToken)
+        public async Task<Transaction> GetTransactionAsync(Guid id, Guid accountId, CancellationToken cancellationToken)
         {
             return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id && s.AccountId == accountId, cancellationToken) ?? new Transaction();
         }

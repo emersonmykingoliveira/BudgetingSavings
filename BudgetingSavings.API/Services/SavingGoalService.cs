@@ -25,9 +25,9 @@ namespace BudgetingSavings.API.Services
             return savingGoal;
         }
 
-        public async Task DeleteSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task DeleteSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(customerId, id, cancellationToken);
+            var savingGoal = await GetSavingGoalAsync(id, customerId, cancellationToken);
 
             if (savingGoal is not null)
             {
@@ -43,15 +43,15 @@ namespace BudgetingSavings.API.Services
             return await db.SavingGoals.Where(s => s.CustomerId == customerId).ToListAsync(cancellationToken);
         }
 
-        public async Task<SavingGoal> GetSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task<SavingGoal> GetSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new SavingGoal();
         }
 
         public async Task<SavingGoal> UpdateSavingGoalAsync(Guid id, UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(request.CustomerId, id, cancellationToken);
-            
+            var savingGoal = await GetSavingGoalAsync(id, request.CustomerId, cancellationToken);
+
             if (savingGoal is not null)
             {
                 savingGoal.Name = request.Name;

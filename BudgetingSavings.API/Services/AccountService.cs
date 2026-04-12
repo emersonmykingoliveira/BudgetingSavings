@@ -27,9 +27,9 @@ namespace BudgetingSavings.API.Services
             return MapAccountResponse(account);
         }
 
-        public async Task DeleteAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task DeleteAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var account = await GetSpecificAccountAsync(customerId, id, cancellationToken);
+            var account = await GetSpecificAccountAsync(id, customerId, cancellationToken);
 
             if (account is not null)
             {
@@ -39,13 +39,13 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<AccountResponse> GetAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task<AccountResponse> GetAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var account = await GetSpecificAccountAsync(customerId, id, cancellationToken);
+            var account = await GetSpecificAccountAsync(id, customerId, cancellationToken);
             return MapAccountResponse(account);
         }
 
-        private async Task<Account> GetSpecificAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        private async Task<Account> GetSpecificAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             return await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new Account();
         }
@@ -62,7 +62,7 @@ namespace BudgetingSavings.API.Services
             return accounts.Select(MapAccountResponse).ToList();
         }
 
-        public async Task UpdateAccountBalanceAsync(Guid customerId, Guid id, decimal amount, DateTime transactionDate, CancellationToken cancellationToken)
+        public async Task UpdateAccountBalanceAsync(Guid id, Guid customerId, decimal amount, DateTime transactionDate, CancellationToken cancellationToken)
         {
             var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken);
 

@@ -6,9 +6,9 @@ namespace BudgetingSavings.API.Services
     public interface ISavingGoalService
     {
         Task<List<SavingGoal>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken);
-        Task<SavingGoal> GetSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
+        Task<SavingGoal> GetSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
         Task<SavingGoal> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken);
-        Task DeleteSavingGoalAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
+        Task DeleteSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
         Task<SavingGoal> UpdateSavingGoalAsync(Guid id, UpdateSavingGoalRequest request, CancellationToken cancellationToken);
     }
 }

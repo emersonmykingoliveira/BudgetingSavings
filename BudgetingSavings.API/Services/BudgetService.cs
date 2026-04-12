@@ -25,9 +25,9 @@ namespace BudgetingSavings.API.Services
             return MapBudgetResponse(budget);
         }
 
-        public async Task DeleteBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task DeleteBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(customerId, id, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
 
             if(budget is not null)
             {
@@ -38,13 +38,13 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<BudgetResponse> GetBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task<BudgetResponse> GetBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(customerId, id, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
             return MapBudgetResponse(budget);
         }
 
-        public async Task<Budget> GetSpecificBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public async Task<Budget> GetSpecificBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             return await db.Budgets.FirstOrDefaultAsync(b => b.CustomerId == customerId && b.Id == id, cancellationToken) ?? new Budget();
         }
@@ -55,14 +55,14 @@ namespace BudgetingSavings.API.Services
             return budgets.Select(b => MapBudgetResponse(b)).ToList();
         }
 
-        public Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid customerId, Guid id, CancellationToken cancellationToken)
+        public Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
         public async Task<BudgetResponse> UpdateBudgetAsync(Guid id, Guid customerId, UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(customerId, id, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
 
             if(budget is not null)
             {

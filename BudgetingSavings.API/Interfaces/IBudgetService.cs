@@ -7,9 +7,9 @@ namespace BudgetingSavings.API.Services
     {
         Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken);
         Task<BudgetResponse> UpdateBudgetAsync(Guid id, Guid customerId, UpdateBudgetRequest request, CancellationToken cancellationToken);
-        Task DeleteBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
-        Task<BudgetResponse> GetBudgetAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
+        Task DeleteBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
+        Task<BudgetResponse> GetBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
         Task<List<BudgetResponse>> GetBudgetsAsync(Guid customerId, CancellationToken cancellationToken);
-        Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
+        Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
     }
 }

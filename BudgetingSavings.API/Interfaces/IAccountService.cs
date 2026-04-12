@@ -7,10 +7,10 @@ namespace BudgetingSavings.API.Services
     public interface IAccountService
     {
         Task<List<AccountResponse>> GetAllAccountsAsync(CancellationToken cancellationToken);
-        Task<AccountResponse> GetAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
+        Task<AccountResponse> GetAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
         Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken);
-        Task DeleteAccountAsync(Guid customerId, Guid id, CancellationToken cancellationToken);
-        Task UpdateAccountBalanceAsync(Guid customerId, Guid id, decimal amount, DateTime transactionDate, CancellationToken cancellationToken);
+        Task DeleteAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
+        Task UpdateAccountBalanceAsync(Guid id, Guid customerId, decimal amount, DateTime transactionDate, CancellationToken cancellationToken);
         Task<List<AccountResponse>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken);
     }
 }
