@@ -69,9 +69,6 @@ public class ApiDbContext : DbContext
 
             builder.HasKey(t => t.Id);
 
-            builder.Property(t => t.Description)
-                .HasMaxLength(250);
-
             builder.Property(t => t.Amount)
                 .IsRequired();
 

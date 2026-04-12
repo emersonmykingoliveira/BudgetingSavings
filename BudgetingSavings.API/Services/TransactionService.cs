@@ -19,7 +19,8 @@ namespace BudgetingSavings.API.Services
                     AccountId = request.AccountId,
                     Amount = request.Amount,
                     Currency = request.Currency,
-                    Description = request.Description,
+                    TransactionType = request.TransactionType,
+                    TransactionCategory = request.TransactionCategory,
                     TransactionDateTime = transactionDate
                 };
 

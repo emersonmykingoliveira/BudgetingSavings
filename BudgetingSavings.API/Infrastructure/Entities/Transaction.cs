@@ -7,7 +7,8 @@ namespace BudgetingSavings.API.Infrastructure.Entities
     {
         public Guid Id { get; set; }
         public DateTime TransactionDateTime { get; set; }
-        public string? Description { get; set; }
+        public TransactionType TransactionType { get; set; }
+        public TransactionCategory TransactionCategory { get; set; }
         public decimal Amount { get; set; }
         public CurrencyType Currency { get; set; }
         public Guid AccountId { get; set; }

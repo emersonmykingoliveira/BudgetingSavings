@@ -1,5 +1,6 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.Shared.Models.Enums;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +30,7 @@ namespace BudgetingSavings.API.Services
         {
             var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
 
-            if(budget is not null)
+            if (budget is not null)
             {
                 db.Budgets.Remove(budget);
                 await db.SaveChangesAsync(cancellationToken);
@@ -58,21 +59,29 @@ namespace BudgetingSavings.API.Services
         public async Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
-            
+
             var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
 
-            var transactions = await db.Transactions.Where(t => accounts.Select(a => a.Id).Contains(t.AccountId) && t.TransactionDateTime >= budget.StartTime && t.TransactionDateTime <= budget.EndTime).ToListAsync(cancellationToken);
+            var transactions = await FilterDebitTransactionsForBudget(accounts, budget, cancellationToken);
 
             var spentAmount = transactions.Where(t => t.Amount > 0).Sum(t => t.Amount);
 
             return MapBudgetStatusResponse(budget, spentAmount);
         }
 
+        private async Task<List<Transaction>> FilterDebitTransactionsForBudget(List<Account> accounts, Budget budget, CancellationToken cancellationToken)
+        {
+            return await db.Transactions.Where(t => accounts.Select(a => a.Id).Contains(t.AccountId) 
+                                            && t.TransactionDateTime >= budget.StartTime
+                                            && t.TransactionDateTime <= budget.EndTime
+                                            && t.TransactionType == TransactionType.Debit).ToListAsync(cancellationToken);
+        }
+
         public async Task<BudgetResponse> UpdateBudgetAsync(Guid id, Guid customerId, UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
             var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
 
-            if(budget is not null)
+            if (budget is not null)
             {
                 budget.StartTime = request.StartTime;
                 budget.EndTime = request.EndTime;
@@ -87,7 +96,7 @@ namespace BudgetingSavings.API.Services
 
         private BudgetResponse MapBudgetResponse(Budget? budget)
         {
-            if(budget is null) return new BudgetResponse();
+            if (budget is null) return new BudgetResponse();
 
             return new BudgetResponse
             {

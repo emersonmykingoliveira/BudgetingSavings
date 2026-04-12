@@ -1,8 +1,10 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.Shared.Models.Enums;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Immutable;
 
 namespace BudgetingSavings.API.Services
 {
@@ -15,7 +17,7 @@ namespace BudgetingSavings.API.Services
                 Id = Guid.NewGuid(),
                 Name = request.Name,
                 TargetAmount = request.TargetAmount,
-                StartDate = DateTime.Now,    
+                StartDate = DateTime.Now,
                 TargetDate = request.TargetDate,
                 CustomerId = request.CustomerId
             };
@@ -73,10 +75,25 @@ namespace BudgetingSavings.API.Services
             return MapSavingGoalResponse(savingGoal);
         }
 
-        public Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var savingGoal = GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
+            var savingGoal = await GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
 
+            var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+
+            var transactions = await FilterCreditTransactionsForSaving(savingGoal, accounts, cancellationToken);
+
+            return MapSavingGoalStatusResponse(savingGoal, transactions);
+        }
+
+        private async Task<List<Transaction>> FilterCreditTransactionsForSaving(SavingGoal savingGoal, List<Account> accounts, CancellationToken cancellationToken)
+        {
+            return await db.Transactions
+                        .Where(t => accounts.Select(a => a.Id).Contains(t.AccountId)
+                        && t.TransactionDateTime >= savingGoal.StartDate
+                        && t.TransactionDateTime <= savingGoal.TargetDate
+                        && t.TransactionType == TransactionType.Credit
+                        && t.TransactionCategory == TransactionCategory.Savings).ToListAsync(cancellationToken);
         }
 
         public SavingGoalResponse MapSavingGoalResponse(SavingGoal? savingGoal)
@@ -92,6 +109,33 @@ namespace BudgetingSavings.API.Services
                 TargetDate = savingGoal.TargetDate,
                 CustomerId = savingGoal.CustomerId
             };
+        }
+
+        private SavingGoalStatusResponse MapSavingGoalStatusResponse(SavingGoal savingGoal, List<Transaction> transactions)
+        {
+            var savedAmount = transactions.Sum(t => t.Amount);
+
+            return new SavingGoalStatusResponse
+            {
+                Id = savingGoal.Id,
+                Name = savingGoal.Name,
+                SavedAmount = savedAmount,
+                TargetAmount = savingGoal.TargetAmount,
+                CustomerId= savingGoal.CustomerId,
+                RemainingAmount = savingGoal.TargetAmount - savedAmount,
+                ProgressPercentage = savingGoal.TargetAmount > 0 ? (savedAmount / savingGoal.TargetAmount) * 100 : 0,
+                StartDate = savingGoal.StartDate,
+                TargetDate = savingGoal.TargetDate,
+                Status = DefineSavingGoalStatus(savingGoal, savedAmount),
+                DaysRemaining = (savingGoal.TargetDate - DateTime.Now).Days
+            };
+        }
+
+        private SavingGoalStatus DefineSavingGoalStatus(SavingGoal savingGoal, decimal savedAmount)
+        {
+            return savingGoal.TargetDate < DateTime.Now
+                ? (savedAmount >= savingGoal.TargetAmount ? SavingGoalStatus.Completed : SavingGoalStatus.Failed)
+                : (savedAmount > 0 ? SavingGoalStatus.InProgress : SavingGoalStatus.NotStarted);
         }
     }
 }
