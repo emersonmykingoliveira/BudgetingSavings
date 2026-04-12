@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingSavings.API.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20260412184019_InitialMigration")]
+    [Migration("20260412192950_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -159,12 +159,14 @@ namespace BudgetingSavings.API.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("TransactionCategory")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("TransactionDateTime")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

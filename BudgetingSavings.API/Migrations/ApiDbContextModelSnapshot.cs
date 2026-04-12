@@ -156,12 +156,14 @@ namespace BudgetingSavings.API.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(250)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("TransactionCategory")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("TransactionDateTime")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

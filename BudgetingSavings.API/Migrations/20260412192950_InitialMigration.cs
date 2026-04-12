@@ -100,7 +100,8 @@ namespace BudgetingSavings.API.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     TransactionDateTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 250, nullable: true),
+                    TransactionType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TransactionCategory = table.Column<int>(type: "INTEGER", nullable: false),
                     Amount = table.Column<decimal>(type: "TEXT", nullable: false),
                     Currency = table.Column<int>(type: "INTEGER", maxLength: 10, nullable: false),
                     AccountId = table.Column<Guid>(type: "TEXT", nullable: false)
