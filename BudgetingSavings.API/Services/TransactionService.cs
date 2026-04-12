@@ -1,13 +1,14 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.Shared.Models.Requests;
+using BudgetingSavings.Shared.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
     public class TransactionService(ApiDbContext db, IAccountService accountsService) : ITransactionService
     {
-        public async Task<Transaction> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
             var transactionDate = DateTime.Now;
 
@@ -28,7 +29,7 @@ namespace BudgetingSavings.API.Services
                 await db.SaveChangesAsync(cancellationToken);
                 await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.CustomerId, request.Amount, transactionDate, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
-                return transaction;
+                return MapTransactionResponse(transaction);
             }
             catch (Exception)
             {
@@ -37,14 +38,36 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        public async Task<List<Transaction>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
+        public async Task<List<TransactionResponse>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
         {
-            return await db.Transactions.Where(s => s.AccountId == accountId).ToListAsync(cancellationToken);
+            var transactions = await db.Transactions.Where(s => s.AccountId == accountId).ToListAsync(cancellationToken);
+            return transactions.Select(MapTransactionResponse).ToList();
         }
 
-        public async Task<Transaction> GetTransactionAsync(Guid id, Guid accountId, CancellationToken cancellationToken)
+        public async Task<TransactionResponse> GetTransactionAsync(Guid id, Guid accountId, CancellationToken cancellationToken)
+        {
+            var transaction = await GetSpecificTransactionAsync(id, accountId, cancellationToken);
+            return MapTransactionResponse(transaction);
+        }
+
+        private async Task<Transaction> GetSpecificTransactionAsync(Guid id, Guid accountId, CancellationToken cancellationToken)
         {
             return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id && s.AccountId == accountId, cancellationToken) ?? new Transaction();
+        }
+
+        private TransactionResponse MapTransactionResponse(Transaction? transaction)
+        {
+            if (transaction is null) return new TransactionResponse();
+            return new TransactionResponse
+            {
+                Id = transaction.Id,
+                AccountId = transaction.AccountId,
+                Amount = transaction.Amount,
+                Currency = transaction.Currency,
+                TransactionType = transaction.TransactionType,
+                TransactionCategory = transaction.TransactionCategory,
+                TransactionDateTime = transaction.TransactionDateTime
+            };
         }
     }
 }

@@ -96,7 +96,7 @@ namespace BudgetingSavings.API.Services
                         && t.TransactionCategory == TransactionCategory.Savings).ToListAsync(cancellationToken);
         }
 
-        public SavingGoalResponse MapSavingGoalResponse(SavingGoal? savingGoal)
+        private SavingGoalResponse MapSavingGoalResponse(SavingGoal? savingGoal)
         {
             if (savingGoal is null) return new SavingGoalResponse();
 
