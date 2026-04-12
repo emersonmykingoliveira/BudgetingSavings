@@ -51,6 +51,28 @@ namespace BudgetingSavings.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Budgets",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EndTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LimitAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Currency = table.Column<int>(type: "INTEGER", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Budgets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Budgets_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SavingGoals",
                 columns: table => new
                 {
@@ -77,7 +99,7 @@ namespace BudgetingSavings.API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    TransactionDateTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 250, nullable: true),
                     Amount = table.Column<decimal>(type: "TEXT", nullable: false),
                     Currency = table.Column<int>(type: "INTEGER", maxLength: 10, nullable: false),
@@ -100,6 +122,11 @@ namespace BudgetingSavings.API.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Budgets_CustomerId",
+                table: "Budgets",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SavingGoals_CustomerId",
                 table: "SavingGoals",
                 column: "CustomerId");
@@ -113,6 +140,9 @@ namespace BudgetingSavings.API.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Budgets");
+
             migrationBuilder.DropTable(
                 name: "SavingGoals");
 

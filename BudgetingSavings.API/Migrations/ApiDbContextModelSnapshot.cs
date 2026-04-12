@@ -55,6 +55,34 @@ namespace BudgetingSavings.API.Migrations
                     b.ToTable("Accounts", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Budget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("LimitAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Budgets", (string)null);
+                });
+
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -128,11 +156,11 @@ namespace BudgetingSavings.API.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("TransactionDateTime")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -146,6 +174,17 @@ namespace BudgetingSavings.API.Migrations
                 {
                     b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Customer", "Customer")
                         .WithMany("Accounts")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Budget", b =>
+                {
+                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Customer", "Customer")
+                        .WithMany("Budgets")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -183,6 +222,8 @@ namespace BudgetingSavings.API.Migrations
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Customer", b =>
                 {
                     b.Navigation("Accounts");
+
+                    b.Navigation("Budgets");
 
                     b.Navigation("SavingGoals");
                 });
