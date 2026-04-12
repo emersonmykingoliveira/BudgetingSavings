@@ -45,10 +45,10 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpPut("{id}/customer/{customerId}")]
-        public async Task<IActionResult> UpdateSavingGoal(Guid id, Guid customerId, [FromBody] UpdateBudgetRequest request)
+        public async Task<IActionResult> UpdateBudget(Guid id, Guid customerId, [FromBody] UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.UpdateBudgetAsync(id, customerId, request, CancellationToken.None);
-            return Ok(savingGoal);
+            var budget = await service.UpdateBudgetAsync(id, customerId, request, cancellationToken);
+            return Ok(budget);
         }
     }
 }

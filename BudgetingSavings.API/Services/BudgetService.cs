@@ -52,7 +52,7 @@ namespace BudgetingSavings.API.Services
 
         public async Task<List<BudgetResponse>> GetBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            var budgets = await db.Budgets.Where(b => b.CustomerId == customerId).ToListAsync();
+            var budgets = await db.Budgets.Where(b => b.CustomerId == customerId).ToListAsync(cancellationToken);
             return budgets.Select(b => MapBudgetResponse(b)).ToList();
         }
 
