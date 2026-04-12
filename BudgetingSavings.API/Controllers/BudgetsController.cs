@@ -1,4 +1,5 @@
-﻿using BudgetingSavings.API.Services;
+﻿using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.API.Services;
 using BudgetingSavings.Shared.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,10 +16,10 @@ namespace BudgetingSavings.API.Controllers
             return Ok(budget);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetBudget(Guid id, CancellationToken cancellationToken)
+        [HttpGet("{id}/customer/{customerId}")]
+        public async Task<IActionResult> GetBudget(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var budget = await service.GetBudgetsAsync(id, cancellationToken);
+            var budget = await service.GetBudgetAsync(customerId, id, cancellationToken);
             return Ok(budget);
         }
 
@@ -36,10 +37,10 @@ namespace BudgetingSavings.API.Controllers
             return NoContent();
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSavingGoal(Guid id, [FromBody] UpdateBudgetRequest request)
+        [HttpPut("{id}/customer/{customerId}")]
+        public async Task<IActionResult> UpdateSavingGoal(Guid id, Guid customerId, [FromBody] UpdateBudgetRequest request)
         {
-            var savingGoal = await service.UpdateBudgetAsync(id, request, CancellationToken.None);
+            var savingGoal = await service.UpdateBudgetAsync(id, customerId, request, CancellationToken.None);
             return Ok(savingGoal);
         }
     }

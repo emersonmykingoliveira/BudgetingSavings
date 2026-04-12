@@ -60,9 +60,9 @@ namespace BudgetingSavings.API.Services
             throw new NotImplementedException();
         }
 
-        public async Task<BudgetResponse> UpdateBudgetAsync(Guid id, UpdateBudgetRequest request, CancellationToken cancellationToken)
+        public async Task<BudgetResponse> UpdateBudgetAsync(Guid id, Guid customerId, UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(request.CustomerId, id, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(customerId, id, cancellationToken);
 
             if(budget is not null)
             {
