@@ -62,6 +62,7 @@ namespace BudgetingSavings.API.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Currency")
+                        .HasMaxLength(10)
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CustomerId")
@@ -157,12 +158,14 @@ namespace BudgetingSavings.API.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("TransactionCategory")
+                        .HasMaxLength(50)
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("TransactionDateTime")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("TransactionType")
+                        .HasMaxLength(50)
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

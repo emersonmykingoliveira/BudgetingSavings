@@ -58,7 +58,7 @@ namespace BudgetingSavings.API.Migrations
                     StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EndTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LimitAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Currency = table.Column<int>(type: "INTEGER", nullable: false),
+                    Currency = table.Column<int>(type: "INTEGER", maxLength: 10, nullable: false),
                     CustomerId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -100,8 +100,8 @@ namespace BudgetingSavings.API.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     TransactionDateTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    TransactionType = table.Column<int>(type: "INTEGER", nullable: false),
-                    TransactionCategory = table.Column<int>(type: "INTEGER", nullable: false),
+                    TransactionType = table.Column<int>(type: "INTEGER", maxLength: 50, nullable: false),
+                    TransactionCategory = table.Column<int>(type: "INTEGER", maxLength: 50, nullable: false),
                     Amount = table.Column<decimal>(type: "TEXT", nullable: false),
                     Currency = table.Column<int>(type: "INTEGER", maxLength: 10, nullable: false),
                     AccountId = table.Column<Guid>(type: "TEXT", nullable: false)

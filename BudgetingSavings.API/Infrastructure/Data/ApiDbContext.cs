@@ -35,6 +35,9 @@ public class ApiDbContext : DbContext
 
             builder.Property(c => c.PhoneNumber)
                 .HasMaxLength(20);
+
+            builder.Property(c => c.DateOfBirth)
+                .IsRequired();
         });
 
         modelBuilder.Entity<Account>(builder =>
@@ -57,6 +60,11 @@ public class ApiDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(10);
 
+            builder.Property(a => a.CreatedDate)
+                .IsRequired();
+
+            builder.Property(a => a.LastTransactionDate);
+
             builder.HasOne(a => a.Customer)
                 .WithMany(c => c.Accounts)
                 .HasForeignKey(a => a.CustomerId)
@@ -72,9 +80,20 @@ public class ApiDbContext : DbContext
             builder.Property(t => t.Amount)
                 .IsRequired();
 
+            builder.Property(t => t.TransactionType)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            builder.Property(t => t.TransactionCategory)
+                .IsRequired()
+                .HasMaxLength(50);
+
             builder.Property(t => t.Currency)
                 .IsRequired()
                 .HasMaxLength(10);
+
+            builder.Property(t => t.TransactionDateTime)
+                .IsRequired();
 
             builder.HasOne(t => t.Account)
                 .WithMany(a => a.Transactions)
@@ -96,6 +115,12 @@ public class ApiDbContext : DbContext
             builder.Property(s => s.TargetAmount)
                 .IsRequired();
 
+            builder.Property(s => s.StartDate)
+                .IsRequired();
+
+            builder.Property(s => s.TargetDate)
+                .IsRequired();
+
             builder.HasOne(s => s.Customer)
                 .WithMany(c => c.SavingGoals)
                 .HasForeignKey(s => s.CustomerId)
@@ -112,6 +137,13 @@ public class ApiDbContext : DbContext
                 .IsRequired();
 
             builder.Property(b => b.Currency)
+                .IsRequired()
+                .HasMaxLength(10);
+
+            builder.Property(b => b.StartTime)
+                .IsRequired();
+
+            builder.Property(b => b.EndTime)
                 .IsRequired();
 
             builder.HasOne(b => b.Customer)
