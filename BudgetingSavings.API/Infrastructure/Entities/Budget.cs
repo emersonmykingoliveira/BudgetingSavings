@@ -1,4 +1,4 @@
-﻿using BudgetingSavings.Shared.Models;
+﻿using BudgetingSavings.Shared.Models.Enums;
 
 namespace BudgetingSavings.API.Infrastructure.Entities
 {

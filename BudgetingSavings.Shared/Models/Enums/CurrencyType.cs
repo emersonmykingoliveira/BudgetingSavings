@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BudgetingSavings.Shared.Models
+namespace BudgetingSavings.Shared.Models.Enums
 {
     public enum CurrencyType
     {
-        NOK = 0,
-        USD = 1,
-        EUR = 2
+        NOK,
+        USD,
+        EUR
     }
 }

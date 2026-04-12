@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BudgetingSavings.Shared.Models
+namespace BudgetingSavings.Shared.Models.Enums
 {
     public enum AccountType
     {
-        Checking = 0,
-        Savings = 1
+        Checking,
+        Savings
     }
 }

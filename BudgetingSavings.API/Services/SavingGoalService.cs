@@ -75,7 +75,8 @@ namespace BudgetingSavings.API.Services
 
         public Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var savingGoal = GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
+
         }
 
         public SavingGoalResponse MapSavingGoalResponse(SavingGoal? savingGoal)

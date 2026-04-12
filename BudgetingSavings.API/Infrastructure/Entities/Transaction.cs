@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using BudgetingSavings.Shared.Models;
+using BudgetingSavings.Shared.Models.Enums;
 
 namespace BudgetingSavings.API.Infrastructure.Entities
 {
