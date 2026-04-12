@@ -153,6 +153,36 @@ public static class DbInitializer
             }
         );
 
+        dbContext.Budgets.AddRange(
+            new Budget
+            {
+                Id = Guid.NewGuid(),
+                StartTime = DateTime.Parse("2023-01-01"),
+                EndTime = DateTime.Parse("2023-12-31"),
+                LimitAmount = 5000.0m,
+                Currency = CurrencyType.NOK,
+                CustomerId = customer1
+            },
+            new Budget
+            {
+                Id = Guid.NewGuid(),
+                StartTime = DateTime.Parse("2023-01-01"),
+                EndTime = DateTime.Parse("2023-12-31"),
+                LimitAmount = 10000.0m,
+                Currency = CurrencyType.NOK,
+                CustomerId = customer2
+            },
+            new Budget
+            {
+                Id = Guid.NewGuid(),
+                StartTime = DateTime.Parse("2023-01-01"),
+                EndTime = DateTime.Parse("2023-12-31"),
+                LimitAmount = 3000.0m,
+                Currency = CurrencyType.NOK,
+                CustomerId = customer3
+            }
+        );
+
         dbContext.SaveChanges();
     }
 }
