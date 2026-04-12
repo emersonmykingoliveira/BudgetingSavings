@@ -1,13 +1,14 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.Shared.Models.Requests;
+using BudgetingSavings.Shared.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
     public class SavingGoalService(ApiDbContext db) : ISavingGoalService
     {
-        public async Task<SavingGoal> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<SavingGoalResponse> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
             var savingGoal = new SavingGoal
             {
@@ -22,12 +23,12 @@ namespace BudgetingSavings.API.Services
             await db.SavingGoals.AddAsync(savingGoal, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
 
-            return savingGoal;
+            return MapSavingGoalResponse(savingGoal);
         }
 
         public async Task DeleteSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(id, customerId, cancellationToken);
+            var savingGoal = await GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
 
             if (savingGoal is not null)
             {
@@ -38,19 +39,26 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<List<SavingGoal>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<List<SavingGoalResponse>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            return await db.SavingGoals.Where(s => s.CustomerId == customerId).ToListAsync(cancellationToken);
+            var savingGoals = await db.SavingGoals.Where(s => s.CustomerId == customerId).ToListAsync(cancellationToken);
+            return savingGoals.Select(s => MapSavingGoalResponse(s)).ToList();
         }
 
-        public async Task<SavingGoal> GetSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<SavingGoalResponse> GetSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        {
+            var savingGoal = await GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
+            return MapSavingGoalResponse(savingGoal);
+        }
+
+        private async Task<SavingGoal> GetSpecificSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
             return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new SavingGoal();
         }
 
-        public async Task<SavingGoal> UpdateSavingGoalAsync(Guid id, UpdateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<SavingGoalResponse> UpdateSavingGoalAsync(Guid id, UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSavingGoalAsync(id, request.CustomerId, cancellationToken);
+            var savingGoal = await GetSpecificSavingGoalAsync(id, request.CustomerId, cancellationToken);
 
             if (savingGoal is not null)
             {
@@ -62,7 +70,27 @@ namespace BudgetingSavings.API.Services
                 await db.SaveChangesAsync(cancellationToken);
             }
 
-            return savingGoal ?? new SavingGoal();
+            return MapSavingGoalResponse(savingGoal);
+        }
+
+        public Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SavingGoalResponse MapSavingGoalResponse(SavingGoal? savingGoal)
+        {
+            if (savingGoal is null) return new SavingGoalResponse();
+
+            return new SavingGoalResponse
+            {
+                Id = savingGoal.Id,
+                Name = savingGoal.Name,
+                TargetAmount = savingGoal.TargetAmount,
+                StartDate = savingGoal.StartDate,
+                TargetDate = savingGoal.TargetDate,
+                CustomerId = savingGoal.CustomerId
+            };
         }
     }
 }

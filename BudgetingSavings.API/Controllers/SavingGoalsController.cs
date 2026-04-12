@@ -23,6 +23,14 @@ namespace BudgetingSavings.API.Controllers
             return Ok(savingGoal);
         }
 
+
+        [HttpGet("{id}/customer/{customerId}/Status")]
+        public async Task<IActionResult> GetSavingGoalStatus(Guid id, Guid customerId, CancellationToken cancellationToken)
+        {
+            var savingGoalStatus = await service.GetSavingGoalStatusAsync(id, customerId, cancellationToken);
+            return Ok(savingGoalStatus);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateSavingGoal([FromBody] CreateSavingGoalRequest request)
         {
