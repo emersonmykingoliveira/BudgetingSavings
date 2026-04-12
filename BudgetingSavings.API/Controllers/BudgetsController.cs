@@ -8,6 +8,13 @@ namespace BudgetingSavings.API.Controllers
     [Route("api/[controller]")]
     public class BudgetsController(IBudgetService service) : ControllerBase
     {
+        [HttpGet("customer/{customerId}")]
+        public async Task<IActionResult> GetBudgets(Guid customerId, CancellationToken cancellationToken)
+        {
+            var budget = await service.GetBudgetsAsync(customerId, cancellationToken);
+            return Ok(budget);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBudget(Guid id, CancellationToken cancellationToken)
         {
