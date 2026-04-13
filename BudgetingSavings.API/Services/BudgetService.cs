@@ -50,7 +50,7 @@ namespace BudgetingSavings.API.Services
             return await db.Budgets.FirstOrDefaultAsync(b => b.CustomerId == customerId && b.Id == id, cancellationToken) ?? new Budget();
         }
 
-        public async Task<List<BudgetResponse>> GetBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<List<BudgetResponse>> GetAllBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var budgets = await db.Budgets.Where(b => b.CustomerId == customerId).ToListAsync(cancellationToken);
             return budgets.Select(b => MapBudgetResponse(b)).ToList();

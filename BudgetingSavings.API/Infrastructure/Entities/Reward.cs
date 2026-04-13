@@ -1,0 +1,12 @@
+﻿namespace BudgetingSavings.API.Infrastructure.Entities
+{
+    public class Reward
+    {
+        public Guid Id { get; set; }
+        public DateTime Date { get; set; }
+        public int Points { get; set; }
+        public bool Redeemed { get; set; }
+        public decimal CashBack { get; set; }
+        public DateTime RedeemedDate { get; set; }
+    }
+}
