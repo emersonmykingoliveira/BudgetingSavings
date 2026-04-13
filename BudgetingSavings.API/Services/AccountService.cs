@@ -96,7 +96,7 @@ namespace BudgetingSavings.API.Services
             var account = await GetSpecificAccountAsync(id, cancellationToken);
 
             if (amount == 0)
-                throw new ArgumentException("Amount must be different from zero.");
+                throw new ArgumentException("Amount must be different than zero.");
 
             if (account.Balance + amount < 0)
                 throw new ArgumentException("Insufficient balance.");

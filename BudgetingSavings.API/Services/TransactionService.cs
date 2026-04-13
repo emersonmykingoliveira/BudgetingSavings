@@ -25,7 +25,7 @@ namespace BudgetingSavings.API.Services
                 {
                     AccountId = request.AccountId,
                     CustomerId = request.CustomerId,
-                    Amount = request.Amount,
+                    Amount = request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount,
                     Currency = request.Currency,
                     TransactionType = request.TransactionType,
                     TransactionCategory = request.TransactionCategory,
@@ -34,7 +34,9 @@ namespace BudgetingSavings.API.Services
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
-                await accountService.UpdateAccountBalanceAsync(request.AccountId, request.Amount, cancellationToken);
+                await accountService.UpdateAccountBalanceAsync(request.AccountId,
+                                                                request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount, 
+                                                                cancellationToken);
                 await HandleRewardAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return MapTransactionResponse(transaction);
