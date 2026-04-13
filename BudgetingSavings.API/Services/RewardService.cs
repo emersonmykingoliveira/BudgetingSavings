@@ -20,27 +20,62 @@ namespace BudgetingSavings.API.Services
             return MapRewardResponse(reward);
         }
 
-        public Task<RewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<RedeemRewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            //Get all rewards that are not redeemed
-            var rewards = db.Rewards.Where(s => s.CustomerId == customerId && !s.Redeemed).ToList();
+            using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-            decimal cashBackTotal = 0;
+            try
+            {
+                var rewards = await db.Rewards
+                    .Where(s => s.CustomerId == customerId && !s.Redeemed)
+                    .ToListAsync(cancellationToken);
 
+                decimal cashBackTotal = await CashbackRewardsAsync(rewards, cancellationToken);
+
+                var account = await db.Accounts
+                    .FirstOrDefaultAsync(s => s.CustomerId == customerId, cancellationToken);
+
+                if (account is not null)
+                {
+                    account.Balance += cashBackTotal;
+                    db.Accounts.Update(account);
+                    await db.SaveChangesAsync(cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return MapRedeemRewardResponse(rewards, account);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        }
+
+        private RedeemRewardResponse MapRedeemRewardResponse(List<Reward> rewards, Account? account)
+        {
+            return new RedeemRewardResponse
+            {
+                CashBack = rewards.Sum(s => s.CashBack),
+                UpdatedAccountBalance = account?.Balance ?? 0m,
+                RedeemedPoints = rewards.Sum(s => s.Points),
+                AccountId = account?.Id ?? Guid.Empty,
+                CustomerId = account?.CustomerId ?? Guid.Empty 
+            };
+        }
+
+        private async Task<decimal> CashbackRewardsAsync(List<Reward> rewards, CancellationToken cancellationToken)
+        {
             foreach (var reward in rewards)
             {
                 reward.CashBack = reward.Points * 0.01m;
-                db.Rewards.Update(reward);
-                db.SaveChangesAsync(cancellationToken);
                 reward.RedeemedDate = DateTime.Now;
                 reward.Redeemed = true;
-                cashBackTotal += reward.CashBack;
+                db.Rewards.Update(reward);
+                await db.SaveChangesAsync(cancellationToken);
             }
-            //Calculate cash back and points
 
-
-            //Update account balance with cash back
-
+            return rewards.Sum(s => s.CashBack);
         }
 
         private RewardResponse MapRewardResponse(Reward? reward)

@@ -6,6 +6,6 @@ namespace BudgetingSavings.API.Interfaces
     {
         Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken);
         Task<RewardResponse> GetRewardAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
-        Task<RewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken);
+        Task<RedeemRewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken);
     }
 }
