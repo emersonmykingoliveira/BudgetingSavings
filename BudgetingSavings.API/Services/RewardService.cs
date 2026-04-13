@@ -82,7 +82,7 @@ namespace BudgetingSavings.API.Services
 
             var cashBackFactor = config.GetValue<decimal>("RewardCashBackFactor");
             reward.CashBack = reward.Points * cashBackFactor;
-            reward.RedeemedDate = DateTime.Now;
+            reward.RedeemedDate = DateTime.UtcNow;
             reward.Redeemed = true;
             db.Rewards.Update(reward);
             await db.SaveChangesAsync(cancellationToken);
@@ -112,37 +112,64 @@ namespace BudgetingSavings.API.Services
 
             if (points == 0) return;
 
-            var existingReward = await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == request.CustomerId && !s.Redeemed, cancellationToken);
-
-            if (existingReward is not null)
+            using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            try
             {
-                var originalPoints = existingReward.Points;
+                var existingReward = await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == request.CustomerId && !s.Redeemed, cancellationToken);
 
-                if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
-                    existingReward.Points += points;
-
-                else if (request.TransactionType == TransactionType.Debit)
-                    existingReward.Points -= points;
-
-                if (existingReward.Points != originalPoints)
+                if (existingReward is not null)
                 {
-                    db.Rewards.Update(existingReward);
+                    var originalPoints = existingReward.Points;
+
+                    if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+                    {
+                        // Gamification: Bonus for first saving of the month
+                        var account = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId, cancellationToken);
+                        bool firstSavingOfMonth = account != null && !await db.Transactions.AnyAsync(t => 
+                            t.AccountId == account.Id &&
+                            t.TransactionDateTime.Month == DateTime.UtcNow.Month &&
+                            t.TransactionDateTime.Year == DateTime.UtcNow.Year &&
+                            t.TransactionCategory == TransactionCategory.Savings, cancellationToken);
+
+                        if (firstSavingOfMonth)
+                        {
+                            points += 50; // Bonus points
+                        }
+
+                        existingReward.Points += points;
+                    }
+                    else if (request.TransactionType == TransactionType.Debit)
+                    {
+                        existingReward.Points = Math.Max(0, existingReward.Points - points);
+                    }
+
+                    if (existingReward.Points != originalPoints)
+                    {
+                        db.Rewards.Update(existingReward);
+                        await db.SaveChangesAsync(cancellationToken);
+                    }
+                }
+                else if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+                {
+                    var newReward = new Reward
+                    {
+                        Id = Guid.NewGuid(),
+                        CustomerId = request.CustomerId,
+                        Points = points + 100, // Welcome bonus for first ever saving!
+                        Date = DateTime.UtcNow,
+                        Redeemed = false
+                    };
+
+                    db.Rewards.Add(newReward);
                     await db.SaveChangesAsync(cancellationToken);
                 }
-            }
-            else if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
-            {
-                var newReward = new Reward
-                {
-                    Id = Guid.NewGuid(),
-                    CustomerId = request.CustomerId,
-                    Points = points,
-                    Date = DateTime.Now,
-                    Redeemed = false
-                };
 
-                db.Rewards.Add(newReward);
-                await db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
             }
         }
     }

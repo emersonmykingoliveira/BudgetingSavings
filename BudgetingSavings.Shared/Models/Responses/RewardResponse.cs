@@ -11,7 +11,7 @@ namespace BudgetingSavings.Shared.Models.Responses
         public int Points { get; set; }
         public bool Redeemed { get; set; }
         public decimal CashBack { get; set; }
-        public DateTime RedeemedDate { get; set; }
+        public DateTime? RedeemedDate { get; set; }
         public Guid CustomerId { get; set; }
     }
 }
