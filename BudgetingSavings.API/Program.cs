@@ -5,6 +5,7 @@ using BudgetingSavings.API.Middleware;
 using BudgetingSavings.API.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +28,16 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IRewardService, RewardService>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 
