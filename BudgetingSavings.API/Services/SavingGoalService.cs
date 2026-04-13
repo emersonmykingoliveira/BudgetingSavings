@@ -3,15 +3,19 @@ using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.Shared.Models.Enums;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 
 namespace BudgetingSavings.API.Services
 {
-    public class SavingGoalService(ApiDbContext db) : ISavingGoalService
+    public class SavingGoalService(ApiDbContext db, IValidator<CreateSavingGoalRequest> validator) : ISavingGoalService
     {
         public async Task<SavingGoalResponse> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
+            await validator.ValidateAndThrowAsync(request, cancellationToken);
+
             var savingGoal = new SavingGoal
             {
                 Id = Guid.NewGuid(),

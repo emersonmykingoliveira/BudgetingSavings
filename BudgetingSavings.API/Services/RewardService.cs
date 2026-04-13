@@ -4,11 +4,16 @@ using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.Shared.Models.Enums;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace BudgetingSavings.API.Services
 {
-    public class RewardService(ApiDbContext db, IAccountService accountsService, IConfiguration config) : IRewardService
+    public class RewardService(ApiDbContext db, 
+                               IAccountService accountsService, 
+                               IConfiguration config,
+                               IValidator<CreateRewardRequest> validator) : IRewardService
     {
         public async Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
         {
@@ -100,6 +105,8 @@ namespace BudgetingSavings.API.Services
 
         public async Task RewardHandlerAsync(CreateRewardRequest request, CancellationToken cancellationToken)
         {
+            await validator.ValidateAndThrowAsync(request, cancellationToken);
+
             var pointsFactor = config.GetValue<decimal>("RewardPointsFactor");
             var points = (int)(request.Amount * pointsFactor);
 

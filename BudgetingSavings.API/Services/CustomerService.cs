@@ -3,14 +3,18 @@ using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace BudgetingSavings.API.Services
 {
-    public class CustomerService(ApiDbContext db) : ICustomerService
+    public class CustomerService(ApiDbContext db, IValidator<CreateCustomerRequest> validator) : ICustomerService
     {
         public async Task<CustomerResponse> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken)
         {
+            await validator.ValidateAndThrowAsync(request, cancellationToken);
+
             var customer = new Customer
             {
                 Id = Guid.NewGuid(),

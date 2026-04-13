@@ -15,10 +15,7 @@ namespace BudgetingSavings.API.Services
     {
         public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
-            var result = await validator.ValidateAsync(request, cancellationToken);
-
-            if (!result.IsValid)
-                throw new ValidationException(result.Errors);
+            await validator.ValidateAndThrowAsync(request, cancellationToken);
 
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try

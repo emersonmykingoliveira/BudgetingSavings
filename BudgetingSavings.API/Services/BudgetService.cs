@@ -3,14 +3,18 @@ using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.Shared.Models.Enums;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace BudgetingSavings.API.Services
 {
-    public class BudgetService(ApiDbContext db) : IBudgetService
+    public class BudgetService(ApiDbContext db, IValidator<CreateBudgetRequest> validator) : IBudgetService
     {
         public async Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
         {
+            await validator.ValidateAndThrowAsync(request, cancellationToken);
+
             var budget = new Budget
             {
                 Id = Guid.NewGuid(),

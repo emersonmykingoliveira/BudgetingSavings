@@ -2,15 +2,19 @@
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace BudgetingSavings.API.Services
 {
-    public class AccountService(ApiDbContext db) : IAccountService
+    public class AccountService(ApiDbContext db, IValidator<CreateAccountRequest> validator) : IAccountService
     {
         public async Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken)
         {
+            await validator.ValidateAndThrowAsync(request, cancellationToken);
+
             var account = new Account
             {
                 Id = Guid.NewGuid(),
