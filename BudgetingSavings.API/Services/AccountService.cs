@@ -40,7 +40,6 @@ namespace BudgetingSavings.API.Services
                 db.Accounts.Remove(account);
                 await db.SaveChangesAsync(cancellationToken);
             }
-            //todo: handle not found case
         }
 
         public async Task<AccountResponse> GetAccountByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -77,8 +76,6 @@ namespace BudgetingSavings.API.Services
                 db.Accounts.Update(account);
                 await db.SaveChangesAsync(cancellationToken);
             }
-
-            //TODO: Handle case when account is not found (e.g., throw an exception or return a result indicating failure)
         }
 
         private async Task<string> GenerateUniqueAccountNumberAsync(CancellationToken cancellationToken)

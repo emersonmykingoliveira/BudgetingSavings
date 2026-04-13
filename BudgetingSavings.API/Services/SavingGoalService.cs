@@ -43,8 +43,6 @@ namespace BudgetingSavings.API.Services
                 db.SavingGoals.Remove(savingGoal);
                 await db.SaveChangesAsync(cancellationToken);
             }
-
-            //todo: handle not found case
         }
 
         public async Task<List<SavingGoalResponse>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)

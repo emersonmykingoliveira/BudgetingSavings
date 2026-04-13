@@ -40,7 +40,6 @@ namespace BudgetingSavings.API.Services
                 db.Customers.Remove(customer);
                 await db.SaveChangesAsync(cancellationToken);
             }
-            //todo: handle not found case
         }
 
         public async Task<List<CustomerResponse>> GetAllCustomersAsync(CancellationToken cancellationToken)

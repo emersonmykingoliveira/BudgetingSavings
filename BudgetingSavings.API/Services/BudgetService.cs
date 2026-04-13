@@ -41,8 +41,6 @@ namespace BudgetingSavings.API.Services
                 db.Budgets.Remove(budget);
                 await db.SaveChangesAsync(cancellationToken);
             }
-
-            //todo: handle not found case
         }
 
         public async Task<BudgetResponse> GetBudgetByIdAsync(Guid id, CancellationToken cancellationToken)
