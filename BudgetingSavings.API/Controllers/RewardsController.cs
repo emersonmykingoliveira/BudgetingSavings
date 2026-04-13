@@ -18,15 +18,15 @@ namespace BudgetingSavings.API.Controllers
         [HttpGet("{id}/customer/{customerId}")]
         public async Task<IActionResult> GetReward(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var rewards = await service.GetRewardAsync(id, customerId, cancellationToken);
-            return Ok(rewards);
+            var reward = await service.GetRewardAsync(id, customerId, cancellationToken);
+            return Ok(reward);
         }
 
         [HttpPost]
         public async Task<IActionResult> RedeemReward([FromBody] RedeemRewardRequest request, CancellationToken cancellationToken)
         {
-            var rewards = await service.RedeemRewardAsync(request, cancellationToken);
-            return Ok(rewards);
+            var reward = await service.RedeemRewardAsync(request, cancellationToken);
+            return Ok(reward);
         }
     }
 }
