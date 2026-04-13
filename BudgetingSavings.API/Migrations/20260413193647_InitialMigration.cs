@@ -82,7 +82,7 @@ namespace BudgetingSavings.API.Migrations
                     Points = table.Column<int>(type: "INTEGER", nullable: false),
                     Redeemed = table.Column<bool>(type: "INTEGER", nullable: false),
                     CashBack = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    RedeemedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    RedeemedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CustomerId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -128,6 +128,7 @@ namespace BudgetingSavings.API.Migrations
                     TransactionCategory = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Currency = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
+                    CustomerId = table.Column<Guid>(type: "TEXT", nullable: false),
                     AccountId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -137,6 +138,12 @@ namespace BudgetingSavings.API.Migrations
                         name: "FK_Transactions_Accounts_AccountId",
                         column: x => x.AccountId,
                         principalTable: "Accounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Transactions_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -165,6 +172,11 @@ namespace BudgetingSavings.API.Migrations
                 name: "IX_Transactions_AccountId",
                 table: "Transactions",
                 column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_CustomerId",
+                table: "Transactions",
+                column: "CustomerId");
         }
 
         /// <inheritdoc />

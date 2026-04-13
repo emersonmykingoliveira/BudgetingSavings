@@ -138,7 +138,7 @@ namespace BudgetingSavings.API.Migrations
                     b.Property<bool>("Redeemed")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("RedeemedDate")
+                    b.Property<DateTime?>("RedeemedDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -195,6 +195,9 @@ namespace BudgetingSavings.API.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TransactionCategory")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -211,6 +214,8 @@ namespace BudgetingSavings.API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("Transactions", (string)null);
                 });
@@ -267,7 +272,15 @@ namespace BudgetingSavings.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Customer", "Customer")
+                        .WithMany("Transactions")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Account");
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Account", b =>
@@ -284,6 +297,8 @@ namespace BudgetingSavings.API.Migrations
                     b.Navigation("Rewards");
 
                     b.Navigation("SavingGoals");
+
+                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }
