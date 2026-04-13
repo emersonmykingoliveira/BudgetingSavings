@@ -22,7 +22,25 @@ namespace BudgetingSavings.API.Services
 
         public Task<RewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            //Get all rewards that are not redeemed
+            var rewards = db.Rewards.Where(s => s.CustomerId == customerId && !s.Redeemed).ToList();
+
+            decimal cashBackTotal = 0;
+
+            foreach (var reward in rewards)
+            {
+                reward.CashBack = reward.Points * 0.01m;
+                db.Rewards.Update(reward);
+                db.SaveChangesAsync(cancellationToken);
+                reward.RedeemedDate = DateTime.Now;
+                reward.Redeemed = true;
+                cashBackTotal += reward.CashBack;
+            }
+            //Calculate cash back and points
+
+
+            //Update account balance with cash back
+
         }
 
         private RewardResponse MapRewardResponse(Reward? reward)
