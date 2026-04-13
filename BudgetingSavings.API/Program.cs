@@ -1,6 +1,7 @@
 using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.API.Interfaces;
+using BudgetingSavings.API.Middleware;
 using BudgetingSavings.API.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,7 @@ using (var scope = app.Services.CreateScope())
     DbInitializer.Initialize(dbContext);
 }
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();

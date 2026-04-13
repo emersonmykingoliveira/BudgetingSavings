@@ -16,10 +16,6 @@ public class CreateTransactionRequestValidator : AbstractValidator<CreateTransac
         RuleFor(x => x.Amount)
             .GreaterThan(0);
 
-        RuleFor(x => x.Description)
-            .NotEmpty()
-            .MaximumLength(200);
-
         RuleFor(x => x.TransactionType)
             .IsInEnum();
 

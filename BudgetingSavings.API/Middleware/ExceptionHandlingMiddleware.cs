@@ -1,6 +1,8 @@
-﻿using BudgetingSavings.API.Exceptions;
-using FluentValidation;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Text;
+using System.Text.Json;
 
 namespace BudgetingSavings.API.Middleware;
 
@@ -14,34 +16,33 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
         catch (ValidationException ex)
         {
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            await context.Response.WriteAsJsonAsync(new
-            {
-                error = "Validation failed",
-                details = ex.Errors.Select(e => new
-                {
-                    field = e.PropertyName,
-                    message = e.ErrorMessage
-                })
-            });
+            StringBuilder sb = new StringBuilder();
+            ex.Errors.ToList().ForEach(error => sb.AppendLine(error.ErrorMessage));
+
+            await CreateProblemDetails(context, HttpStatusCode.BadRequest, sb.ToString());
+
         }
         catch (ArgumentException ex)
         {
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            await context.Response.WriteAsJsonAsync(new
-            {
-                error = ex.Message
-            });
+            await CreateProblemDetails(context, HttpStatusCode.BadRequest, ex.Message);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex, "Unhandled exception");
-
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            await context.Response.WriteAsJsonAsync(new
-            {
-                error = "An unexpected error occurred."
-            });
+            await CreateProblemDetails(context, HttpStatusCode.InternalServerError, "An unexpected error occurred.");
         }
+    }
+
+    private async Task CreateProblemDetails(HttpContext context, HttpStatusCode httpStatusCode, string errorMessage)
+    {
+        context.Response.StatusCode = (int)httpStatusCode;
+        context.Response.ContentType = "application/json";
+
+        var problem = new ProblemDetails
+        {
+            Status = (int)httpStatusCode,
+            Detail = errorMessage
+        };
+
+        await context.Response.WriteAsJsonAsync(problem);
     }
 }
