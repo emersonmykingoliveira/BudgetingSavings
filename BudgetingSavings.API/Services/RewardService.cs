@@ -82,7 +82,7 @@ namespace BudgetingSavings.API.Services
 
             var cashBackFactor = config.GetValue<decimal>("RewardCashBackFactor");
             reward.CashBack = reward.Points * cashBackFactor;
-            reward.RedeemedDate = DateTime.UtcNow;
+            reward.RedeemedDate = DateTime.Now;
             reward.Redeemed = true;
             db.Rewards.Update(reward);
             await db.SaveChangesAsync(cancellationToken);
@@ -119,49 +119,11 @@ namespace BudgetingSavings.API.Services
 
                 if (existingReward is not null)
                 {
-                    var originalPoints = existingReward.Points;
-
-                    if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
-                    {
-                        // Gamification: Bonus for first saving of the month
-                        var account = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId, cancellationToken);
-                        bool firstSavingOfMonth = account != null && !await db.Transactions.AnyAsync(t => 
-                            t.AccountId == account.Id &&
-                            t.TransactionDateTime.Month == DateTime.UtcNow.Month &&
-                            t.TransactionDateTime.Year == DateTime.UtcNow.Year &&
-                            t.TransactionCategory == TransactionCategory.Savings, cancellationToken);
-
-                        if (firstSavingOfMonth)
-                        {
-                            points += 50; // Bonus points
-                        }
-
-                        existingReward.Points += points;
-                    }
-                    else if (request.TransactionType == TransactionType.Debit)
-                    {
-                        existingReward.Points = Math.Max(0, existingReward.Points - points);
-                    }
-
-                    if (existingReward.Points != originalPoints)
-                    {
-                        db.Rewards.Update(existingReward);
-                        await db.SaveChangesAsync(cancellationToken);
-                    }
+                    await HandleExistingRewardAsync(existingReward, points, request, cancellationToken);
                 }
                 else if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
                 {
-                    var newReward = new Reward
-                    {
-                        Id = Guid.NewGuid(),
-                        CustomerId = request.CustomerId,
-                        Points = points + 100, // Welcome bonus for first ever saving!
-                        Date = DateTime.UtcNow,
-                        Redeemed = false
-                    };
-
-                    db.Rewards.Add(newReward);
-                    await db.SaveChangesAsync(cancellationToken);
+                    await HandleNewRewardAsync(points, request, cancellationToken);
                 }
 
                 await transaction.CommitAsync(cancellationToken);
@@ -171,6 +133,57 @@ namespace BudgetingSavings.API.Services
                 await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
+        }
+
+        private async Task HandleExistingRewardAsync(Reward existingReward, int points, CreateRewardRequest request, CancellationToken cancellationToken)
+        {
+            var originalPoints = existingReward.Points;
+
+            if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+            {
+                if (await IsFirstSavingOfMonthAsync(request.CustomerId, cancellationToken))
+                {
+                    points += 50;
+                }
+                existingReward.Points += points;
+            }
+            else if (request.TransactionType == TransactionType.Debit)
+            {
+                existingReward.Points = Math.Max(0, existingReward.Points - points);
+            }
+
+            if (existingReward.Points != originalPoints)
+            {
+                db.Rewards.Update(existingReward);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private async Task HandleNewRewardAsync(int points, CreateRewardRequest request, CancellationToken cancellationToken)
+        {
+            var newReward = new Reward
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = request.CustomerId,
+                Points = points + 100,
+                Date = DateTime.Now,
+                Redeemed = false
+            };
+
+            db.Rewards.Add(newReward);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task<bool> IsFirstSavingOfMonthAsync(Guid customerId, CancellationToken cancellationToken)
+        {
+            var account = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == customerId, cancellationToken);
+            if (account == null) return false;
+
+            return !await db.Transactions.AnyAsync(t =>
+                t.AccountId == account.Id &&
+                t.TransactionDateTime.Month == DateTime.Now.Month &&
+                t.TransactionDateTime.Year == DateTime.Now.Year &&
+                t.TransactionCategory == TransactionCategory.Savings, cancellationToken);
         }
     }
 }
