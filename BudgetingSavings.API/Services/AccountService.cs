@@ -27,9 +27,9 @@ namespace BudgetingSavings.API.Services
             return MapAccountResponse(account);
         }
 
-        public async Task DeleteAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task DeleteAccountAsync(Guid id, CancellationToken cancellationToken)
         {
-            var account = await GetSpecificAccountAsync(id, customerId, cancellationToken);
+            var account = await GetSpecificAccountAsync(id, cancellationToken);
 
             if (account is not null)
             {
@@ -39,15 +39,15 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<AccountResponse> GetAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<AccountResponse> GetAccountByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var account = await GetSpecificAccountAsync(id, customerId, cancellationToken);
+            var account = await GetSpecificAccountAsync(id, cancellationToken);
             return MapAccountResponse(account);
         }
 
-        private async Task<Account> GetSpecificAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        private async Task<Account> GetSpecificAccountAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new Account();
+            return await db.Accounts.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Account();
         }
 
         public async Task<List<AccountResponse>> GetAllAccountsAsync(CancellationToken cancellationToken)
@@ -62,9 +62,9 @@ namespace BudgetingSavings.API.Services
             return accounts.Select(MapAccountResponse).ToList();
         }
 
-        public async Task UpdateAccountBalanceAsync(Guid id, Guid customerId, decimal amount, CancellationToken cancellationToken)
+        public async Task UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken)
         {
-            var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken);
+            var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (account is not null)
             {

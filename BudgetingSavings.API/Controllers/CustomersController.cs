@@ -18,7 +18,7 @@ namespace BudgetingSavings.API.Controllers
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetCustomer(Guid id, CancellationToken cancellationToken)
         {
-            var customer = await service.GetCustomerAsync(id, cancellationToken);
+            var customer = await service.GetCustomerByIdAsync(id, cancellationToken);
             return Ok(customer);
         }
 

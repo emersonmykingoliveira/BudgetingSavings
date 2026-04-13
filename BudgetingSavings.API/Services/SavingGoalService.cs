@@ -28,9 +28,9 @@ namespace BudgetingSavings.API.Services
             return MapSavingGoalResponse(savingGoal);
         }
 
-        public async Task DeleteSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
+            var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
 
             if (savingGoal is not null)
             {
@@ -47,20 +47,20 @@ namespace BudgetingSavings.API.Services
             return savingGoals.Select(s => MapSavingGoalResponse(s)).ToList();
         }
 
-        public async Task<SavingGoalResponse> GetSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<SavingGoalResponse> GetSavingGoalByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
+            var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
             return MapSavingGoalResponse(savingGoal);
         }
 
-        private async Task<SavingGoal> GetSpecificSavingGoalAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        private async Task<SavingGoal> GetSpecificSavingGoalAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken) ?? new SavingGoal();
+            return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new SavingGoal();
         }
 
-        public async Task<SavingGoalResponse> UpdateSavingGoalAsync(Guid id, UpdateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<SavingGoalResponse> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSpecificSavingGoalAsync(id, request.CustomerId, cancellationToken);
+            var savingGoal = await GetSpecificSavingGoalAsync(request.Id, cancellationToken);
 
             if (savingGoal is not null)
             {
@@ -75,11 +75,11 @@ namespace BudgetingSavings.API.Services
             return MapSavingGoalResponse(savingGoal);
         }
 
-        public async Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await GetSpecificSavingGoalAsync(id, customerId, cancellationToken);
+            var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
 
-            var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+            var accounts = await db.Accounts.Where(a => a.CustomerId == savingGoal.CustomerId).ToListAsync(cancellationToken);
 
             var transactions = await FilterCreditTransactionsForSaving(savingGoal, accounts, cancellationToken);
 

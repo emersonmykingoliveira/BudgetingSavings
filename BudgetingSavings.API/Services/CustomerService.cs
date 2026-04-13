@@ -43,7 +43,7 @@ namespace BudgetingSavings.API.Services
             return customers.Select(MapCustomerResponse).ToList();
         }
 
-        public async Task<CustomerResponse> GetCustomerAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<CustomerResponse> GetCustomerByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var customer = await GetSpecificCustomerAsync(id, cancellationToken);
             return MapCustomerResponse(customer);
@@ -54,9 +54,9 @@ namespace BudgetingSavings.API.Services
             return await db.Customers.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Customer();
         }
 
-        public async Task<CustomerResponse> UpdateCustomerAsync(Guid id, UpdateCustomerRequest request, CancellationToken cancellationToken)
+        public async Task<CustomerResponse> UpdateCustomerAsync(UpdateCustomerRequest request, CancellationToken cancellationToken)
         {
-            var customer = await GetSpecificCustomerAsync(id, cancellationToken);
+            var customer = await GetSpecificCustomerAsync(request.Id, cancellationToken);
 
             if(customer is not null)
             {

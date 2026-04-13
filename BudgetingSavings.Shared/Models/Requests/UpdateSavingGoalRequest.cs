@@ -6,9 +6,10 @@ namespace BudgetingSavings.Shared.Models.Requests
 {
     public class UpdateSavingGoalRequest
     {
-        public Guid CustomerId { get; set; }
+        public Guid Id { get; set; }
         public string? Name { get; set; }
         public decimal TargetAmount { get; set; }
         public DateTime TargetDate { get; set; }
+        public Guid CustomerId { get; set; }
     }
 }

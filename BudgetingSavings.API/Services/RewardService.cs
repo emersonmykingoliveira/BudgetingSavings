@@ -16,15 +16,15 @@ namespace BudgetingSavings.API.Services
             return rewards.Select(MapRewardResponse).ToList();
         }
 
-        public async Task<RewardResponse> GetRewardAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<RewardResponse> GetRewardByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var reward = await GetActiveRewardAsync(id, customerId, cancellationToken);
+            var reward = await GetActiveRewardAsync(id, cancellationToken);
             return MapRewardResponse(reward);
         }
 
-        private async Task<Reward?> GetActiveRewardAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        private async Task<Reward?> GetActiveRewardAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.Rewards.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId && !s.Redeemed, cancellationToken);
+            return await db.Rewards.FirstOrDefaultAsync(s => s.Id == id && !s.Redeemed, cancellationToken);
         }
 
         public async Task<RedeemRewardResponse> RedeemRewardAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
@@ -47,7 +47,7 @@ namespace BudgetingSavings.API.Services
                 if(account is null)
                     throw new ArgumentException("Account not found for the customer.");
 
-                await accountsService.UpdateAccountBalanceAsync(account.Id, account.CustomerId, reward.CashBack, cancellationToken);
+                await accountsService.UpdateAccountBalanceAsync(account.Id, reward.CashBack, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
                 return MapRedeemRewardResponse(reward, account);

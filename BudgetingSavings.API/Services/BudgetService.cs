@@ -26,9 +26,9 @@ namespace BudgetingSavings.API.Services
             return MapBudgetResponse(budget);
         }
 
-        public async Task DeleteBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task DeleteBudgetAsync(Guid id, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(id, cancellationToken);
 
             if (budget is not null)
             {
@@ -39,15 +39,15 @@ namespace BudgetingSavings.API.Services
             //todo: handle not found case
         }
 
-        public async Task<BudgetResponse> GetBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<BudgetResponse> GetBudgetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(id, cancellationToken);
             return MapBudgetResponse(budget);
         }
 
-        public async Task<Budget> GetSpecificBudgetAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<Budget> GetSpecificBudgetAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.Budgets.FirstOrDefaultAsync(b => b.CustomerId == customerId && b.Id == id, cancellationToken) ?? new Budget();
+            return await db.Budgets.FirstOrDefaultAsync(b => b.Id == id, cancellationToken) ?? new Budget();
         }
 
         public async Task<List<BudgetResponse>> GetAllBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
@@ -56,11 +56,11 @@ namespace BudgetingSavings.API.Services
             return budgets.Select(b => MapBudgetResponse(b)).ToList();
         }
 
-        public async Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(id, cancellationToken);
 
-            var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+            var accounts = await db.Accounts.Where(a => a.CustomerId == budget.CustomerId).ToListAsync(cancellationToken);
 
             var transactions = await FilterDebitTransactionsForBudget(accounts, budget, cancellationToken);
 
@@ -77,9 +77,9 @@ namespace BudgetingSavings.API.Services
                                             && t.TransactionType == TransactionType.Debit).ToListAsync(cancellationToken);
         }
 
-        public async Task<BudgetResponse> UpdateBudgetAsync(Guid id, Guid customerId, UpdateBudgetRequest request, CancellationToken cancellationToken)
+        public async Task<BudgetResponse> UpdateBudgetAsync(UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
-            var budget = await GetSpecificBudgetAsync(id, customerId, cancellationToken);
+            var budget = await GetSpecificBudgetAsync(request.Id, cancellationToken);
 
             if (budget is not null)
             {

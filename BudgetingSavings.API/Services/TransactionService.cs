@@ -26,7 +26,7 @@ namespace BudgetingSavings.API.Services
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
-                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.CustomerId, request.Amount, cancellationToken);
+                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.Amount, cancellationToken);
                 await HandleRewardAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return MapTransactionResponse(transaction);
@@ -57,15 +57,15 @@ namespace BudgetingSavings.API.Services
             return transactions.Select(MapTransactionResponse).ToList();
         }
 
-        public async Task<TransactionResponse> GetTransactionAsync(Guid id, Guid accountId, CancellationToken cancellationToken)
+        public async Task<TransactionResponse> GetTransactionByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var transaction = await GetSpecificTransactionAsync(id, accountId, cancellationToken);
+            var transaction = await GetSpecificTransactionAsync(id, cancellationToken);
             return MapTransactionResponse(transaction);
         }
 
-        private async Task<Transaction> GetSpecificTransactionAsync(Guid id, Guid accountId, CancellationToken cancellationToken)
+        private async Task<Transaction> GetSpecificTransactionAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id && s.AccountId == accountId, cancellationToken) ?? new Transaction();
+            return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Transaction();
         }
 
         private TransactionResponse MapTransactionResponse(Transaction? transaction)
