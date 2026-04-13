@@ -16,31 +16,33 @@ namespace BudgetingSavings.API.Services
             return rewards.Select(MapRewardResponse).ToList();
         }
 
-        public async Task<RewardResponse> GetRewardAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<RewardResponse> GetRewardAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            var reward = await GetActiveRewardAsync(customerId, cancellationToken);
+            var reward = await GetActiveRewardAsync(id, customerId, cancellationToken);
             return MapRewardResponse(reward);
         }
 
-        private async Task<Reward?> GetActiveRewardAsync(Guid customerId, CancellationToken cancellationToken)
+        private async Task<Reward?> GetActiveRewardAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
         {
-            return await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == customerId && !s.Redeemed, cancellationToken);
+            return await db.Rewards.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId && !s.Redeemed, cancellationToken);
         }
 
-        public async Task<RedeemRewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<RedeemRewardResponse> RedeemRewardAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
         {
             using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var reward = await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == customerId && !s.Redeemed, cancellationToken);
+                var reward = await db.Rewards.FirstOrDefaultAsync(s => s.Id == request.Id 
+                                                                    && s.CustomerId == request.CustomerId
+                                                                    && !s.Redeemed, cancellationToken);
 
                 if (reward is null)
                     throw new ArgumentException("No rewards available for redemption.");
 
                 await HandleCashbackRewardAsync(reward, cancellationToken);
 
-                var account = await db.Accounts.FirstOrDefaultAsync(s => s.CustomerId == customerId, cancellationToken);
+                var account = await db.Accounts.FirstOrDefaultAsync(s => s.CustomerId == request.CustomerId, cancellationToken);
 
                 if(account is null)
                     throw new ArgumentException("Account not found for the customer.");
@@ -103,7 +105,7 @@ namespace BudgetingSavings.API.Services
 
             if (points == 0) return;
 
-            var existingReward = await GetActiveRewardAsync(request.CustomerId, cancellationToken);
+            var existingReward = await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == request.CustomerId && !s.Redeemed, cancellationToken);
 
             if (existingReward is not null)
             {
