@@ -152,7 +152,8 @@ namespace BudgetingSavings.API.Services
 
             if (disposable <= 0) return new SavingSuggestionsResponse();
 
-            var recommendedAmount = disposable * config.GetValue<decimal>("SavingSuggestionFactor");
+            var recommendedPercentage = CalculateRecommendedPercentage(income, expenses, disposable);
+            var recommendedMontlySaving = CalculateRecommendedMontlySaving(recommendedPercentage, disposable);
 
             return new SavingSuggestionsResponse
             {
@@ -160,10 +161,32 @@ namespace BudgetingSavings.API.Services
                 Income = income,
                 Expenses = expenses,
                 Disposable = disposable,
-                SavingPercentage = config.GetValue<decimal>("SavingSuggestionFactor"),
-                RecommendedMontlySaving = recommendedAmount,
+                SavingPercentage = recommendedPercentage,
+                RecommendedMontlySaving = recommendedMontlySaving,
                 ExtimatedMonths = config.GetValue<int>("SavingSuggestionMonths"),
             };
+        }
+
+        private int CalculateRecommendedMontlySaving(decimal recommendedPercentage, decimal disposable)
+        {
+            var recommendedMonthlySaving = disposable * recommendedPercentage;
+            return Math.Max(0, (int)Math.Round(recommendedMonthlySaving, 2));
+        }
+
+        private decimal CalculateRecommendedPercentage(decimal income, decimal expenses, decimal disposable)
+        {
+            var savingsCapacityRatio = income <= 0 ? 0 : disposable / income;
+
+            decimal savingPercentage = savingsCapacityRatio switch
+            {
+                <= 0.05m => 0.00m,
+                <= 0.10m => 0.05m,
+                <= 0.20m => 0.10m,
+                <= 0.30m => 0.15m,
+                _ => 0.20m
+            };
+
+            return savingPercentage;
         }
     }
 }
