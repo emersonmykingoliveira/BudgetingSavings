@@ -68,6 +68,7 @@ public static class DbInitializer
                 Amount = -75.5m,
                 Currency = CurrencyType.NOK,
                 AccountId = account1,
+                CustomerId = customer1,
                 TransactionType = TransactionType.Debit,
                 TransactionCategory = TransactionCategory.Groceries
             },
@@ -78,6 +79,7 @@ public static class DbInitializer
                 Amount = 2500.0m,
                 Currency = CurrencyType.NOK,
                 AccountId = account1,
+                CustomerId = customer1,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.General
             },
@@ -88,6 +90,7 @@ public static class DbInitializer
                 Amount = -320.25m,
                 Currency = CurrencyType.NOK,
                 AccountId = account2,
+                CustomerId = customer2,
                 TransactionType = TransactionType.Debit,
                 TransactionCategory = TransactionCategory.Entertainment
             },
@@ -98,6 +101,7 @@ public static class DbInitializer
                 Amount = 50.25m,
                 Currency = CurrencyType.NOK,
                 AccountId = account2,
+                CustomerId = customer2,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.Savings
             },
@@ -108,6 +112,7 @@ public static class DbInitializer
                 Amount = -1000.0m,
                 Currency = CurrencyType.NOK,
                 AccountId = account3,
+                CustomerId = customer3,
                 TransactionType = TransactionType.Debit,
                 TransactionCategory = TransactionCategory.Rent
             },
@@ -118,6 +123,7 @@ public static class DbInitializer
                 Amount = 1500.0m,
                 Currency = CurrencyType.NOK,
                 AccountId = account3,
+                CustomerId = customer3,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.General
             }

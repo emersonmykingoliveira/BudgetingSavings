@@ -11,6 +11,8 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public TransactionCategory TransactionCategory { get; set; }
         public decimal Amount { get; set; }
         public CurrencyType Currency { get; set; }
+        public Guid CustomerId { get; set; }
+        public Customer? Customer { get; set; }
         public Guid AccountId { get; set; }
         public Account? Account { get; set; }
     }

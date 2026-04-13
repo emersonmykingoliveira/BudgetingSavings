@@ -103,6 +103,11 @@ public class ApiDbContext : DbContext
             builder.Property(t => t.TransactionDateTime)
                 .IsRequired();
 
+            builder.HasOne(t => t.Customer)
+                .WithMany(c => c.Transactions)
+                .HasForeignKey(t => t.CustomerId)
+                .IsRequired();
+
             builder.HasOne(t => t.Account)
                 .WithMany(a => a.Transactions)
                 .HasForeignKey(t => t.AccountId)

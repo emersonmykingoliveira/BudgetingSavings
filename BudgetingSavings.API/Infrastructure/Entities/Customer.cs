@@ -10,6 +10,7 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public string? PhoneNumber { get; set; }
         public string? Email { get; set; }
         public List<Account>? Accounts { get; set; }
+        public List<Transaction>? Transactions { get; set; }
         public List<SavingGoal>? SavingGoals { get; set; }
         public List<Budget>? Budgets { get; set; }
         public List<Reward>? Rewards { get; set; }

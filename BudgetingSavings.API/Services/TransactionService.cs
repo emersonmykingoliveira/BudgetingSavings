@@ -17,6 +17,7 @@ namespace BudgetingSavings.API.Services
                 var transaction = new Transaction
                 {
                     AccountId = request.AccountId,
+                    CustomerId = request.CustomerId,
                     Amount = request.Amount,
                     Currency = request.Currency,
                     TransactionType = request.TransactionType,
@@ -75,6 +76,7 @@ namespace BudgetingSavings.API.Services
             {
                 Id = transaction.Id,
                 AccountId = transaction.AccountId,
+                CustomerId = transaction.CustomerId,
                 Amount = transaction.Amount,
                 Currency = transaction.Currency,
                 TransactionType = transaction.TransactionType,

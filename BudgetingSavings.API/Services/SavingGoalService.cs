@@ -8,7 +8,7 @@ using System.Collections.Immutable;
 
 namespace BudgetingSavings.API.Services
 {
-    public class SavingGoalService(ApiDbContext db) : ISavingGoalService
+    public class SavingGoalService(ApiDbContext db, IConfiguration config) : ISavingGoalService
     {
         public async Task<SavingGoalResponse> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
@@ -140,7 +140,30 @@ namespace BudgetingSavings.API.Services
 
         public async Task<SavingSuggestionsResponse> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken)
         {
-            return new SavingSuggestionsResponse();
+            var income = await db.Transactions.Where(t => t.CustomerId == customerId
+                                            && t.TransactionType == TransactionType.Credit)
+                                            .SumAsync(t => t.Amount, cancellationToken);
+
+            var expenses = await db.Transactions.Where(t => t.CustomerId == customerId
+                                            && t.TransactionType == TransactionType.Debit)
+                                            .SumAsync(t => t.Amount, cancellationToken);
+
+            var disposable = income - expenses;
+
+            if (disposable <= 0) return new SavingSuggestionsResponse();
+
+            var recommendedAmount = disposable * config.GetValue<decimal>("SavingSuggestionFactor");
+
+            return new SavingSuggestionsResponse
+            {
+                CustomerId = customerId,
+                Income = income,
+                Expenses = expenses,
+                Disposable = disposable,
+                SavingPercentage = config.GetValue<decimal>("SavingSuggestionFactor"),
+                RecommendedMontlySaving = recommendedAmount,
+                ExtimatedMonths = config.GetValue<int>("SavingSuggestionMonths"),
+            };
         }
     }
 }
