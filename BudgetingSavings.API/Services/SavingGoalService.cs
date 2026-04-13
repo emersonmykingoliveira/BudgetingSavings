@@ -137,5 +137,10 @@ namespace BudgetingSavings.API.Services
                 ? (savedAmount >= savingGoal.TargetAmount ? SavingGoalStatus.Completed : SavingGoalStatus.Failed)
                 : (savedAmount > 0 ? SavingGoalStatus.InProgress : SavingGoalStatus.NotStarted);
         }
+
+        public async Task<SavingSuggestionsResponse> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken)
+        {
+            return new SavingSuggestionsResponse();
+        }
     }
 }

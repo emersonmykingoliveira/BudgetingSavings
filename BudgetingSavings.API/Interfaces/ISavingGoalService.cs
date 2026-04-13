@@ -12,5 +12,6 @@ namespace BudgetingSavings.API.Services
         Task DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken);
         Task<SavingGoalResponse> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken);
         Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, CancellationToken cancellationToken);
+        Task<SavingSuggestionsResponse> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken);
     }
 }
