@@ -15,6 +15,7 @@ public class ApiDbContext : DbContext
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<Reward> Rewards => Set<Reward>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -149,6 +150,31 @@ public class ApiDbContext : DbContext
             builder.HasOne(b => b.Customer)
                 .WithMany(c => c.Budgets)
                 .HasForeignKey(b => b.CustomerId)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<Reward>(builder =>
+        {
+            builder.ToTable("Rewards");
+
+            builder.HasKey(r => r.Id);
+
+            builder.Property(r => r.Date)
+                .IsRequired();
+
+            builder.Property(r => r.Points)
+                .IsRequired();
+
+            builder.Property(r => r.Redeemed)
+                .IsRequired();
+
+            builder.Property(r => r.CashBack);
+
+            builder.Property(r => r.RedeemedDate);
+
+            builder.HasOne(r => r.Customer)
+                .WithMany(c => c.Rewards)
+                .HasForeignKey(r => r.CustomerId)
                 .IsRequired();
         });
     }
