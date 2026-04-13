@@ -1,6 +1,7 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.API.Interfaces;
+using BudgetingSavings.Shared.Models.Enums;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
 using FluentValidation;
@@ -91,9 +92,67 @@ namespace BudgetingSavings.API.Services
             };
         }
 
-        public Task<TransferResponse> TransferAsync(TransferRequest request, CancellationToken cancellationToken)
+        public async Task<TransferResponse> TransferAsync(TransferRequest request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            if (request.AccountOriginId == request.AccountDestinyId)
+                throw new ArgumentException("Origin and destination accounts cannot be the same.");
+
+            if (request.Amount <= 0)
+                throw new ArgumentException("Transfer amount must be greater than zero.");
+
+            await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                // Debit Origin
+                await accountService.UpdateAccountBalanceAsync(request.AccountOriginId, -request.Amount, cancellationToken);
+                var accountOrigin = await db.Accounts.FirstAsync(a => a.Id == request.AccountOriginId, cancellationToken);
+
+                var originTransaction = new Transaction
+                {
+                    AccountId = request.AccountOriginId,
+                    CustomerId = accountOrigin.CustomerId,
+                    Amount = -request.Amount,
+                    Currency = request.Currency,
+                    TransactionType = TransactionType.Debit,
+                    TransactionCategory = TransactionCategory.General,
+                    TransactionDateTime = DateTime.UtcNow
+                };
+                await db.Transactions.AddAsync(originTransaction, cancellationToken);
+
+                // Credit Destiny
+                await accountService.UpdateAccountBalanceAsync(request.AccountDestinyId, request.Amount, cancellationToken);
+                var accountDestiny = await db.Accounts.FirstAsync(a => a.Id == request.AccountDestinyId, cancellationToken);
+
+                var destinyTransaction = new Transaction
+                {
+                    AccountId = request.AccountDestinyId,
+                    CustomerId = accountDestiny.CustomerId,
+                    Amount = request.Amount,
+                    Currency = request.Currency,
+                    TransactionType = TransactionType.Credit,
+                    TransactionCategory = TransactionCategory.General,
+                    TransactionDateTime = DateTime.UtcNow
+                };
+                await db.Transactions.AddAsync(destinyTransaction, cancellationToken);
+
+                await db.SaveChangesAsync(cancellationToken);
+                await dbTransaction.CommitAsync(cancellationToken);
+
+                return new TransferResponse
+                {
+                    AccountOriginId = request.AccountOriginId,
+                    AccountDestinyId = request.AccountDestinyId,
+                    Amount = request.Amount,
+                    Currency = request.Currency,
+                    Date = originTransaction.TransactionDateTime
+                };
+            }
+            catch (Exception)
+            {
+                await dbTransaction.RollbackAsync(cancellationToken);
+                throw;
+            }
         }
     }
 }
