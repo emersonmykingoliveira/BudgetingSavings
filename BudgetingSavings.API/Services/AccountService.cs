@@ -46,9 +46,6 @@ namespace BudgetingSavings.API.Services
         {
             var account = await GetSpecificAccountAsync(id, cancellationToken);
 
-            if (account is null)
-                throw new ArgumentException("Account does not exist.");
-
             if (account.Balance > 0)
                 throw new ArgumentException("Cannot delete an account that still contains money.");
 
@@ -63,9 +60,6 @@ namespace BudgetingSavings.API.Services
         public async Task<AccountResponse> GetAccountByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var account = await GetSpecificAccountAsync(id, cancellationToken);
-
-            if (account is null)
-                throw new ArgumentException("Account does not exist.");
 
             return MapAccountResponse(account);
         }
@@ -99,10 +93,7 @@ namespace BudgetingSavings.API.Services
 
         public async Task UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken)
         {
-            var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-
-            if (account is null)
-                throw new ArgumentException("Account does not exist.");
+            var account = await GetSpecificAccountAsync(id, cancellationToken);
 
             if (amount == 0)
                 throw new ArgumentException("Amount must be different from zero.");

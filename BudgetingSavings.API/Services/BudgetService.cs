@@ -17,6 +17,11 @@ namespace BudgetingSavings.API.Services
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
+
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
+
             var budget = new Budget
             {
                 Id = Guid.NewGuid(),
@@ -36,26 +41,35 @@ namespace BudgetingSavings.API.Services
         {
             var budget = await GetSpecificBudgetAsync(id, cancellationToken);
 
-            if (budget is not null)
-            {
-                db.Budgets.Remove(budget);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            db.Budgets.Remove(budget);
+            await db.SaveChangesAsync(cancellationToken);
+
         }
 
         public async Task<BudgetResponse> GetBudgetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var budget = await GetSpecificBudgetAsync(id, cancellationToken);
+
             return MapBudgetResponse(budget);
         }
 
         public async Task<Budget> GetSpecificBudgetAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.Budgets.FirstOrDefaultAsync(b => b.Id == id, cancellationToken) ?? new Budget();
+            var budget = await db.Budgets.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+
+            if (budget is null)
+                throw new ArgumentException("Budget does not exist.");
+
+            return budget;
         }
 
         public async Task<List<BudgetResponse>> GetAllBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
         {
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
+
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
+
             var budgets = await db.Budgets.Where(b => b.CustomerId == customerId).ToListAsync(cancellationToken);
             return budgets.Select(b => MapBudgetResponse(b)).ToList();
         }
@@ -68,7 +82,7 @@ namespace BudgetingSavings.API.Services
 
             var transactions = await FilterDebitTransactionsForBudget(accounts, budget, cancellationToken);
 
-            var spentAmount = transactions.Where(t => t.Amount > 0).Sum(t => t.Amount);
+            var spentAmount = transactions.Where(t => t.Amount > 0).Sum(t => Math.Abs(t.Amount));
 
             return MapBudgetStatusResponse(budget, spentAmount);
         }
