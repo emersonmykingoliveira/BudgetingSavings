@@ -62,14 +62,14 @@ namespace BudgetingSavings.API.Services
             return accounts.Select(MapAccountResponse).ToList();
         }
 
-        public async Task UpdateAccountBalanceAsync(Guid id, Guid customerId, decimal amount, DateTime transactionDate, CancellationToken cancellationToken)
+        public async Task UpdateAccountBalanceAsync(Guid id, Guid customerId, decimal amount, CancellationToken cancellationToken)
         {
             var account = await db.Accounts.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken);
 
             if (account is not null)
             {
                 account.Balance += amount;
-                account.LastTransactionDate = transactionDate;
+                account.LastTransactionDate = DateTime.Now;
                 db.Accounts.Update(account);
                 await db.SaveChangesAsync(cancellationToken);
             }

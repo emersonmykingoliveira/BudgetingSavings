@@ -10,7 +10,7 @@ namespace BudgetingSavings.API.Services
         Task<AccountResponse> GetAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
         Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken);
         Task DeleteAccountAsync(Guid id, Guid customerId, CancellationToken cancellationToken);
-        Task UpdateAccountBalanceAsync(Guid id, Guid customerId, decimal amount, DateTime transactionDate, CancellationToken cancellationToken);
+        Task UpdateAccountBalanceAsync(Guid id, Guid customerId, decimal amount, CancellationToken cancellationToken);
         Task<List<AccountResponse>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken);
     }
 }

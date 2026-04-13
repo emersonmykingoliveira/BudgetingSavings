@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class RewardService(ApiDbContext db) : IRewardService
+    public class RewardService(ApiDbContext db, IAccountService accountsService) : IRewardService
     {
         public async Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
         {
@@ -35,12 +35,7 @@ namespace BudgetingSavings.API.Services
                 var account = await db.Accounts
                     .FirstOrDefaultAsync(s => s.CustomerId == customerId, cancellationToken);
 
-                if (account is not null)
-                {
-                    account.Balance += cashBackTotal;
-                    db.Accounts.Update(account);
-                    await db.SaveChangesAsync(cancellationToken);
-                }
+                await accountsService.UpdateAccountBalanceAsync(account?.Id ?? Guid.Empty, account?.CustomerId ?? Guid.Empty, cashBackTotal, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
                 return MapRedeemRewardResponse(rewards, account);

@@ -10,8 +10,6 @@ namespace BudgetingSavings.API.Services
     {
         public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
-            var transactionDate = DateTime.Now;
-
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
@@ -22,12 +20,12 @@ namespace BudgetingSavings.API.Services
                     Currency = request.Currency,
                     TransactionType = request.TransactionType,
                     TransactionCategory = request.TransactionCategory,
-                    TransactionDateTime = transactionDate
+                    TransactionDateTime = DateTime.Now
                 };
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
-                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.CustomerId, request.Amount, transactionDate, cancellationToken);
+                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.CustomerId, request.Amount, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return MapTransactionResponse(transaction);
             }
