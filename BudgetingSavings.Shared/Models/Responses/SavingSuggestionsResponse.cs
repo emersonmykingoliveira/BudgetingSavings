@@ -11,6 +11,7 @@ namespace BudgetingSavings.Shared.Models.Responses
         public decimal Disposable { get; set; }
         public decimal SavingPercentage { get; set; }
         public decimal RecommendedMontlySaving { get; set; }
+        public decimal SuggestedTargetAmount { get; set; }
         public int ExtimatedMonths { get; set; }
         public Guid CustomerId { get; set; }
     }

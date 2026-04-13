@@ -140,20 +140,36 @@ namespace BudgetingSavings.API.Services
 
         public async Task<SavingSuggestionsResponse> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken)
         {
-            var income = await db.Transactions.Where(t => t.CustomerId == customerId
-                                            && t.TransactionType == TransactionType.Credit)
-                                            .SumAsync(t => t.Amount, cancellationToken);
+            var income = await db.Transactions
+                .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Credit)
+                .SumAsync(t => t.Amount, cancellationToken);
 
-            var expenses = await db.Transactions.Where(t => t.CustomerId == customerId
-                                            && t.TransactionType == TransactionType.Debit)
-                                            .SumAsync(t => t.Amount, cancellationToken);
+            var expenses = await db.Transactions
+                .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Debit)
+                .SumAsync(t => t.Amount, cancellationToken);
 
             var disposable = income - expenses;
 
-            if (disposable <= 0) return new SavingSuggestionsResponse();
+            if (disposable <= 0)
+            {
+                return new SavingSuggestionsResponse
+                {
+                    CustomerId = customerId,
+                    Income = income,
+                    Expenses = expenses,
+                    Disposable = disposable
+                };
+            }
 
+            return CalculateSavingSuggestions(customerId, income, expenses, disposable);
+        }
+
+        private SavingSuggestionsResponse CalculateSavingSuggestions(Guid customerId, decimal income, decimal expenses, decimal disposable)
+        {
             var recommendedPercentage = CalculateRecommendedPercentage(income, expenses, disposable);
             var recommendedMontlySaving = CalculateRecommendedMontlySaving(recommendedPercentage, disposable);
+            var suggestedTargetAmount = CalculateSuggestedTargetAmount(income, expenses, disposable);
+            var estimatedMonths = CalculateEstimatedMonths(recommendedMontlySaving, suggestedTargetAmount);
 
             return new SavingSuggestionsResponse
             {
@@ -163,14 +179,15 @@ namespace BudgetingSavings.API.Services
                 Disposable = disposable,
                 SavingPercentage = recommendedPercentage,
                 RecommendedMontlySaving = recommendedMontlySaving,
-                ExtimatedMonths = config.GetValue<int>("SavingSuggestionMonths"),
+                SuggestedTargetAmount = suggestedTargetAmount,
+                ExtimatedMonths = estimatedMonths
             };
         }
 
-        private int CalculateRecommendedMontlySaving(decimal recommendedPercentage, decimal disposable)
+        private decimal CalculateRecommendedMontlySaving(decimal recommendedPercentage, decimal disposable)
         {
             var recommendedMonthlySaving = disposable * recommendedPercentage;
-            return Math.Max(0, (int)Math.Round(recommendedMonthlySaving, 2));
+            return Math.Max(0, Math.Round(recommendedMonthlySaving, 2));
         }
 
         private decimal CalculateRecommendedPercentage(decimal income, decimal expenses, decimal disposable)
@@ -187,6 +204,33 @@ namespace BudgetingSavings.API.Services
             };
 
             return savingPercentage;
+        }
+
+        private decimal CalculateSuggestedTargetAmount(decimal income, decimal expenses, decimal disposable)
+        {
+            var savingsCapacityRatio = income <= 0 ? 0 : disposable / income;
+
+            int targetMonthsOfExpenses = savingsCapacityRatio switch
+            {
+                <= 0.10m => 1,
+                <= 0.20m => 2,
+                _ => 3
+            };
+
+            return Math.Round(expenses * targetMonthsOfExpenses, 2);
+        }
+
+        private int CalculateEstimatedMonths(decimal recommendedMonthlySaving, decimal suggestedTargetAmount)
+        {
+            if (recommendedMonthlySaving <= 0 || suggestedTargetAmount <= 0)
+                return 0;
+
+            var estimatedMonths = (int)Math.Ceiling(suggestedTargetAmount / recommendedMonthlySaving);
+
+            if (estimatedMonths > 24)
+                return 12;
+
+            return estimatedMonths;
         }
     }
 }
