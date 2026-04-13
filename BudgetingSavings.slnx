@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="BudgetingSavings.API/BudgetingSavings.API.csproj" />
+  <Project Path="BudgetingSavings.UnitTests/BudgetingSavings.UnitTests.csproj" Id="ba926780-02d6-44e4-8b5f-e9f9471e97b3" />
 </Solution>
