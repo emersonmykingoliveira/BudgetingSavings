@@ -9,11 +9,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BudgetingSavings.API.Services
 {
-    public class BudgetService(ApiDbContext db, IValidator<CreateBudgetRequest> validator) : IBudgetService
+    public class BudgetService(ApiDbContext db, 
+                                IValidator<CreateBudgetRequest> createValidator,
+                                IValidator<UpdateBudgetRequest> updateValidator) : IBudgetService
     {
         public async Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
         {
-            await validator.ValidateAndThrowAsync(request, cancellationToken);
+            await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var budget = new Budget
             {
@@ -83,6 +85,8 @@ namespace BudgetingSavings.API.Services
 
         public async Task<BudgetResponse> UpdateBudgetAsync(UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
+            await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
+
             var budget = await GetSpecificBudgetAsync(request.Id, cancellationToken);
 
             if (budget is not null)

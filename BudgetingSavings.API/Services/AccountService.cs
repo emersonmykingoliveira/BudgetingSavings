@@ -9,11 +9,11 @@ using System.Text.Json.Serialization;
 
 namespace BudgetingSavings.API.Services
 {
-    public class AccountService(ApiDbContext db, IValidator<CreateAccountRequest> validator) : IAccountService
+    public class AccountService(ApiDbContext db, IValidator<CreateAccountRequest> createValidator) : IAccountService
     {
         public async Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken)
         {
-            await validator.ValidateAndThrowAsync(request, cancellationToken);
+            await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var account = new Account
             {

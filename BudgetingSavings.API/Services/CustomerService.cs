@@ -9,11 +9,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BudgetingSavings.API.Services
 {
-    public class CustomerService(ApiDbContext db, IValidator<CreateCustomerRequest> validator) : ICustomerService
+    public class CustomerService(ApiDbContext db, 
+                                IValidator<CreateCustomerRequest> createValidator,
+                                IValidator<UpdateCustomerRequest> updateValidator) : ICustomerService
     {
         public async Task<CustomerResponse> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken)
         {
-            await validator.ValidateAndThrowAsync(request, cancellationToken);
+            await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var customer = new Customer
             {
@@ -60,9 +62,11 @@ namespace BudgetingSavings.API.Services
 
         public async Task<CustomerResponse> UpdateCustomerAsync(UpdateCustomerRequest request, CancellationToken cancellationToken)
         {
+            await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
+
             var customer = await GetSpecificCustomerAsync(request.Id, cancellationToken);
 
-            if(customer is not null)
+            if (customer is not null)
             {
                 customer.Name = request.Name;
                 customer.DateOfBirth = request.DateOfBirth;
@@ -78,7 +82,7 @@ namespace BudgetingSavings.API.Services
 
         private CustomerResponse MapCustomerResponse(Customer? customer)
         {
-            if(customer is null) return new CustomerResponse();
+            if (customer is null) return new CustomerResponse();
 
             return new CustomerResponse
             {

@@ -11,11 +11,11 @@ namespace BudgetingSavings.API.Services
     public class TransactionService(ApiDbContext db, 
                                     IAccountService accountsService, 
                                     IRewardService rewardService,
-                                    IValidator<CreateTransactionRequest> validator) : ITransactionService
+                                    IValidator<CreateTransactionRequest> createValidator) : ITransactionService
     {
         public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
-            await validator.ValidateAndThrowAsync(request, cancellationToken);
+            await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try

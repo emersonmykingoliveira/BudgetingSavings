@@ -13,7 +13,7 @@ namespace BudgetingSavings.API.Services
     public class RewardService(ApiDbContext db, 
                                IAccountService accountsService, 
                                IConfiguration config,
-                               IValidator<CreateRewardRequest> validator) : IRewardService
+                               IValidator<CreateRewardRequest> createValidator) : IRewardService
     {
         public async Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
         {
@@ -105,7 +105,7 @@ namespace BudgetingSavings.API.Services
 
         public async Task RewardHandlerAsync(CreateRewardRequest request, CancellationToken cancellationToken)
         {
-            await validator.ValidateAndThrowAsync(request, cancellationToken);
+            await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var pointsFactor = config.GetValue<decimal>("RewardPointsFactor");
             var points = (int)(request.Amount * pointsFactor);

@@ -10,11 +10,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BudgetingSavings.API.Services
 {
-    public class SavingGoalService(ApiDbContext db, IValidator<CreateSavingGoalRequest> validator) : ISavingGoalService
+    public class SavingGoalService(ApiDbContext db, 
+                                    IValidator<CreateSavingGoalRequest> createValidator,
+                                    IValidator<UpdateSavingGoalRequest> updateValidator) : ISavingGoalService
     {
         public async Task<SavingGoalResponse> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            await validator.ValidateAndThrowAsync(request, cancellationToken);
+            await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var savingGoal = new SavingGoal
             {
@@ -64,6 +66,8 @@ namespace BudgetingSavings.API.Services
 
         public async Task<SavingGoalResponse> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
+            await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
+
             var savingGoal = await GetSpecificSavingGoalAsync(request.Id, cancellationToken);
 
             if (savingGoal is not null)
