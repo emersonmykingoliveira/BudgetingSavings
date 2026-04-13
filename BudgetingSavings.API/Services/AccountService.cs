@@ -23,7 +23,7 @@ namespace BudgetingSavings.API.Services
             var account = new Account
             {
                 Id = Guid.NewGuid(),
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
                 AccountNumber = await GenerateUniqueAccountNumberAsync(cancellationToken),
                 AccountType = request.AccountType,
                 Currency = request.Currency,
@@ -102,7 +102,7 @@ namespace BudgetingSavings.API.Services
                 throw new ArgumentException("Insufficient balance.");
 
             account.Balance += amount;
-            account.LastTransactionDate = DateTime.Now;
+            account.LastTransactionDate = DateTime.UtcNow;
             db.Accounts.Update(account);
             await db.SaveChangesAsync(cancellationToken);
             

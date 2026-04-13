@@ -9,5 +9,6 @@ namespace BudgetingSavings.API.Services
         Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken);
         Task<List<TransactionResponse>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken);
         Task<TransactionResponse> GetTransactionByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<TransferResponse> TransferAsync(TransferRequest request, CancellationToken cancellationToken);
     }
 }

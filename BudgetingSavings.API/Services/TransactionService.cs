@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace BudgetingSavings.API.Services
 {
     public class TransactionService(ApiDbContext db, 
-                                    IAccountService accountsService, 
+                                    IAccountService accountService, 
                                     IRewardService rewardService,
                                     IValidator<CreateTransactionRequest> createValidator) : ITransactionService
     {
@@ -28,12 +28,12 @@ namespace BudgetingSavings.API.Services
                     Currency = request.Currency,
                     TransactionType = request.TransactionType,
                     TransactionCategory = request.TransactionCategory,
-                    TransactionDateTime = DateTime.Now
+                    TransactionDateTime = DateTime.UtcNow
                 };
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
-                await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.Amount, cancellationToken);
+                await accountService.UpdateAccountBalanceAsync(request.AccountId, request.Amount, cancellationToken);
                 await HandleRewardAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return MapTransactionResponse(transaction);
@@ -89,6 +89,11 @@ namespace BudgetingSavings.API.Services
                 TransactionCategory = transaction.TransactionCategory,
                 TransactionDateTime = transaction.TransactionDateTime
             };
+        }
+
+        public Task<TransferResponse> TransferAsync(TransferRequest request, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

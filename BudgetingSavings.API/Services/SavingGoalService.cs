@@ -23,7 +23,7 @@ namespace BudgetingSavings.API.Services
                 Id = Guid.NewGuid(),
                 Name = request.Name,
                 TargetAmount = request.TargetAmount,
-                StartDate = DateTime.Now,
+                StartDate = DateTime.UtcNow,
                 TargetDate = request.TargetDate,
                 CustomerId = request.CustomerId
             };
@@ -133,13 +133,13 @@ namespace BudgetingSavings.API.Services
                 StartDate = savingGoal.StartDate,
                 TargetDate = savingGoal.TargetDate,
                 Status = DefineSavingGoalStatus(savingGoal, savedAmount),
-                DaysRemaining = (savingGoal.TargetDate - DateTime.Now).Days
+                DaysRemaining = (savingGoal.TargetDate - DateTime.UtcNow).Days
             };
         }
 
         private SavingGoalStatus DefineSavingGoalStatus(SavingGoal savingGoal, decimal savedAmount)
         {
-            return savingGoal.TargetDate < DateTime.Now
+            return savingGoal.TargetDate < DateTime.UtcNow
                 ? (savedAmount >= savingGoal.TargetAmount ? SavingGoalStatus.Completed : SavingGoalStatus.Failed)
                 : (savedAmount > 0 ? SavingGoalStatus.InProgress : SavingGoalStatus.NotStarted);
         }

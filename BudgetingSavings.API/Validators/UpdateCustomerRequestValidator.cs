@@ -16,7 +16,7 @@ namespace BudgetingSavings.API.Validators
 
             RuleFor(x => x.DateOfBirth)
                 .NotEmpty()
-                .LessThan(DateTime.Now);
+                .LessThan(DateTime.UtcNow);
 
             RuleFor(x => x.Email)
                 .NotEmpty()

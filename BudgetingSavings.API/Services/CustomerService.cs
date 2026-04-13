@@ -27,7 +27,7 @@ namespace BudgetingSavings.API.Services
             if (phoneExists)
                 throw new ArgumentException("A customer with this phone number already exists.");
 
-            if (request.DateOfBirth > DateTime.Now.AddYears(-18))
+            if (request.DateOfBirth > DateTime.UtcNow.AddYears(-18))
                 throw new ArgumentException("Customer must be at least 18 years old.");
 
             var customer = new Customer
@@ -98,7 +98,7 @@ namespace BudgetingSavings.API.Services
             if (phoneExists)
                 throw new ArgumentException("A customer with this phone number already exists.");
 
-            if (request.DateOfBirth > DateTime.Now.AddYears(-18))
+            if (request.DateOfBirth > DateTime.UtcNow.AddYears(-18))
                 throw new ArgumentException("Customer must be at least 18 years old.");
 
             if (customer is not null)
