@@ -12,6 +12,5 @@ namespace BudgetingSavings.Shared.Models.Requests
         public DateTime EndTime { get; set; }
         public decimal LimitAmount { get; set; }
         public CurrencyType Currency { get; set; }
-        public Guid CustomerId { get; set; }
     }
 }

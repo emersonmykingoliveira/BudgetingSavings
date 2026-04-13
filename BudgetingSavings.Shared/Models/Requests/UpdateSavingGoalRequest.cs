@@ -10,6 +10,5 @@ namespace BudgetingSavings.Shared.Models.Requests
         public string? Name { get; set; }
         public decimal TargetAmount { get; set; }
         public DateTime TargetDate { get; set; }
-        public Guid CustomerId { get; set; }
     }
 }
