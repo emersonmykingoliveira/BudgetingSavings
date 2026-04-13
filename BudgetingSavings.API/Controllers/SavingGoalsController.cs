@@ -1,54 +1,53 @@
 ﻿using BudgetingSavings.API.Services;
 using BudgetingSavings.Shared.Models.Requests;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/customers/{customerId:guid}/saving-goals")]
     public class SavingGoalsController(ISavingGoalService service) : ControllerBase
     {
-        [HttpGet("customer/{id}")]
-        public async Task<IActionResult> GetAllSavingGoals(Guid id, CancellationToken cancellationToken)
+        [HttpGet]
+        public async Task<IActionResult> GetAllSavingGoals(Guid customerId, CancellationToken cancellationToken)
         {
-            var savingGoals = await service.GetAllSavingGoalsAsync(id, cancellationToken);
+            var savingGoals = await service.GetAllSavingGoalsAsync(customerId, cancellationToken);
             return Ok(savingGoals);
         }
 
-        [HttpGet("{id}/customer/{customerId}")]
-        public async Task<IActionResult> GetSavingGoal(Guid id, Guid customerId, CancellationToken cancellationToken)
+        [HttpGet("{savingGoalId:guid}")]
+        public async Task<IActionResult> GetSavingGoal(Guid customerId, Guid savingGoalId, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.GetSavingGoalAsync(id, customerId, cancellationToken);
+            var savingGoal = await service.GetSavingGoalAsync(savingGoalId, customerId, cancellationToken);
             return Ok(savingGoal);
         }
 
-
-        [HttpGet("{id}/customer/{customerId}/Status")]
-        public async Task<IActionResult> GetSavingGoalStatus(Guid id, Guid customerId, CancellationToken cancellationToken)
+        [HttpGet("{savingGoalId:guid}/status")]
+        public async Task<IActionResult> GetSavingGoalStatus(Guid customerId, Guid savingGoalId, CancellationToken cancellationToken)
         {
-            var savingGoalStatus = await service.GetSavingGoalStatusAsync(id, customerId, cancellationToken);
+            var savingGoalStatus = await service.GetSavingGoalStatusAsync(savingGoalId, customerId, cancellationToken);
             return Ok(savingGoalStatus);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateSavingGoal([FromBody] CreateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateSavingGoal(Guid customerId, [FromBody] CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
+            request.CustomerId = customerId;
             var savingGoal = await service.CreateSavingGoalAsync(request, cancellationToken);
             return Ok(savingGoal);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSavingGoal(Guid Id, [FromBody] UpdateSavingGoalRequest request, CancellationToken cancellationToken)
+        [HttpPut("{savingGoalId:guid}")]
+        public async Task<IActionResult> UpdateSavingGoal(Guid customerId, Guid savingGoalId, [FromBody] UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.UpdateSavingGoalAsync(Id, request, cancellationToken);
+            var savingGoal = await service.UpdateSavingGoalAsync(savingGoalId, request, cancellationToken);
             return Ok(savingGoal);
         }
 
-        [HttpDelete("{id}/customer/{customerId}")]
-        public async Task<IActionResult> DeleteSavingGoal(Guid id, Guid customerId, CancellationToken cancellationToken)
+        [HttpDelete("{savingGoalId:guid}")]
+        public async Task<IActionResult> DeleteSavingGoal(Guid customerId, Guid savingGoalId, CancellationToken cancellationToken)
         {
-            await service.DeleteSavingGoalAsync(id, customerId, cancellationToken);
+            await service.DeleteSavingGoalAsync(savingGoalId, customerId, cancellationToken);
             return NoContent();
         }
     }
