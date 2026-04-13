@@ -53,13 +53,16 @@ public class ApiDbContext : DbContext
 
             builder.Property(a => a.AccountType)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(50)
+                .HasConversion<string>();
 
-            builder.Property(a => a.Balance);
+            builder.Property(a => a.Balance)
+                .HasColumnType("decimal(18,2)");
 
             builder.Property(a => a.Currency)
                 .IsRequired()
-                .HasMaxLength(10);
+                .HasMaxLength(10)
+                .HasConversion<string>();
 
             builder.Property(a => a.CreatedDate)
                 .IsRequired();
@@ -79,19 +82,23 @@ public class ApiDbContext : DbContext
             builder.HasKey(t => t.Id);
 
             builder.Property(t => t.Amount)
-                .IsRequired();
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
 
             builder.Property(t => t.TransactionType)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(50)
+                .HasConversion<string>();
 
             builder.Property(t => t.TransactionCategory)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(50)
+                .HasConversion<string>();
 
             builder.Property(t => t.Currency)
                 .IsRequired()
-                .HasMaxLength(10);
+                .HasMaxLength(10)
+                .HasConversion<string>();
 
             builder.Property(t => t.TransactionDateTime)
                 .IsRequired();
@@ -114,7 +121,8 @@ public class ApiDbContext : DbContext
                 .HasMaxLength(100);
 
             builder.Property(s => s.TargetAmount)
-                .IsRequired();
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
 
             builder.Property(s => s.StartDate)
                 .IsRequired();
@@ -135,11 +143,13 @@ public class ApiDbContext : DbContext
             builder.HasKey(b => b.Id);
 
             builder.Property(b => b.LimitAmount)
-                .IsRequired();
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
 
             builder.Property(b => b.Currency)
                 .IsRequired()
-                .HasMaxLength(10);
+                .HasMaxLength(10)
+                .HasConversion<string>();
 
             builder.Property(b => b.StartTime)
                 .IsRequired();
@@ -162,13 +172,18 @@ public class ApiDbContext : DbContext
             builder.Property(r => r.Date)
                 .IsRequired();
 
+            builder.Property(r => r.Amount)
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
+
             builder.Property(r => r.Points)
                 .IsRequired();
 
             builder.Property(r => r.Redeemed)
                 .IsRequired();
 
-            builder.Property(r => r.CashBack);
+            builder.Property(r => r.CashBack)
+                .HasColumnType("decimal(18,2)");
 
             builder.Property(r => r.RedeemedDate);
 
