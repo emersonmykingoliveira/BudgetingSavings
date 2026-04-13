@@ -1,39 +1,46 @@
-﻿using BudgetingSavings.API.Services;
+﻿using BudgetingSavings.API.Interfaces;
+using BudgetingSavings.API.Services;
 using BudgetingSavings.Shared.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
-    [Route("api/customers/{customerId:guid}/accounts")]
+    [Route("api/accounts")]
     public class AccountsController(IAccountService service) : ControllerBase
     {
         [HttpGet]
+        public async Task<IActionResult> GetAllAccounts(CancellationToken cancellationToken)
+        {
+            var accounts = await service.GetAllAccountsAsync(cancellationToken);
+            return Ok(accounts);
+        }
+
+        [HttpGet("customer/{customerId:guid}")]
         public async Task<IActionResult> GetAllAccountsForCustomer(Guid customerId, CancellationToken cancellationToken)
         {
             var accounts = await service.GetAllAccountsForCustomerAsync(customerId, cancellationToken);
             return Ok(accounts);
         }
 
-        [HttpGet("{accountId:guid}")]
-        public async Task<IActionResult> GetAccount(Guid customerId, Guid accountId, CancellationToken cancellationToken)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetAccount(Guid id, CancellationToken cancellationToken)
         {
-            var account = await service.GetAccountAsync(accountId, customerId, cancellationToken);
+            var account = await service.GetAccountByIdAsync(id, cancellationToken);
             return Ok(account);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAccount(Guid customerId, [FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
         {
-            request.CustomerId = customerId;
             var account = await service.CreateAccountAsync(request, cancellationToken);
             return Ok(account);
         }
 
-        [HttpDelete("{accountId:guid}")]
-        public async Task<IActionResult> DeleteAccount(Guid customerId, Guid accountId, CancellationToken cancellationToken)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteAccount(Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteAccountAsync(accountId, customerId, cancellationToken);
+            await service.DeleteAccountAsync(id, cancellationToken);
             return NoContent();
         }
     }

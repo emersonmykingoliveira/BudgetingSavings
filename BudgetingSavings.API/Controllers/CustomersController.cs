@@ -15,10 +15,10 @@ namespace BudgetingSavings.API.Controllers
             return Ok(customers);
         }
 
-        [HttpGet("{customerId:guid}")]
-        public async Task<IActionResult> GetCustomer(Guid customerId, CancellationToken cancellationToken)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetCustomer(Guid id, CancellationToken cancellationToken)
         {
-            var customer = await service.GetCustomerAsync(customerId, cancellationToken);
+            var customer = await service.GetCustomerAsync(id, cancellationToken);
             return Ok(customer);
         }
 
@@ -29,17 +29,17 @@ namespace BudgetingSavings.API.Controllers
             return Ok(customer);
         }
 
-        [HttpPut("{customerId:guid}")]
-        public async Task<IActionResult> UpdateCustomer(Guid customerId, [FromBody] UpdateCustomerRequest request, CancellationToken cancellationToken)
+        [HttpPut]
+        public async Task<IActionResult> UpdateCustomer([FromBody] UpdateCustomerRequest request, CancellationToken cancellationToken)
         {
-            var customer = await service.UpdateCustomerAsync(customerId, request, cancellationToken);
+            var customer = await service.UpdateCustomerAsync(request, cancellationToken);
             return Ok(customer);
         }
 
-        [HttpDelete("{customerId:guid}")]
-        public async Task<IActionResult> DeleteCustomer(Guid customerId, CancellationToken cancellationToken)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteCustomer(Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteCustomerAsync(customerId, cancellationToken);
+            await service.DeleteCustomerAsync(id, cancellationToken);
             return NoContent();
         }
     }

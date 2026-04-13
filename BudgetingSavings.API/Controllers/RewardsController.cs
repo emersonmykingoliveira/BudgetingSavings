@@ -5,27 +5,26 @@ using Microsoft.AspNetCore.Mvc;
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
-    [Route("api/customers/{customerId:guid}/rewards")]
+    [Route("api/rewards")]
     public class RewardsController(IRewardService service) : ControllerBase
     {
-        [HttpGet]
+        [HttpGet("customer/{customerId:guid}")]
         public async Task<IActionResult> GetAllRewards(Guid customerId, CancellationToken cancellationToken)
         {
             var rewards = await service.GetAllRewardsAsync(customerId, cancellationToken);
             return Ok(rewards);
         }
 
-        [HttpGet("{rewardId:guid}")]
-        public async Task<IActionResult> GetReward(Guid customerId, Guid rewardId, CancellationToken cancellationToken)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetReward(Guid id, CancellationToken cancellationToken)
         {
-            var reward = await service.GetRewardAsync(rewardId, customerId, cancellationToken);
+            var reward = await service.GetRewardByIdAsync(id, cancellationToken);
             return Ok(reward);
         }
 
         [HttpPost("redeem")]
-        public async Task<IActionResult> RedeemReward(Guid customerId, [FromBody] RedeemRewardRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> RedeemReward([FromBody] RedeemRewardRequest request, CancellationToken cancellationToken)
         {
-            request.CustomerId = customerId;
             var reward = await service.RedeemRewardAsync(request, cancellationToken);
             return Ok(reward);
         }
