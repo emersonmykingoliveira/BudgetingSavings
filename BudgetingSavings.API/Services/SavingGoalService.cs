@@ -8,7 +8,7 @@ using System.Collections.Immutable;
 
 namespace BudgetingSavings.API.Services
 {
-    public class SavingGoalService(ApiDbContext db, IConfiguration config) : ISavingGoalService
+    public class SavingGoalService(ApiDbContext db) : ISavingGoalService
     {
         public async Task<SavingGoalResponse> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
