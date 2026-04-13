@@ -1,12 +1,14 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.API.Interfaces;
+using BudgetingSavings.Shared.Models.Enums;
+using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class RewardService(ApiDbContext db, IAccountService accountsService) : IRewardService
+    public class RewardService(ApiDbContext db, IAccountService accountsService, IConfiguration config) : IRewardService
     {
         public async Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
         {
@@ -14,10 +16,15 @@ namespace BudgetingSavings.API.Services
             return rewards.Select(MapRewardResponse).ToList();
         }
 
-        public async Task<RewardResponse> GetRewardAsync(Guid id, Guid customerId, CancellationToken cancellationToken)
+        public async Task<RewardResponse> GetRewardAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            var reward = await db.Rewards.FirstOrDefaultAsync(s => s.Id == id && s.CustomerId == customerId, cancellationToken);
+            var reward = await GetActiveRewardAsync(customerId, cancellationToken);
             return MapRewardResponse(reward);
+        }
+
+        private async Task<Reward> GetActiveRewardAsync(Guid customerId, CancellationToken cancellationToken)
+        {
+            return await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == customerId && !s.Redeemed, cancellationToken) ?? new Reward();
         }
 
         public async Task<RedeemRewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken)
@@ -26,19 +33,22 @@ namespace BudgetingSavings.API.Services
 
             try
             {
-                var rewards = await db.Rewards
-                    .Where(s => s.CustomerId == customerId && !s.Redeemed)
-                    .ToListAsync(cancellationToken);
+                var reward = await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == customerId && !s.Redeemed, cancellationToken);
 
-                decimal cashBackTotal = await CashbackRewardsAsync(rewards, cancellationToken);
+                if (reward is null)
+                    throw new ArgumentException("No rewards available for redemption.");
 
-                var account = await db.Accounts
-                    .FirstOrDefaultAsync(s => s.CustomerId == customerId, cancellationToken);
+                await HandleCashbackRewardAsync(reward, cancellationToken);
 
-                await accountsService.UpdateAccountBalanceAsync(account?.Id ?? Guid.Empty, account?.CustomerId ?? Guid.Empty, cashBackTotal, cancellationToken);
+                var account = await db.Accounts.FirstOrDefaultAsync(s => s.CustomerId == customerId, cancellationToken);
+
+                if(account is null)
+                    throw new ArgumentException("Account not found for the customer.");
+
+                await accountsService.UpdateAccountBalanceAsync(account.Id, account.CustomerId, reward.CashBack, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
-                return MapRedeemRewardResponse(rewards, account);
+                return MapRedeemRewardResponse(reward, account);
             }
             catch
             {
@@ -47,30 +57,28 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        private RedeemRewardResponse MapRedeemRewardResponse(List<Reward> rewards, Account? account)
+        private RedeemRewardResponse MapRedeemRewardResponse(Reward reward, Account account)
         {
             return new RedeemRewardResponse
             {
-                CashBack = rewards.Sum(s => s.CashBack),
-                UpdatedAccountBalance = account?.Balance ?? 0m,
-                RedeemedPoints = rewards.Sum(s => s.Points),
-                AccountId = account?.Id ?? Guid.Empty,
-                CustomerId = account?.CustomerId ?? Guid.Empty 
+                CashBack = reward.CashBack,
+                UpdatedAccountBalance = account.Balance,
+                RedeemedPoints = reward.Points,
+                AccountId = account.Id,
+                CustomerId = account.CustomerId
             };
         }
 
-        private async Task<decimal> CashbackRewardsAsync(List<Reward> rewards, CancellationToken cancellationToken)
+        private async Task HandleCashbackRewardAsync(Reward reward, CancellationToken cancellationToken)
         {
-            foreach (var reward in rewards)
-            {
-                reward.CashBack = reward.Points * 0.01m;
-                reward.RedeemedDate = DateTime.Now;
-                reward.Redeemed = true;
-                db.Rewards.Update(reward);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            if (reward is null) return;
 
-            return rewards.Sum(s => s.CashBack);
+            var cashBackFactor = config.GetValue<decimal>("RewardCashBackFactor");
+            reward.CashBack = reward.Points * cashBackFactor;
+            reward.RedeemedDate = DateTime.Now;
+            reward.Redeemed = true;
+            db.Rewards.Update(reward);
+            await db.SaveChangesAsync(cancellationToken);
         }
 
         private RewardResponse MapRewardResponse(Reward? reward)
@@ -86,6 +94,47 @@ namespace BudgetingSavings.API.Services
                 RedeemedDate = reward.RedeemedDate,
                 CustomerId = reward.CustomerId
             };
+        }
+
+        public async Task RewardHandlerAsync(CreateRewardRequest request, CancellationToken cancellationToken)
+        {
+            var pointsFactor = config.GetValue<decimal>("RewardPointsFactor");
+
+            var points = (int)(request.Amount * pointsFactor);
+
+            var existingReward = await GetActiveRewardAsync(request.CustomerId, cancellationToken);
+
+            if (existingReward is not null)
+            {
+                if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+                {
+                    existingReward.Points += points;
+                }
+                else if (request.TransactionType == TransactionType.Debit)
+                {
+                    existingReward.Points -= points;
+                }
+
+                db.Rewards.Update(existingReward);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+                {
+                    var reward = new Reward
+                    {
+                        Id = Guid.NewGuid(),
+                        CustomerId = request.CustomerId,
+                        Points = points,
+                        Date = DateTime.Now,
+                        Redeemed = false
+                    };
+
+                    db.Rewards.Add(reward);
+                    await db.SaveChangesAsync(cancellationToken);
+                }
+            }
         }
     }
 }

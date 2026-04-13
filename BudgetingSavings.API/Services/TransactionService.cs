@@ -1,12 +1,13 @@
 ﻿using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class TransactionService(ApiDbContext db, IAccountService accountsService) : ITransactionService
+    public class TransactionService(ApiDbContext db, IAccountService accountsService, IRewardService rewardService) : ITransactionService
     {
         public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -26,6 +27,7 @@ namespace BudgetingSavings.API.Services
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
                 await accountsService.UpdateAccountBalanceAsync(request.AccountId, request.CustomerId, request.Amount, cancellationToken);
+                await HandleRewardAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return MapTransactionResponse(transaction);
             }
@@ -34,6 +36,19 @@ namespace BudgetingSavings.API.Services
                 await dbTransaction.RollbackAsync(cancellationToken);
                 throw;
             }
+        }
+
+        private async Task HandleRewardAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
+        {
+            var rewardRequest = new CreateRewardRequest
+            {
+                CustomerId = request.CustomerId,
+                Amount = request.Amount,
+                TransactionType = request.TransactionType,
+                TransactionCategory = request.TransactionCategory
+            };
+
+            await rewardService.RewardHandlerAsync(rewardRequest, cancellationToken);
         }
 
         public async Task<List<TransactionResponse>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
