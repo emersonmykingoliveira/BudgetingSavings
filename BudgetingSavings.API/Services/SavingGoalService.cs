@@ -18,6 +18,17 @@ namespace BudgetingSavings.API.Services
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
+
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
+
+            var activeGoalsCount = await db.SavingGoals
+                .CountAsync(g => g.CustomerId == request.CustomerId && g.TargetDate >= DateTime.UtcNow, cancellationToken);
+
+            if (activeGoalsCount >= 5)
+                throw new ArgumentException("Customer cannot have more than 5 active saving goals.");
+
             var savingGoal = new SavingGoal
             {
                 Id = Guid.NewGuid(),
@@ -47,6 +58,11 @@ namespace BudgetingSavings.API.Services
 
         public async Task<List<SavingGoalResponse>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
         {
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
+
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
+
             var savingGoals = await db.SavingGoals.Where(s => s.CustomerId == customerId).ToListAsync(cancellationToken);
             return savingGoals.Select(s => MapSavingGoalResponse(s)).ToList();
         }
@@ -59,7 +75,12 @@ namespace BudgetingSavings.API.Services
 
         private async Task<SavingGoal> GetSpecificSavingGoalAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new SavingGoal();
+            var savingGoal = await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
+            if(savingGoal is null)
+                throw new ArgumentException("Saving goal not found.");
+
+            return savingGoal;
         }
 
         public async Task<SavingGoalResponse> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
@@ -68,15 +89,17 @@ namespace BudgetingSavings.API.Services
 
             var savingGoal = await GetSpecificSavingGoalAsync(request.Id, cancellationToken);
 
-            if (savingGoal is not null)
-            {
-                savingGoal.Name = request.Name;
-                savingGoal.TargetAmount = request.TargetAmount;
-                savingGoal.TargetDate = request.TargetDate;
+            var amountSaved = await GetAmountSavedFromTransactions(savingGoal, cancellationToken);
 
-                db.SavingGoals.Update(savingGoal);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            if (request.TargetAmount < amountSaved)
+                throw new ArgumentException("Target amount cannot be lower than the amount already saved.");
+
+            savingGoal.Name = request.Name;
+            savingGoal.TargetAmount = request.TargetAmount;
+            savingGoal.TargetDate = request.TargetDate;
+
+            db.SavingGoals.Update(savingGoal);
+            await db.SaveChangesAsync(cancellationToken);
 
             return MapSavingGoalResponse(savingGoal);
         }
@@ -85,21 +108,22 @@ namespace BudgetingSavings.API.Services
         {
             var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
 
-            var accounts = await db.Accounts.Where(a => a.CustomerId == savingGoal.CustomerId).ToListAsync(cancellationToken);
+            var amountSaved = await GetAmountSavedFromTransactions(savingGoal, cancellationToken);
 
-            var transactions = await FilterCreditTransactionsForSaving(savingGoal, accounts, cancellationToken);
-
-            return MapSavingGoalStatusResponse(savingGoal, transactions);
+            return MapSavingGoalStatusResponse(savingGoal, amountSaved);
         }
 
-        private async Task<List<Transaction>> FilterCreditTransactionsForSaving(SavingGoal savingGoal, List<Account> accounts, CancellationToken cancellationToken)
+        private async Task<decimal> GetAmountSavedFromTransactions(SavingGoal savingGoal, CancellationToken cancellationToken)
         {
+            var accounts = await db.Accounts.Where(a => a.CustomerId == savingGoal.CustomerId).ToListAsync(cancellationToken);
+
             return await db.Transactions
                         .Where(t => accounts.Select(a => a.Id).Contains(t.AccountId)
                         && t.TransactionDateTime >= savingGoal.StartDate
                         && t.TransactionDateTime <= savingGoal.TargetDate
                         && t.TransactionType == TransactionType.Credit
-                        && t.TransactionCategory == TransactionCategory.Savings).ToListAsync(cancellationToken);
+                        && t.TransactionCategory == TransactionCategory.Savings)
+                        .SumAsync(t => t.Amount, cancellationToken);
         }
 
         private SavingGoalResponse MapSavingGoalResponse(SavingGoal? savingGoal)
@@ -117,23 +141,21 @@ namespace BudgetingSavings.API.Services
             };
         }
 
-        private SavingGoalStatusResponse MapSavingGoalStatusResponse(SavingGoal savingGoal, List<Transaction> transactions)
+        private SavingGoalStatusResponse MapSavingGoalStatusResponse(SavingGoal savingGoal, decimal amountSaved)
         {
-            var savedAmount = transactions.Sum(t => t.Amount);
-
             return new SavingGoalStatusResponse
             {
                 Id = savingGoal.Id,
                 Name = savingGoal.Name,
-                SavedAmount = savedAmount,
+                SavedAmount = amountSaved,
                 TargetAmount = savingGoal.TargetAmount,
                 CustomerId= savingGoal.CustomerId,
-                RemainingAmount = savingGoal.TargetAmount - savedAmount,
-                ProgressPercentage = savingGoal.TargetAmount > 0 ? (savedAmount / savingGoal.TargetAmount) * 100 : 0,
+                RemainingAmount = savingGoal.TargetAmount - amountSaved,
+                ProgressPercentage = savingGoal.TargetAmount > 0 ? (amountSaved / savingGoal.TargetAmount) * 100 : 0,
                 StartDate = savingGoal.StartDate,
                 TargetDate = savingGoal.TargetDate,
-                Status = DefineSavingGoalStatus(savingGoal, savedAmount),
-                DaysRemaining = (savingGoal.TargetDate - DateTime.UtcNow).Days
+                Status = DefineSavingGoalStatus(savingGoal, amountSaved),
+                DaysRemaining = Math.Max(0, (savingGoal.TargetDate - DateTime.UtcNow).Days)
             };
         }
 
@@ -146,13 +168,23 @@ namespace BudgetingSavings.API.Services
 
         public async Task<SavingSuggestionsResponse> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken)
         {
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
+
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
+
+            var hasTransactions = await db.Transactions.AnyAsync(t => t.CustomerId == customerId, cancellationToken);
+
+            if (!hasTransactions)
+                throw new ArgumentException("Not enough transaction data to generate saving suggestions.");
+
             var income = await db.Transactions
-                .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Credit)
-                .SumAsync(t => t.Amount, cancellationToken);
+                            .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Credit)
+                            .SumAsync(t => t.Amount, cancellationToken);
 
             var expenses = await db.Transactions
-                .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Debit)
-                .SumAsync(t => t.Amount, cancellationToken);
+                            .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Debit)
+                            .SumAsync(t => Math.Abs(t.Amount), cancellationToken);
 
             var disposable = income - expenses;
 
