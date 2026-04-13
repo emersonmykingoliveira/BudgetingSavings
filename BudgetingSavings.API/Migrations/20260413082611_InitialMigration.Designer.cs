@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingSavings.API.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20260412195007_InitialMigration")]
+    [Migration("20260413082611_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -31,19 +31,21 @@ namespace BudgetingSavings.API.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("AccountType")
+                    b.Property<string>("AccountType")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Balance")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Currency")
+                    b.Property<string>("Currency")
+                        .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("TEXT");
@@ -64,9 +66,10 @@ namespace BudgetingSavings.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Currency")
+                    b.Property<string>("Currency")
+                        .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("TEXT");
@@ -75,7 +78,7 @@ namespace BudgetingSavings.API.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("LimitAmount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
@@ -114,6 +117,40 @@ namespace BudgetingSavings.API.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Reward", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CashBack")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Redeemed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("RedeemedDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Rewards", (string)null);
+                });
+
             modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.SavingGoal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -132,7 +169,7 @@ namespace BudgetingSavings.API.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("TargetAmount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("TargetDate")
                         .HasColumnType("TEXT");
@@ -154,22 +191,25 @@ namespace BudgetingSavings.API.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Currency")
-                        .HasMaxLength(10)
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TransactionCategory")
+                    b.Property<string>("TransactionCategory")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("TransactionDateTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TransactionType")
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -193,6 +233,17 @@ namespace BudgetingSavings.API.Migrations
                 {
                     b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Customer", "Customer")
                         .WithMany("Budgets")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("BudgetingSavings.API.Infrastructure.Entities.Reward", b =>
+                {
+                    b.HasOne("BudgetingSavings.API.Infrastructure.Entities.Customer", "Customer")
+                        .WithMany("Rewards")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -232,6 +283,8 @@ namespace BudgetingSavings.API.Migrations
                     b.Navigation("Accounts");
 
                     b.Navigation("Budgets");
+
+                    b.Navigation("Rewards");
 
                     b.Navigation("SavingGoals");
                 });

@@ -32,9 +32,9 @@ namespace BudgetingSavings.API.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     AccountNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    AccountType = table.Column<int>(type: "INTEGER", maxLength: 50, nullable: false),
-                    Balance = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Currency = table.Column<int>(type: "INTEGER", maxLength: 10, nullable: false),
+                    AccountType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Balance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastTransactionDate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CustomerId = table.Column<Guid>(type: "TEXT", nullable: false)
@@ -57,8 +57,8 @@ namespace BudgetingSavings.API.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     EndTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LimitAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Currency = table.Column<int>(type: "INTEGER", maxLength: 10, nullable: false),
+                    LimitAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
                     CustomerId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -73,12 +73,36 @@ namespace BudgetingSavings.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Rewards",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Points = table.Column<int>(type: "INTEGER", nullable: false),
+                    Redeemed = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CashBack = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    RedeemedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rewards", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Rewards_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SavingGoals",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    TargetAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TargetAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     TargetDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CustomerId = table.Column<Guid>(type: "TEXT", nullable: false)
@@ -100,10 +124,10 @@ namespace BudgetingSavings.API.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     TransactionDateTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    TransactionType = table.Column<int>(type: "INTEGER", maxLength: 50, nullable: false),
-                    TransactionCategory = table.Column<int>(type: "INTEGER", maxLength: 50, nullable: false),
-                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Currency = table.Column<int>(type: "INTEGER", maxLength: 10, nullable: false),
+                    TransactionType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    TransactionCategory = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
                     AccountId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -128,6 +152,11 @@ namespace BudgetingSavings.API.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Rewards_CustomerId",
+                table: "Rewards",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SavingGoals_CustomerId",
                 table: "SavingGoals",
                 column: "CustomerId");
@@ -143,6 +172,9 @@ namespace BudgetingSavings.API.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Budgets");
+
+            migrationBuilder.DropTable(
+                name: "Rewards");
 
             migrationBuilder.DropTable(
                 name: "SavingGoals");
