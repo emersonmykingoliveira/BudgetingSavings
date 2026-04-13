@@ -1,5 +1,5 @@
 using BudgetingSavings.API.Infrastructure.Entities;
-using BudgetingSavings.Shared.Models.Enums;
+using BudgetingSavings.API.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Infrastructure.Data;

@@ -1,9 +1,11 @@
-﻿using System.Text.Json.Serialization;
-using BudgetingSavings.API.Models.Enums;
+﻿using BudgetingSavings.API.Models.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace BudgetingSavings.API.Infrastructure.Entities
+namespace BudgetingSavings.Shared.Models.Responses
 {
-    public class Account
+    public class AccountResponse
     {
         public Guid Id { get; set; }
         public string? AccountNumber { get; set; }
@@ -13,7 +15,5 @@ namespace BudgetingSavings.API.Infrastructure.Entities
         public DateTime CreatedDate { get; set; }
         public DateTime? LastTransactionDate { get; set; }
         public Guid CustomerId { get; set; }
-        public Customer? Customer { get; set; }
-        public List<Transaction>? Transactions { get; set; }
     }
 }

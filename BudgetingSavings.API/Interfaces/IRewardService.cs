@@ -1,4 +1,4 @@
-﻿using BudgetingSavings.Shared.Models.Enums;
+﻿using BudgetingSavings.API.Models.Enums;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
 
