@@ -18,6 +18,27 @@ namespace BudgetingSavings.API.Services
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
+
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
+
+            var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == request.AccountId, cancellationToken);
+
+            if (account is null)
+                throw new ArgumentException("Account does not exist.");
+
+            if (account.CustomerId != request.CustomerId)
+                throw new ArgumentException("Account does not belong to the customer.");
+
+            if (account.Currency != request.Currency)
+                throw new ArgumentException("Transaction currency must match account currency.");
+
+            return await TransactionHandler(request, cancellationToken);
+        }
+
+        private async Task<TransactionResponse> TransactionHandler(CreateTransactionRequest request, CancellationToken cancellationToken)
+        {
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
@@ -35,7 +56,7 @@ namespace BudgetingSavings.API.Services
                 await db.Transactions.AddAsync(transaction, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
                 await accountService.UpdateAccountBalanceAsync(request.AccountId,
-                                                                request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount, 
+                                                                request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount,
                                                                 cancellationToken);
                 await HandleRewardAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
@@ -63,6 +84,11 @@ namespace BudgetingSavings.API.Services
 
         public async Task<List<TransactionResponse>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
         {
+            var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
+
+            if (!accountExists)
+                throw new ArgumentException("Account does not exist.");
+
             var transactions = await db.Transactions.Where(s => s.AccountId == accountId).ToListAsync(cancellationToken);
             return transactions.Select(MapTransactionResponse).ToList();
         }
@@ -75,7 +101,12 @@ namespace BudgetingSavings.API.Services
 
         private async Task<Transaction> GetSpecificTransactionAsync(Guid id, CancellationToken cancellationToken)
         {
-            return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Transaction();
+            var transaction = await db.Transactions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
+            if(transaction is null)
+                throw new ArgumentException("Transaction does not exist.");
+
+            return transaction;
         }
 
         private TransactionResponse MapTransactionResponse(Transaction? transaction)
@@ -96,7 +127,7 @@ namespace BudgetingSavings.API.Services
 
         public async Task<TransferResponse> TransferAsync(TransferRequest request, CancellationToken cancellationToken)
         {
-            if (request.AccountOriginId == request.AccountDestinyId)
+            if (request.AccountOriginId == request.AccountDestinationId)
                 throw new ArgumentException("Origin and destination accounts cannot be the same.");
 
             if (request.Amount <= 0)
@@ -106,37 +137,14 @@ namespace BudgetingSavings.API.Services
 
             try
             {
-                // Debit Origin
-                await accountService.UpdateAccountBalanceAsync(request.AccountOriginId, -request.Amount, cancellationToken);
                 var accountOrigin = await db.Accounts.FirstAsync(a => a.Id == request.AccountOriginId, cancellationToken);
+                await DebitOriginAccountHandler(request, accountOrigin, cancellationToken);
 
-                var originTransaction = new Transaction
-                {
-                    AccountId = request.AccountOriginId,
-                    CustomerId = accountOrigin.CustomerId,
-                    Amount = -request.Amount,
-                    Currency = request.Currency,
-                    TransactionType = TransactionType.Debit,
-                    TransactionCategory = TransactionCategory.General,
-                    TransactionDateTime = DateTime.UtcNow
-                };
-                await db.Transactions.AddAsync(originTransaction, cancellationToken);
+                var accountDestination = await db.Accounts.FirstAsync(a => a.Id == request.AccountDestinationId, cancellationToken);
+                await CreditDestinationAccountHandler(request, accountDestination, cancellationToken);
 
-                // Credit Destiny
-                await accountService.UpdateAccountBalanceAsync(request.AccountDestinyId, request.Amount, cancellationToken);
-                var accountDestiny = await db.Accounts.FirstAsync(a => a.Id == request.AccountDestinyId, cancellationToken);
-
-                var destinyTransaction = new Transaction
-                {
-                    AccountId = request.AccountDestinyId,
-                    CustomerId = accountDestiny.CustomerId,
-                    Amount = request.Amount,
-                    Currency = request.Currency,
-                    TransactionType = TransactionType.Credit,
-                    TransactionCategory = TransactionCategory.General,
-                    TransactionDateTime = DateTime.UtcNow
-                };
-                await db.Transactions.AddAsync(destinyTransaction, cancellationToken);
+                if (accountOrigin.Currency != accountDestination.Currency || accountOrigin.Currency != request.Currency)
+                    throw new ArgumentException("Transfer currency must match both account currencies.");
 
                 await db.SaveChangesAsync(cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
@@ -144,10 +152,10 @@ namespace BudgetingSavings.API.Services
                 return new TransferResponse
                 {
                     AccountOriginId = request.AccountOriginId,
-                    AccountDestinyId = request.AccountDestinyId,
+                    AccountDestinyId = request.AccountDestinationId,
                     Amount = request.Amount,
                     Currency = request.Currency,
-                    Date = originTransaction.TransactionDateTime
+                    Date = DateTime.UtcNow
                 };
             }
             catch (Exception)
@@ -155,6 +163,46 @@ namespace BudgetingSavings.API.Services
                 await dbTransaction.RollbackAsync(cancellationToken);
                 throw;
             }
+        }
+
+        private async Task CreditDestinationAccountHandler(TransferRequest request, Account accountDestination, CancellationToken cancellationToken)
+        {
+            await accountService.UpdateAccountBalanceAsync(request.AccountDestinationId, request.Amount, cancellationToken);
+
+            if (accountDestination is null)
+                throw new ArgumentException("Destination account does not exist.");
+
+            var destinyTransaction = new Transaction
+            {
+                AccountId = request.AccountDestinationId,
+                CustomerId = accountDestination.CustomerId,
+                Amount = request.Amount,
+                Currency = request.Currency,
+                TransactionType = TransactionType.Credit,
+                TransactionCategory = TransactionCategory.General,
+                TransactionDateTime = DateTime.UtcNow
+            };
+            await db.Transactions.AddAsync(destinyTransaction, cancellationToken);
+        }
+
+        private async Task DebitOriginAccountHandler(TransferRequest request, Account accountOrigin, CancellationToken cancellationToken)
+        {
+            await accountService.UpdateAccountBalanceAsync(request.AccountOriginId, -request.Amount, cancellationToken);
+
+            if (accountOrigin is null)
+                throw new ArgumentException("Origin account does not exist.");
+
+            var originTransaction = new Transaction
+            {
+                AccountId = request.AccountOriginId,
+                CustomerId = accountOrigin.CustomerId,
+                Amount = -request.Amount,
+                Currency = request.Currency,
+                TransactionType = TransactionType.Debit,
+                TransactionCategory = TransactionCategory.General,
+                TransactionDateTime = DateTime.UtcNow
+            };
+            await db.Transactions.AddAsync(originTransaction, cancellationToken);
         }
     }
 }
