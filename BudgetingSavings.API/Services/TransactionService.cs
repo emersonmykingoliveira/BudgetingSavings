@@ -3,14 +3,23 @@ using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.Shared.Models.Requests;
 using BudgetingSavings.Shared.Models.Responses;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class TransactionService(ApiDbContext db, IAccountService accountsService, IRewardService rewardService) : ITransactionService
+    public class TransactionService(ApiDbContext db, 
+                                    IAccountService accountsService, 
+                                    IRewardService rewardService,
+                                    IValidator<CreateTransactionRequest> validator) : ITransactionService
     {
         public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
+            var result = await validator.ValidateAsync(request, cancellationToken);
+
+            if (!result.IsValid)
+                throw new ValidationException(result.Errors);
+
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
