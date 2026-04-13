@@ -24,7 +24,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetSavingGoal(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetSavingGoalById(Guid id, CancellationToken cancellationToken)
         {
             var savingGoal = await service.GetSavingGoalByIdAsync(id, cancellationToken);
             return Ok(savingGoal);
@@ -41,7 +41,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> CreateSavingGoal([FromBody] CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
             var savingGoal = await service.CreateSavingGoalAsync(request, cancellationToken);
-            return Ok(savingGoal);
+            return CreatedAtAction(nameof(GetSavingGoalById), new { id = savingGoal.Id }, savingGoal);
         }
 
         [HttpPut]

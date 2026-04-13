@@ -17,7 +17,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetBudget(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetBudgetById(Guid id, CancellationToken cancellationToken)
         {
             var budget = await service.GetBudgetByIdAsync(id, cancellationToken);
             return Ok(budget);
@@ -34,7 +34,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> CreateBudget([FromBody] CreateBudgetRequest request, CancellationToken cancellationToken)
         {
             var budget = await service.CreateBudgetAsync(request, cancellationToken);
-            return Ok(budget);
+            return CreatedAtAction(nameof(GetBudgetById), new { id = budget.Id }, budget);
         }
 
         [HttpPut]

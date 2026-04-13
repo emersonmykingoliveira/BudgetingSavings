@@ -17,7 +17,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetTransaction(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetTransactionById(Guid id, CancellationToken cancellationToken)
         {
             var transaction = await service.GetTransactionByIdAsync(id, cancellationToken);
             return Ok(transaction);
@@ -27,7 +27,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> CreateTransaction([FromBody] CreateTransactionRequest request, CancellationToken cancellationToken)
         {
             var transaction = await service.CreateTransactionAsync(request, cancellationToken);
-            return Ok(transaction);
+            return CreatedAtAction(nameof(GetTransactionById), new { id = transaction.Id }, transaction);
         }
     }
 }

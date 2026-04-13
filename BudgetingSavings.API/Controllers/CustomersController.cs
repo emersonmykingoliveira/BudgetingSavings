@@ -16,7 +16,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetCustomer(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCustomerById(Guid id, CancellationToken cancellationToken)
         {
             var customer = await service.GetCustomerByIdAsync(id, cancellationToken);
             return Ok(customer);
@@ -26,7 +26,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerRequest request, CancellationToken cancellationToken)
         {
             var customer = await service.CreateCustomerAsync(request, cancellationToken);
-            return Ok(customer);
+            return CreatedAtAction(nameof(GetCustomerById), new { id = customer.Id }, customer);
         }
 
         [HttpPut]

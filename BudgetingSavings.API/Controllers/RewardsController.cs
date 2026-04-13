@@ -16,7 +16,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetReward(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRewardById(Guid id, CancellationToken cancellationToken)
         {
             var reward = await service.GetRewardByIdAsync(id, cancellationToken);
             return Ok(reward);

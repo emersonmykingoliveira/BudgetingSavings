@@ -24,7 +24,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetAccount(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAccountById(Guid id, CancellationToken cancellationToken)
         {
             var account = await service.GetAccountByIdAsync(id, cancellationToken);
             return Ok(account);
@@ -34,7 +34,7 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
         {
             var account = await service.CreateAccountAsync(request, cancellationToken);
-            return Ok(account);
+            return CreatedAtAction(nameof(GetAccountById), new { id = account.Id }, account);
         }
 
         [HttpDelete("{id:guid}")]
