@@ -22,9 +22,9 @@ namespace BudgetingSavings.API.Services
             return MapRewardResponse(reward);
         }
 
-        private async Task<Reward> GetActiveRewardAsync(Guid customerId, CancellationToken cancellationToken)
+        private async Task<Reward?> GetActiveRewardAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            return await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == customerId && !s.Redeemed, cancellationToken) ?? new Reward();
+            return await db.Rewards.FirstOrDefaultAsync(s => s.CustomerId == customerId && !s.Redeemed, cancellationToken);
         }
 
         public async Task<RedeemRewardResponse> RedeemRewardAsync(Guid customerId, CancellationToken cancellationToken)
@@ -99,41 +99,41 @@ namespace BudgetingSavings.API.Services
         public async Task RewardHandlerAsync(CreateRewardRequest request, CancellationToken cancellationToken)
         {
             var pointsFactor = config.GetValue<decimal>("RewardPointsFactor");
-
             var points = (int)(request.Amount * pointsFactor);
+
+            if (points == 0) return;
 
             var existingReward = await GetActiveRewardAsync(request.CustomerId, cancellationToken);
 
             if (existingReward is not null)
             {
+                var originalPoints = existingReward.Points;
+
                 if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
-                {
                     existingReward.Points += points;
-                }
+
                 else if (request.TransactionType == TransactionType.Debit)
-                {
                     existingReward.Points -= points;
-                }
 
-                db.Rewards.Update(existingReward);
-                await db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+                if (existingReward.Points != originalPoints)
                 {
-                    var reward = new Reward
-                    {
-                        Id = Guid.NewGuid(),
-                        CustomerId = request.CustomerId,
-                        Points = points,
-                        Date = DateTime.Now,
-                        Redeemed = false
-                    };
-
-                    db.Rewards.Add(reward);
+                    db.Rewards.Update(existingReward);
                     await db.SaveChangesAsync(cancellationToken);
                 }
+            }
+            else if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+            {
+                var newReward = new Reward
+                {
+                    Id = Guid.NewGuid(),
+                    CustomerId = request.CustomerId,
+                    Points = points,
+                    Date = DateTime.Now,
+                    Redeemed = false
+                };
+
+                db.Rewards.Add(newReward);
+                await db.SaveChangesAsync(cancellationToken);
             }
         }
     }
