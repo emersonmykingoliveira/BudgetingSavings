@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BudgetingSavings.API\BudgetingSavings.API.csproj" />
+    <ProjectReference Include="..\BudgetingSavings.BusinessLayer\BudgetingSavings.BusinessLayer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

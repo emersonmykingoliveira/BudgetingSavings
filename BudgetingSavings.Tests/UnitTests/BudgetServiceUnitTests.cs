@@ -1,18 +1,11 @@
-﻿using BudgetingSavings.API.Infrastructure.Data;
-using BudgetingSavings.API.Infrastructure.Entities;
-using BudgetingSavings.API.Services;
-using BudgetingSavings.API.Models.Enums;
-using BudgetingSavings.API.Models.Requests;
-using BudgetingSavings.API.Models.Responses;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
+using BudgetingSavings.BusinessLayer.Infrastructure.Data;
+using BudgetingSavings.BusinessLayer.Models.Requests;
+using BudgetingSavings.BusinessLayer.Services;
+using BudgetingSavings.BusinessLayer.Infrastructure.Entities;
+using BudgetingSavings.BusinessLayer.Models.Enums;
 
 namespace BudgetingSavings.Tests.UnitTests
 {

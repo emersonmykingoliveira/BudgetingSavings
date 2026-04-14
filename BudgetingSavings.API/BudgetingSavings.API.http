@@ -1,6 +1,6 @@
-@BudgetingSavings.API_HostAddress = http://localhost:5196
+@BudgetingSavings.BusinessLayer_HostAddress = http://localhost:5196
 
-GET {{BudgetingSavings.API_HostAddress}}/weatherforecast/
+GET {{BudgetingSavings.BusinessLayer_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###

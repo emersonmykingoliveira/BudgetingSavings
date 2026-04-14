@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using BudgetingSavings.API.Infrastructure.Data;
-using BudgetingSavings.API.Infrastructure.Entities;
-using BudgetingSavings.API.Services;
-using BudgetingSavings.API.Models.Enums;
-using BudgetingSavings.API.Models.Requests;
+﻿using BudgetingSavings.BusinessLayer.Infrastructure.Data;
+using BudgetingSavings.BusinessLayer.Infrastructure.Entities;
+using BudgetingSavings.BusinessLayer.Models.Enums;
+using BudgetingSavings.BusinessLayer.Models.Requests;
+using BudgetingSavings.BusinessLayer.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
@@ -189,7 +184,7 @@ namespace BudgetingSavings.Tests.UnitTests
 
             // Assert
             var updatedAccount = await _db.Accounts.FindAsync(accountId);
-            Assert.Equal(150m, updatedAccount.Balance);
+            Assert.Equal(150m, updatedAccount?.Balance);
         }
 
         [Fact]

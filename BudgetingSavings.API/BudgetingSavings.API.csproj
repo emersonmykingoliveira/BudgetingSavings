@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <ProjectReference Include="..\BudgetingSavings.BusinessLayer\BudgetingSavings.BusinessLayer.csproj" />
   </ItemGroup>
 
 </Project>

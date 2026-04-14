@@ -1,9 +1,9 @@
-﻿using BudgetingSavings.API.Interfaces;
-using BudgetingSavings.API.Models.Requests;
-using BudgetingSavings.API.Models.Responses;
+﻿using BudgetingSavings.BusinessLayer.Interfaces;
+using BudgetingSavings.BusinessLayer.Models.Requests;
+using BudgetingSavings.BusinessLayer.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BudgetingSavings.API.Controllers
+namespace BudgetingSavings.BusinessLayer.Controllers
 {
     [ApiController]
     [Route("api/customers")]
