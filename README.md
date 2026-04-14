@@ -2,6 +2,14 @@
 
 A .NET 10 backend project Web API designed to help users manage their finances, track saving goals, set budgets, and earn rewards for saving.
 
+## Saving Goals and Rewards Handling
+
+The API employs an intelligent approach to encourage better financial habits through saving goals and a gamified reward system:
+
+- **Saving Goals Tracking**: Users can set specific saving targets with a name, target amount, and deadline. The system monitors transactions tagged with `TransactionCategory.Savings`. The goal's progress is dynamically calculated by summarizing all relevant savings transactions within the goal's timeframe.
+- **Automated "Round-Up" Savings**: Every time a user makes a `Debit` (expense) transaction from a Checking account, the API automatically rounds the amount up to the nearest whole unit. The difference is then moved from the Checking account to the user's Savings account as an automated saving transaction.
+- **Gamified Rewards**: Rewards are automatically handled after transactions to incentivize positive financial behavior. Users earn points for their first transaction (welcome bonus) and for their first savings contribution each month. Accumulated points can be redeemed for cashback.
+
 ## Project Structure
 
 - **BudgetingSavings.API**: The main project containing the Web API.
