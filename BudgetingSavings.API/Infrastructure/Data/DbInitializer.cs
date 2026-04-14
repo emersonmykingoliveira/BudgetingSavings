@@ -36,6 +36,7 @@ public static class DbInitializer
                 Balance = 15000.25m,
                 Currency = CurrencyType.NOK,
                 CustomerId = customer1,
+                CreatedDate = DateTime.SpecifyKind(new DateTime(2023, 1, 1), DateTimeKind.Utc),
                 LastTransactionDate = DateTime.SpecifyKind(new DateTime(2023, 8, 15), DateTimeKind.Utc)
             },
             new Account
@@ -46,6 +47,7 @@ public static class DbInitializer
                 Balance = 25000.75m,
                 Currency = CurrencyType.NOK,
                 CustomerId = customer2,
+                CreatedDate = DateTime.SpecifyKind(new DateTime(2023, 1, 1), DateTimeKind.Utc),
                 LastTransactionDate = DateTime.SpecifyKind(new DateTime(2023, 8, 15), DateTimeKind.Utc)
             },
             new Account
@@ -56,6 +58,7 @@ public static class DbInitializer
                 Balance = 2000.50m,
                 Currency = CurrencyType.NOK,
                 CustomerId = customer3,
+                CreatedDate = DateTime.SpecifyKind(new DateTime(2023, 1, 1), DateTimeKind.Utc),
                 LastTransactionDate = DateTime.SpecifyKind(new DateTime(2023, 8, 15), DateTimeKind.Utc)
             }
         );
@@ -197,6 +200,7 @@ public static class DbInitializer
                 Amount = 1500.25m,
                 Points = 150,
                 Redeemed = false,
+                CashBack = 0,
                 Date = DateTime.UtcNow
             },
             new Reward
@@ -207,6 +211,7 @@ public static class DbInitializer
                 Points = 250,
                 Redeemed = true,
                 RedeemedDate = DateTime.UtcNow,
+                CashBack = 25.00m,
                 Date = DateTime.UtcNow.AddDays(-10)
             }
         );
