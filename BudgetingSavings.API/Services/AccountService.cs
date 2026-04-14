@@ -1,4 +1,4 @@
-﻿using BudgetingSavings.API.Infrastructure.Data;
+using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
@@ -91,12 +91,12 @@ namespace BudgetingSavings.API.Services
             return accounts.Select(MapAccountResponse).ToList();
         }
 
-        public async Task UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken)
+        public async Task UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken, bool saveChanges = true)
         {
             if (amount == 0)
                 throw new ArgumentException("Amount must be different than zero.");
 
-            var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+            var account = await db.Accounts.FindAsync([id], cancellationToken);
             if (account is null)
                 throw new ArgumentException("Account does not exist.");
 
@@ -106,8 +106,8 @@ namespace BudgetingSavings.API.Services
             account.Balance += amount;
             account.LastTransactionDate = DateTime.UtcNow;
 
-            db.Accounts.Update(account);
-            await db.SaveChangesAsync(cancellationToken);
+            if (saveChanges)
+                await db.SaveChangesAsync(cancellationToken);
         }
 
         private async Task<string> GenerateUniqueAccountNumberAsync(CancellationToken cancellationToken)

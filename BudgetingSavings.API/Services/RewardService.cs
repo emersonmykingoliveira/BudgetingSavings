@@ -55,7 +55,7 @@ namespace BudgetingSavings.API.Services
 
                 await HandleCashbackRewardAsync(reward, cancellationToken);
                 await accountsService.UpdateAccountBalanceAsync(account.Id, reward.CashBack, cancellationToken);
-
+                await db.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return MapRedeemRewardResponse(reward, account);
             }

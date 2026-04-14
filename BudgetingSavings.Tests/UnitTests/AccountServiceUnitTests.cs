@@ -181,6 +181,7 @@ namespace BudgetingSavings.Tests.UnitTests
 
             // Act
             await _service.UpdateAccountBalanceAsync(accountId, 50m, CancellationToken.None);
+            await _db.SaveChangesAsync();
 
             // Assert
             var updatedAccount = await _db.Accounts.FindAsync(accountId);

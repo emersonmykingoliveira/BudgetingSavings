@@ -76,7 +76,7 @@ namespace BudgetingSavings.Tests.UnitTests
             // Assert
             Assert.NotNull(result);
             Assert.Equal(request.Amount * -1, result.Amount);
-            await _accountService.Received(1).UpdateAccountBalanceAsync(accountId, -100, Arg.Any<CancellationToken>());
+            await _accountService.Received(1).UpdateAccountBalanceAsync(accountId, -100, Arg.Any<CancellationToken>(), Arg.Any<bool>());
             await _rewardService.Received(1).RewardHandlerAsync(Arg.Any<CreateRewardRequest>(), Arg.Any<CancellationToken>());
         }
 
@@ -211,8 +211,8 @@ namespace BudgetingSavings.Tests.UnitTests
 
             // Assert
             Assert.NotNull(result);
-            await _accountService.Received(1).UpdateAccountBalanceAsync(originId, -200, Arg.Any<CancellationToken>());
-            await _accountService.Received(1).UpdateAccountBalanceAsync(destinationId, 200, Arg.Any<CancellationToken>());
+            await _accountService.Received(1).UpdateAccountBalanceAsync(originId, -200, Arg.Any<CancellationToken>(), Arg.Any<bool>());
+            await _accountService.Received(1).UpdateAccountBalanceAsync(destinationId, 200, Arg.Any<CancellationToken>(), Arg.Any<bool>());
             
             var transactions = await _db.Transactions.ToListAsync();
             Assert.Equal(2, transactions.Count);

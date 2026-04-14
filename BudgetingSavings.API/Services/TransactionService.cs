@@ -54,10 +54,11 @@ namespace BudgetingSavings.API.Services
                 };
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
-                await db.SaveChangesAsync(cancellationToken);
                 await accountService.UpdateAccountBalanceAsync(request.AccountId,
-                                                                request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount,
-                                                                cancellationToken);
+                                                request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount,
+                                                cancellationToken,
+                                                saveChanges: false);
+                await db.SaveChangesAsync(cancellationToken);
                 await HandleRewardAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return MapTransactionResponse(transaction);
@@ -171,7 +172,7 @@ namespace BudgetingSavings.API.Services
 
         private async Task CreditDestinationAccountHandler(TransferRequest request, Account accountDestination, CancellationToken cancellationToken)
         {
-            await accountService.UpdateAccountBalanceAsync(request.AccountDestinationId, request.Amount, cancellationToken);
+            await accountService.UpdateAccountBalanceAsync(request.AccountDestinationId, request.Amount, cancellationToken, saveChanges: false);
 
             if (accountDestination is null)
                 throw new ArgumentException("Destination account does not exist.");
@@ -191,7 +192,7 @@ namespace BudgetingSavings.API.Services
 
         private async Task DebitOriginAccountHandler(TransferRequest request, Account accountOrigin, CancellationToken cancellationToken)
         {
-            await accountService.UpdateAccountBalanceAsync(request.AccountOriginId, -request.Amount, cancellationToken);
+            await accountService.UpdateAccountBalanceAsync(request.AccountOriginId, -request.Amount, cancellationToken, saveChanges: false);
 
             if (accountOrigin is null)
                 throw new ArgumentException("Origin account does not exist.");
