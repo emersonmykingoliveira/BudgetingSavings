@@ -22,8 +22,6 @@ namespace BudgetingSavings.Tests.UnitTests
     public class TransactionServiceUnitTests : IDisposable
     {
         private readonly ApiDbContext _db;
-        private readonly IAccountService _accountService;
-        private readonly IRewardService _rewardService;
         private readonly IValidator<CreateTransactionRequest> _createValidator;
         private readonly TransactionService _service;
 
@@ -35,11 +33,10 @@ namespace BudgetingSavings.Tests.UnitTests
                 .Options;
 
             _db = new ApiDbContext(options);
-            _accountService = Substitute.For<IAccountService>();
-            _rewardService = Substitute.For<IRewardService>();
+
             _createValidator = Substitute.For<IValidator<CreateTransactionRequest>>();
 
-            _service = new TransactionService(_db, _accountService, _rewardService, _createValidator);
+            _service = new TransactionService(_db, _createValidator);
 
             _createValidator.ValidateAsync(Arg.Any<CreateTransactionRequest>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new ValidationResult()));

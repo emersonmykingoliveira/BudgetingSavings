@@ -9,10 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class TransactionService(ApiDbContext db, 
-                                    IAccountService accountService, 
-                                    IRewardService rewardService,
-                                    IValidator<CreateTransactionRequest> createValidator) : ITransactionService
+    public class TransactionService(ApiDbContext db, IValidator<CreateTransactionRequest> createValidator) : ITransactionService
     {
         public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -34,10 +31,10 @@ namespace BudgetingSavings.API.Services
             if (account.Currency != request.Currency)
                 throw new ArgumentException("Transaction currency must match account currency.");
 
-            return await TransactionHandler(request, cancellationToken);
+            return await TransactionHandler(request, account, cancellationToken);
         }
 
-        private async Task<TransactionResponse> TransactionHandler(CreateTransactionRequest request, CancellationToken cancellationToken)
+        private async Task<TransactionResponse> TransactionHandler(CreateTransactionRequest request, Account account, CancellationToken cancellationToken)
         {
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
@@ -54,10 +51,8 @@ namespace BudgetingSavings.API.Services
                 };
 
                 await db.Transactions.AddAsync(transaction, cancellationToken);
-                await accountService.UpdateAccountBalanceAsync(request.AccountId,
-                                                request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount,
-                                                cancellationToken,
-                                                saveChanges: false);
+ 
+                UpdateAccountBalance(account, request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount);
 
                 if (request.TransactionType == TransactionType.Debit)
                     await HandleRoundUpToSavingsAsync(request, cancellationToken);
@@ -88,7 +83,8 @@ namespace BudgetingSavings.API.Services
                                                                             && a.AccountType == AccountType.Savings, cancellationToken);
             if (savingsAccount is null) return;
 
-            await accountService.UpdateAccountBalanceAsync(request.AccountId, -roundUpAmount, cancellationToken, saveChanges: false);
+            UpdateAccountBalance(currentAccount, -roundUpAmount);
+
             var debitTransaction = new Transaction
             {
                 AccountId = request.AccountId,
@@ -101,7 +97,8 @@ namespace BudgetingSavings.API.Services
             };
             await db.Transactions.AddAsync(debitTransaction, cancellationToken);
 
-            await accountService.UpdateAccountBalanceAsync(savingsAccount.Id, roundUpAmount, cancellationToken, saveChanges: false);
+            UpdateAccountBalance(savingsAccount, roundUpAmount);
+
             var creditTransaction = new Transaction
             {
                 AccountId = savingsAccount.Id,
@@ -185,16 +182,13 @@ namespace BudgetingSavings.API.Services
             {
                 var accountOrigin = await db.Accounts.FirstAsync(a => a.Id == request.AccountOriginId, cancellationToken);
 
-                if (accountOrigin.Balance < request.Amount)
-                    throw new ArgumentException("Insufficient balance for transfer.");
+                var accountDestination = await db.Accounts.FirstAsync(a => a.Id == request.AccountDestinationId, cancellationToken);
+
+                if (accountOrigin?.Currency != request.Currency || accountDestination?.Currency != request.Currency)
+                    throw new ArgumentException("Transfer currency must match both account currencies.");
 
                 await DebitOriginAccountHandler(request, accountOrigin, cancellationToken);
-
-                var accountDestination = await db.Accounts.FirstAsync(a => a.Id == request.AccountDestinationId, cancellationToken);
                 await CreditDestinationAccountHandler(request, accountDestination, cancellationToken);
-
-                if (accountOrigin.Currency != accountDestination.Currency || accountOrigin.Currency != request.Currency)
-                    throw new ArgumentException("Transfer currency must match both account currencies.");
 
                 await db.SaveChangesAsync(cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
@@ -217,10 +211,10 @@ namespace BudgetingSavings.API.Services
 
         private async Task CreditDestinationAccountHandler(TransferRequest request, Account accountDestination, CancellationToken cancellationToken)
         {
-            await accountService.UpdateAccountBalanceAsync(request.AccountDestinationId, request.Amount, cancellationToken, saveChanges: false);
-
             if (accountDestination is null)
                 throw new ArgumentException("Destination account does not exist.");
+
+            UpdateAccountBalance(accountDestination, request.Amount);
 
             var destinyTransaction = new Transaction
             {
@@ -237,10 +231,13 @@ namespace BudgetingSavings.API.Services
 
         private async Task DebitOriginAccountHandler(TransferRequest request, Account accountOrigin, CancellationToken cancellationToken)
         {
-            await accountService.UpdateAccountBalanceAsync(request.AccountOriginId, -request.Amount, cancellationToken, saveChanges: false);
-
             if (accountOrigin is null)
                 throw new ArgumentException("Origin account does not exist.");
+
+            if (accountOrigin.Balance < request.Amount)
+                throw new ArgumentException("Insufficient balance for transfer.");
+
+            UpdateAccountBalance(accountOrigin, -request.Amount);
 
             var originTransaction = new Transaction
             {
@@ -253,6 +250,18 @@ namespace BudgetingSavings.API.Services
                 TransactionDateTime = DateTime.UtcNow
             };
             await db.Transactions.AddAsync(originTransaction, cancellationToken);
+        }
+
+        private static void UpdateAccountBalance(Account account, decimal amount)
+        {
+            if (amount == 0)
+                throw new ArgumentException("Amount must be different from zero.");
+
+            if (account.Balance + amount < 0)
+                throw new ArgumentException("Insufficient balance.");
+
+            account.Balance += amount;
+            account.LastTransactionDate = DateTime.UtcNow;
         }
     }
 }
