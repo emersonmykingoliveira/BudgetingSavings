@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace BudgetingSavings.Shared.Models.Requests
+namespace BudgetingSavings.API.Models.Requests
 {
     public class CreateTransactionRequest
     {

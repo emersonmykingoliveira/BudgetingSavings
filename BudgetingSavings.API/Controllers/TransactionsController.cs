@@ -1,7 +1,7 @@
 ﻿using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.API.Services;
-using BudgetingSavings.Shared.Models.Requests;
-using BudgetingSavings.Shared.Models.Responses;
+using BudgetingSavings.API.Models.Requests;
+using BudgetingSavings.API.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetingSavings.API.Controllers

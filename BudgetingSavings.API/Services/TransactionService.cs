@@ -2,8 +2,8 @@
 using BudgetingSavings.API.Infrastructure.Entities;
 using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.API.Models.Enums;
-using BudgetingSavings.Shared.Models.Requests;
-using BudgetingSavings.Shared.Models.Responses;
+using BudgetingSavings.API.Models.Requests;
+using BudgetingSavings.API.Models.Responses;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 

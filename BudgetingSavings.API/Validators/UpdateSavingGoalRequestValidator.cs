@@ -1,4 +1,4 @@
-﻿using BudgetingSavings.Shared.Models.Requests;
+﻿using BudgetingSavings.API.Models.Requests;
 using FluentValidation;
 
 namespace BudgetingSavings.API.Validators

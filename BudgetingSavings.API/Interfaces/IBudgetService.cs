@@ -1,5 +1,5 @@
-﻿using BudgetingSavings.Shared.Models.Requests;
-using BudgetingSavings.Shared.Models.Responses;
+﻿using BudgetingSavings.API.Models.Requests;
+using BudgetingSavings.API.Models.Responses;
 
 namespace BudgetingSavings.API.Services
 {

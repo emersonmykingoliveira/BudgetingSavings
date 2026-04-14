@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace BudgetingSavings.Shared.Models.Responses
+namespace BudgetingSavings.API.Models.Responses
 {
     public class TransferResponse
     {
