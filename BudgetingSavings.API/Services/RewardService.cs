@@ -109,7 +109,7 @@ namespace BudgetingSavings.API.Services
             if (cashBackFactor <= 0)
                 throw new ArgumentException("Reward cashback factor is invalid.");
 
-            var cashback = reward.Points * cashBackFactor;
+            var cashback = reward.Points * (cashBackFactor / 100);
             if (cashback <= 0)
                 throw new ArgumentException("Reward cashback amount is invalid.");
 
@@ -178,7 +178,7 @@ namespace BudgetingSavings.API.Services
             if (pointsFactor <= 0)
                 throw new ArgumentException("Reward points factor is invalid.");
 
-            return (int)(amount * pointsFactor);
+            return (int)(amount * (pointsFactor / 100));
         }
 
         private bool IsSavingsTransaction(CreateRewardRequest request)

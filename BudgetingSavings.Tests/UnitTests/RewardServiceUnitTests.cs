@@ -41,8 +41,8 @@ namespace BudgetingSavings.Tests.UnitTests
             
             var myConfiguration = new Dictionary<string, string>
             {
-                {"RewardSettings:PointsFactor", "0.01"},
-                {"RewardSettings:CashBackFactor", "0.05"}
+                {"RewardSettings:PointsFactor", "1"},
+                {"RewardSettings:CashBackFactor", "5"}
             };
 
             _config = new ConfigurationBuilder()
@@ -134,9 +134,9 @@ namespace BudgetingSavings.Tests.UnitTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(5m, result.CashBack); // 500 * 0.01
+            Assert.Equal(25m, result.CashBack); // 500 * (5/100)
             Assert.True(reward.Redeemed);
-            await _accountsService.Received(1).UpdateAccountBalanceAsync(account.Id, 5m, Arg.Any<CancellationToken>());
+            await _accountsService.Received(1).UpdateAccountBalanceAsync(account.Id, 25m, Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -165,7 +165,7 @@ namespace BudgetingSavings.Tests.UnitTests
             // Assert
             var newReward = await _db.Rewards.FirstOrDefaultAsync(r => r.CustomerId == customerId);
             Assert.NotNull(newReward);
-            Assert.Equal(1100, newReward.Points); // (100 * 10) + 100 welcome bonus
+            Assert.Equal(101, newReward.Points); // (100 * 1%) + 100 welcome bonus
         }
 
         [Fact]
@@ -195,7 +195,7 @@ namespace BudgetingSavings.Tests.UnitTests
             var request = new CreateRewardRequest
             {
                 CustomerId = customerId,
-                Amount = 10,
+                Amount = 100,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.Savings
             };
@@ -207,7 +207,7 @@ namespace BudgetingSavings.Tests.UnitTests
             await _service.RewardHandlerAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.Equal(350, existingReward.Points); // 200 + (10 * 10) + 50 bonus
+            Assert.Equal(251, existingReward.Points); // 200 + (100 * 1%) + 50 bonus
         }
 
         [Fact]
@@ -223,7 +223,7 @@ namespace BudgetingSavings.Tests.UnitTests
             var request = new CreateRewardRequest
             {
                 CustomerId = customerId,
-                Amount = 20,
+                Amount = 2000,
                 TransactionType = TransactionType.Debit,
                 TransactionCategory = TransactionCategory.Savings
             };
@@ -235,7 +235,7 @@ namespace BudgetingSavings.Tests.UnitTests
             await _service.RewardHandlerAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.Equal(300, reward.Points); // 500 - (20 * 10)
+            Assert.Equal(480, reward.Points); // 500 - (2000 * 1%)
         }
     }
 }
