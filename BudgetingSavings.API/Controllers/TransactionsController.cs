@@ -57,6 +57,12 @@ namespace BudgetingSavings.API.Controllers
             return CreatedAtAction(nameof(GetTransactionById), new { id = transaction.Id }, transaction);
         }
 
+        /// <summary>
+        /// Creates a new transfer between two accounts.
+        /// </summary>
+        /// <param name="request">The transfer creation details.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The newly created transfer transaction.</returns>
         [HttpPost]
         [ProducesResponseType(typeof(TransactionResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
