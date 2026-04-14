@@ -21,7 +21,7 @@ The API employs an intelligent approach to encourage better financial habits thr
         - `Entities/`: Defines the core data models used by Entity Framework.
     - `Models/`: Contains Data Transfer Objects (DTOs) for requests and responses, as well as enums.
     - `Validators/`: Contains FluentValidation rules to ensure incoming data is correct.
-    - `Middleware/`: Custom logic injected into the ASP.NET Core request pipeline (e.g., exception handling).
+    - `Middleware/`: Custom logic injected into the ASP.NET Core request pipeline (e.g., exception handling, rate limiting).
 - **BudgetingSavings.Tests**: The testing project to ensure the reliability of the application.
     - `UnitTests/`: Contains isolated tests for the business logic in the `Services/` folder.
 
@@ -31,8 +31,17 @@ The API employs an intelligent approach to encourage better financial habits thr
 - **Framework**: .NET 10
 - **Language**: C# 14
 - **ORM**: Entity Framework Core
-- **Validation**: FluentValidation, ExceptionHandlingMiddleware
+- **Validation**: FluentValidation
+- **Middleware**: ExceptionHandlingMiddleware, RateLimiting
 - **Tests**: xUnit, NSubstitute, FluentAssertions
+
+## Rate Limiting
+
+The API implements rate limiting to ensure stability and prevent abuse:
+
+- **Policy**: `fixedRateLimiter` (Fixed Window).
+- **Limit**: 20 requests per minute.
+- **Queueing**: Disabled (requests are rejected immediately when the limit is reached).
 
 ## Services
 1.  **CustomerService**: Manages customer profiles and information.
