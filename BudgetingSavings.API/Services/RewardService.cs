@@ -11,11 +11,9 @@ namespace BudgetingSavings.API.Services
 {
     public class RewardService(ApiDbContext db,
                                 IAccountService accountsService,
-                                IValidator<CreateRewardRequest> createValidator) : IRewardService
+                                IValidator<CreateRewardRequest> createValidator,
+                                IConfiguration config) : IRewardService
     {
-        public decimal CashBackFactor { get; set; }
-        public decimal PointsFactor { get; set; }
-
         public async Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers
@@ -107,10 +105,11 @@ namespace BudgetingSavings.API.Services
 
         private async Task HandleCashbackRewardAsync(Reward reward, CancellationToken cancellationToken)
         {
-            if (CashBackFactor <= 0)
+            var cashBackFactor = config.GetValue<decimal>("RewardSettings:CashBackFactor");
+            if (cashBackFactor <= 0)
                 throw new ArgumentException("Reward cashback factor is invalid.");
 
-            var cashback = reward.Points * CashBackFactor;
+            var cashback = reward.Points * cashBackFactor;
             if (cashback <= 0)
                 throw new ArgumentException("Reward cashback amount is invalid.");
 
@@ -175,10 +174,11 @@ namespace BudgetingSavings.API.Services
 
         private int CalculatePoints(decimal amount)
         {
-            if (PointsFactor <= 0)
+            var pointsFactor = config.GetValue<decimal>("RewardSettings:PointsFactor");
+            if (pointsFactor <= 0)
                 throw new ArgumentException("Reward points factor is invalid.");
 
-            return (int)(amount * PointsFactor);
+            return (int)(amount * pointsFactor);
         }
 
         private bool IsSavingsTransaction(CreateRewardRequest request)

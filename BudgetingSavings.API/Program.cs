@@ -17,8 +17,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddDbContext<ApiDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), 
-        b => b.MigrationsAssembly("BudgetingSavings.API")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
