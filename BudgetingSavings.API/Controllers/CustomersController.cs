@@ -2,11 +2,13 @@
 using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/customers")]
+    [EnableRateLimiting("fixedRateLimiter")]
     public class CustomersController(ICustomerService service) : ControllerBase
     {
         /// <summary>

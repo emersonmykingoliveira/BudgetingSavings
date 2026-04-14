@@ -1,13 +1,15 @@
 ﻿using BudgetingSavings.API.Interfaces;
-using BudgetingSavings.API.Services;
 using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
+using BudgetingSavings.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/saving-goals")]
+    [EnableRateLimiting("fixedRateLimiter")]
     public class SavingGoalsController(ISavingGoalService service) : ControllerBase
     {
         /// <summary>

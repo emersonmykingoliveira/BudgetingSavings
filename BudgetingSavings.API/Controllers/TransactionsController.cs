@@ -1,13 +1,15 @@
 ﻿using BudgetingSavings.API.Interfaces;
-using BudgetingSavings.API.Services;
 using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
+using BudgetingSavings.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BudgetingSavings.API.Controllers
 {
     [ApiController]
     [Route("api/transactions")]
+    [EnableRateLimiting("fixedRateLimiter")]
     public class TransactionsController(ITransactionService service) : ControllerBase
     {
         /// <summary>
