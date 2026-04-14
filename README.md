@@ -43,6 +43,18 @@ The API implements rate limiting to ensure stability and prevent abuse:
 - **Limit**: 20 requests per minute.
 - **Queueing**: Disabled (requests are rejected immediately when the limit is reached).
 
+## Security & Authentication
+
+The API uses API Key authentication to secure its endpoints:
+
+- **Header Name**: `X-Api-Key`
+- **Configuration**: The API key is stored in `appsettings.json` under the `Security:ApiKey` path.
+- **Local Development Override**: You can override the default API key by using .NET User Secrets:
+  ```bash
+  dotnet user-secrets set "Security:ApiKey" "your-custom-secret-key" --project BudgetingSavings.API
+  ```
+- **Example Usage**: Include the key in your HTTP request headers: `X-Api-Key: your-key-here`.
+
 ## Services
 1.  **CustomerService**: Manages customer profiles and information.
 2.  **AccountService**: Handles account creation, retrieval, and management.
