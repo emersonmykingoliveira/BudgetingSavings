@@ -4,8 +4,19 @@ A .NET 10 backend project Web API designed to help users manage their finances, 
 
 ## Project Structure
 
-- **BudgetingSavings.API**: Web API project containing controllers, services, and infrastructure.
-- **BudgetingSavings.Tests**: Unit tests using xUnit and NSubstitute covering all services.
+- **BudgetingSavings.API**: The main project containing the Web API.
+    - `Controllers/`: Handles incoming HTTP requests and directs them to the appropriate services.
+    - `Services/`: Contains the business logic for the application, such as calculations and processing data.
+    - `Interfaces/`: Defines the service abstractions for loose coupling and easier testing.
+    - `Infrastructure/`:
+        - `Data/`: Manages database connections, context, migrations, and data initialization.
+        - `Entities/`: Defines the core data models used by Entity Framework.
+    - `Models/`: Contains Data Transfer Objects (DTOs) for requests and responses, as well as enums.
+    - `Validators/`: Contains FluentValidation rules to ensure incoming data is correct.
+    - `Middleware/`: Custom logic injected into the ASP.NET Core request pipeline (e.g., exception handling).
+- **BudgetingSavings.Tests**: The testing project to ensure the reliability of the application.
+    - `UnitTests/`: Contains isolated tests for the business logic in the `Services/` folder.
+
 
 ## Technology Stack
 
