@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BudgetingSavings.API.Models.Requests
 {
-    public class TransferRequest
+    public class CreateTransferRequest
     {
         public Guid AccountOriginId { get; set; }
         public Guid AccountDestinationId { get; set; }

@@ -7,6 +7,7 @@ namespace BudgetingSavings.API.Models.Responses
 {
     public class TransferResponse
     {
+        public Guid Id { get; set; }
         public Guid AccountOriginId { get; set; }
         public Guid AccountDestinyId { get; set; }
         public decimal Amount { get; set; }

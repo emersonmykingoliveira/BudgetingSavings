@@ -23,8 +23,8 @@ namespace BudgetingSavings.Tests.UnitTests
     {
         private readonly ApiDbContext _db;
         private readonly IValidator<CreateTransactionRequest> _createValidator;
-        private readonly TransactionService _service;
-
+        private readonly ITransactionService _service;
+        private readonly IRewardService _rewardService;
         public TransactionServiceUnitTests()
         {
             var options = new DbContextOptionsBuilder<ApiDbContext>()
@@ -35,8 +35,8 @@ namespace BudgetingSavings.Tests.UnitTests
             _db = new ApiDbContext(options);
 
             _createValidator = Substitute.For<IValidator<CreateTransactionRequest>>();
-
-            _service = new TransactionService(_db, _createValidator);
+            _rewardService = Substitute.For<IRewardService>();
+            _service = new TransactionService(_db, _rewardService, _createValidator);
 
             _createValidator.ValidateAsync(Arg.Any<CreateTransactionRequest>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new ValidationResult()));
@@ -195,7 +195,7 @@ namespace BudgetingSavings.Tests.UnitTests
             );
             await _db.SaveChangesAsync();
 
-            var request = new TransferRequest
+            var request = new CreateTransferRequest
             {
                 AccountOriginId = originId,
                 AccountDestinationId = destinationId,
@@ -204,7 +204,7 @@ namespace BudgetingSavings.Tests.UnitTests
             };
 
             // Act
-            var result = await _service.TransferAsync(request, CancellationToken.None);
+            var result = await _service.CreateTransferAsync(request, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -222,18 +222,18 @@ namespace BudgetingSavings.Tests.UnitTests
         {
             // Arrange
             var accountId = Guid.NewGuid();
-            var request = new TransferRequest { AccountOriginId = accountId, AccountDestinationId = accountId };
+            var request = new CreateTransferRequest { AccountOriginId = accountId, AccountDestinationId = accountId };
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.TransferAsync(request, CancellationToken.None));
+                _service.CreateTransferAsync(request, CancellationToken.None));
         }
 
         [Fact]
         public async Task TransferAsync_ShouldThrow_WhenAmountIsZeroOrLess()
         {
             // Arrange
-            var request = new TransferRequest 
+            var request = new CreateTransferRequest 
             { 
                 AccountOriginId = Guid.NewGuid(), 
                 AccountDestinationId = Guid.NewGuid(), 
@@ -242,7 +242,7 @@ namespace BudgetingSavings.Tests.UnitTests
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.TransferAsync(request, CancellationToken.None));
+                _service.CreateTransferAsync(request, CancellationToken.None));
         }
 
         [Fact]
@@ -258,7 +258,7 @@ namespace BudgetingSavings.Tests.UnitTests
             );
             await _db.SaveChangesAsync();
 
-            var request = new TransferRequest
+            var request = new CreateTransferRequest
             {
                 AccountOriginId = originId,
                 AccountDestinationId = destinationId,
@@ -268,7 +268,7 @@ namespace BudgetingSavings.Tests.UnitTests
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.TransferAsync(request, CancellationToken.None));
+                _service.CreateTransferAsync(request, CancellationToken.None));
         }
     }
 }

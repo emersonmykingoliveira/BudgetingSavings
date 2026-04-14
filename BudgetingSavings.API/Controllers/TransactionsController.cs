@@ -56,5 +56,14 @@ namespace BudgetingSavings.API.Controllers
             var transaction = await service.CreateTransactionAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetTransactionById), new { id = transaction.Id }, transaction);
         }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(TransactionResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreateTransfer([FromBody] CreateTransferRequest request, CancellationToken cancellationToken)
+        {
+            var transfer = await service.CreateTransferAsync(request, cancellationToken);
+            return CreatedAtAction(nameof(GetTransactionById), new { id = transfer.Id }, transfer);
+        }
     }
 }

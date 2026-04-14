@@ -9,7 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetingSavings.API.Services
 {
-    public class TransactionService(ApiDbContext db, IValidator<CreateTransactionRequest> createValidator) : ITransactionService
+    public class TransactionService(ApiDbContext db, 
+                                    IRewardService rewardService,
+                                    IValidator<CreateTransactionRequest> createValidator) : ITransactionService
     {
         public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -58,7 +60,7 @@ namespace BudgetingSavings.API.Services
                     await HandleRoundUpToSavingsAsync(request, cancellationToken);
 
                 await db.SaveChangesAsync(cancellationToken);
-                await HandleRewardAsync(request, cancellationToken);
+                await ApplyRewardsForTransactionAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return MapTransactionResponse(transaction);
             }
@@ -112,7 +114,7 @@ namespace BudgetingSavings.API.Services
             await db.Transactions.AddAsync(creditTransaction, cancellationToken);
         }
 
-        private async Task HandleRewardAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
+        private async Task ApplyRewardsForTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
             var rewardRequest = new CreateRewardRequest
             {
@@ -168,7 +170,7 @@ namespace BudgetingSavings.API.Services
             };
         }
 
-        public async Task<TransferResponse> TransferAsync(TransferRequest request, CancellationToken cancellationToken)
+        public async Task<TransferResponse> CreateTransferAsync(CreateTransferRequest request, CancellationToken cancellationToken)
         {
             if (request.AccountOriginId == request.AccountDestinationId)
                 throw new ArgumentException("Origin and destination accounts cannot be the same.");
@@ -195,7 +197,7 @@ namespace BudgetingSavings.API.Services
 
                 return new TransferResponse
                 {
-                    AccountOriginId = request.AccountOriginId,
+                    Id = Guid.NewGuid(),
                     AccountDestinyId = request.AccountDestinationId,
                     Amount = request.Amount,
                     Currency = request.Currency,
@@ -209,7 +211,7 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        private async Task CreditDestinationAccountHandler(TransferRequest request, Account accountDestination, CancellationToken cancellationToken)
+        private async Task CreditDestinationAccountHandler(CreateTransferRequest request, Account accountDestination, CancellationToken cancellationToken)
         {
             if (accountDestination is null)
                 throw new ArgumentException("Destination account does not exist.");
@@ -229,7 +231,7 @@ namespace BudgetingSavings.API.Services
             await db.Transactions.AddAsync(destinyTransaction, cancellationToken);
         }
 
-        private async Task DebitOriginAccountHandler(TransferRequest request, Account accountOrigin, CancellationToken cancellationToken)
+        private async Task DebitOriginAccountHandler(CreateTransferRequest request, Account accountOrigin, CancellationToken cancellationToken)
         {
             if (accountOrigin is null)
                 throw new ArgumentException("Origin account does not exist.");
