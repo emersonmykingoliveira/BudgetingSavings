@@ -48,7 +48,7 @@ The API implements rate limiting to ensure stability and prevent abuse:
 The API uses API Key authentication to secure its endpoints:
 - **Development key**: `@MySuperSecretDevKey123`
 - **Header Name**: `X-Api-Key`
-- **Configuration**: The API key is stored in `appsettings.json` under the `Security:ApiKey` path. The default development key is `@MySuperSecretDevKey123`.
+- **Configuration**: The API key is stored in `appsettings.json` under the `Security:ApiKey` path.
 - **Local Development Override**: You can override the default API key by using .NET User Secrets:
   ```bash
   dotnet user-secrets set "Security:ApiKey" "your-custom-secret-key" --project BudgetingSavings.API
