@@ -48,12 +48,12 @@ The API implements rate limiting to ensure stability and prevent abuse:
 The API uses API Key authentication to secure its endpoints:
 
 - **Header Name**: `X-Api-Key`
-- **Configuration**: The API key is stored in `appsettings.json` under the `Security:ApiKey` path.
+- **Configuration**: The API key is stored in `appsettings.json` under the `Security:ApiKey` path. The default development key is `@MySuperSecretDevKey123`.
 - **Local Development Override**: You can override the default API key by using .NET User Secrets:
   ```bash
   dotnet user-secrets set "Security:ApiKey" "your-custom-secret-key" --project BudgetingSavings.API
   ```
-- **Example Usage**: Include the key in your HTTP request headers: `X-Api-Key: your-key-here`.
+- **Example Usage**: Include the key in your HTTP request headers: `X-Api-Key: @MySuperSecretDevKey123`.
 
 ## Services
 1.  **CustomerService**: Manages customer profiles and information.
@@ -143,6 +143,8 @@ The project includes a `DbInitializer` that automatically seeds the database wit
 - Integrate with an open banking provider to import real transactions and balances.
 - Add integration tests and broader edge-case coverage.
 - Improve production readiness with structured logging, health checks, and a production-grade database.
+- Use Azure Key Vault or similar secret vaults to securely store application settings and keys in Azure.
+- Eventually integrate a message bus (e.g., Azure Service Bus) to queue requests and handle background processing.
 
 ## Getting Started
 
