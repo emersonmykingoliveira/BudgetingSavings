@@ -1,10 +1,13 @@
 using BudgetingSavings.API.Infrastructure.Data;
+using BudgetingSavings.API.Infrastructure.Security;
 using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.API.Middleware;
 using BudgetingSavings.API.Services;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -18,6 +21,12 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+builder.Services
+    .AddAuthentication("ApiKey")
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", options => { });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddDbContext<ApiDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -27,7 +36,6 @@ builder.Services.AddScoped<ISavingGoalService, SavingGoalService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IRewardService, RewardService>();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -38,6 +46,30 @@ builder.Services.AddSwaggerGen(options =>
     {
         options.IncludeXmlComments(xmlPath);
     }
+
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Budgeting & Savings API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Description = "API Key needed to access the endpoints. Example: X-Api-Key: your-key",
+        In = ParameterLocation.Header,
+        Name = "X-Api-Key",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "ApiKeyScheme"
+    });
+
+    options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("ApiKey"),
+            new List<string>()
+        }
+    });
+
 });
 
 builder.Services.AddRateLimiter(options =>
@@ -67,6 +99,8 @@ using (var scope = app.Services.CreateScope())
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();

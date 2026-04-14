@@ -211,8 +211,8 @@ namespace BudgetingSavings.Tests.UnitTests
             Assert.NotNull(result);
             var originAccount = await _db.Accounts.FindAsync(originId);
             var destinationAccount = await _db.Accounts.FindAsync(destinationId);
-            Assert.Equal(800, originAccount.Balance);
-            Assert.Equal(700, destinationAccount.Balance);
+            Assert.Equal(800, originAccount?.Balance);
+            Assert.Equal(700, destinationAccount?.Balance);
 
             var transactions = await _db.Transactions.ToListAsync();
             Assert.Equal(2, transactions.Count);

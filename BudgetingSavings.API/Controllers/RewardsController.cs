@@ -1,6 +1,7 @@
 ﻿using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -9,6 +10,7 @@ namespace BudgetingSavings.API.Controllers
     [ApiController]
     [Route("api/rewards")]
     [EnableRateLimiting("fixedRateLimiter")]
+    [Authorize]
     public class RewardsController(IRewardService service) : ControllerBase
     {
         /// <summary>
