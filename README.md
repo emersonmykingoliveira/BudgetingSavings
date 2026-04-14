@@ -94,7 +94,8 @@ The API implements rate limiting to ensure stability and prevent abuse:
 ### Transactions (`/api/transactions`)
 - `GET /api/transactions/{id}`: Retrieve a specific transaction.
 - `GET /api/transactions/account/{accountId}`: Retrieve all transactions for an account.
-- `POST /api/transactions`: Create a new transaction (Debit/Credit/Transfer).
+- `POST /api/transactions`: Create a new transaction (Debit/Credit).
+- `POST /api/transactions/Transfer`: Create a new transfer between two accounts.
 
 ### Saving Goals (`/api/saving-goals`)
 - `GET /api/saving-goals/{id}`: Retrieve a specific saving goal.
@@ -103,6 +104,7 @@ The API implements rate limiting to ensure stability and prevent abuse:
 - `GET /api/saving-goals/customer/{customerId}/suggestions`: Get saving suggestions based on spending patterns.
 - `POST /api/saving-goals`: Create a saving goal.
 - `PUT /api/saving-goals`: Update a saving goal.
+- `DELETE /api/saving-goals/{id}`: Delete a saving goal.
 
 ### Budgets (`/api/budgets`)
 - `GET /api/budgets/{id}`: Retrieve a specific budget.
