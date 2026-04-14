@@ -123,6 +123,15 @@ The API implements rate limiting to ensure stability and prevent abuse:
 
 The project includes a `DbInitializer` that automatically seeds the database with sample data if it's empty when the application starts. This includes customers, accounts, initial transactions, goals, budgets, and rewards.
 
+## Future Improvements
+
+- Add JWT-based authentication and authorization, deriving customer identity from the authenticated user instead of request payloads.
+- Expand business validation and standardize error responses further.
+- Refine the reward system into a more explicit points ledger and reward history model.
+- Integrate with an open banking provider to import real transactions and balances.
+- Add integration tests and broader edge-case coverage.
+- Improve production readiness with structured logging, health checks, and a production-grade database.
+
 ## Getting Started
 
 1.  Clone the repository.
