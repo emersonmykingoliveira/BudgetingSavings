@@ -4,8 +4,8 @@ A .NET 10 backend project Web API designed to help users manage their finances, 
 
 ## Project Structure
 
-- **BudgetingSavings.API**: The core Web API project containing controllers, services, and infrastructure.
-- **BudgetingSavings.Tests**: A comprehensive suite of unit tests using xUnit and NSubstitute.
+- **BudgetingSavings.API**: Web API project containing controllers, services, and infrastructure.
+- **BudgetingSavings.Tests**: Unit tests using xUnit and NSubstitute covering all services.
 
 ## Technology Stack
 
@@ -14,6 +14,14 @@ A .NET 10 backend project Web API designed to help users manage their finances, 
 - **ORM**: Entity Framework Core
 - **Validation**: FluentValidation, ExceptionHandlingMiddleware
 - **Tests**: xUnit, NSubstitute, FluentAssertions
+
+## Services
+1.  **CustomerService**: Manages customer profiles and information.
+2.  **AccountService**: Handles account creation, retrieval, and management.
+3.  **TransactionService**: Manages transactions (debits, credits, transfers).
+4.  **SavingGoalService**: Manages saving goals, progress tracking, and suggestions.
+5.  **BudgetService**: Manages budgets, spending tracking, and notifications.
+6.  **RewardService**: Manages rewards, points calculation, and redemption.
 
 ## Entities and Relationships
 
