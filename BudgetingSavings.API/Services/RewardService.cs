@@ -249,7 +249,7 @@ namespace BudgetingSavings.API.Services
                 t.TransactionCategory == TransactionCategory.Savings,
                 cancellationToken);
 
-            return otherSavingsCount == 1; // Since current transaction is already saved, 1 means it's the first.
+            return otherSavingsCount == 1;
         }
     }
 }
