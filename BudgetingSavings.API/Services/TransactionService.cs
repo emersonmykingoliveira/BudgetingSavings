@@ -58,6 +58,10 @@ namespace BudgetingSavings.API.Services
                                                 request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount,
                                                 cancellationToken,
                                                 saveChanges: false);
+
+                if (request.TransactionType == TransactionType.Debit)
+                    await HandleRoundUpToSavingsAsync(request, cancellationToken);
+
                 await db.SaveChangesAsync(cancellationToken);
                 await HandleRewardAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
@@ -68,6 +72,47 @@ namespace BudgetingSavings.API.Services
                 await dbTransaction.RollbackAsync(cancellationToken);
                 throw;
             }
+        }
+
+        private async Task HandleRoundUpToSavingsAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
+        {
+            var roundUpAmount = Math.Ceiling(request.Amount) - request.Amount;
+            if (roundUpAmount <= 0) return;
+
+            var currentAccount = await db.Accounts.FindAsync([request.AccountId], cancellationToken);
+            if (currentAccount is null || currentAccount.AccountType == AccountType.Savings) return;
+
+            if (currentAccount.Balance < roundUpAmount) return;
+
+            var savingsAccount = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId
+                                                                            && a.AccountType == AccountType.Savings, cancellationToken);
+            if (savingsAccount is null) return;
+
+            await accountService.UpdateAccountBalanceAsync(request.AccountId, -roundUpAmount, cancellationToken, saveChanges: false);
+            var debitTransaction = new Transaction
+            {
+                AccountId = request.AccountId,
+                CustomerId = request.CustomerId,
+                Amount = -roundUpAmount,
+                Currency = request.Currency,
+                TransactionType = TransactionType.Debit,
+                TransactionCategory = TransactionCategory.Savings,
+                TransactionDateTime = DateTime.UtcNow
+            };
+            await db.Transactions.AddAsync(debitTransaction, cancellationToken);
+
+            await accountService.UpdateAccountBalanceAsync(savingsAccount.Id, roundUpAmount, cancellationToken, saveChanges: false);
+            var creditTransaction = new Transaction
+            {
+                AccountId = savingsAccount.Id,
+                CustomerId = request.CustomerId,
+                Amount = roundUpAmount,
+                Currency = request.Currency,
+                TransactionType = TransactionType.Credit,
+                TransactionCategory = TransactionCategory.Savings,
+                TransactionDateTime = DateTime.UtcNow
+            };
+            await db.Transactions.AddAsync(creditTransaction, cancellationToken);
         }
 
         private async Task HandleRewardAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
