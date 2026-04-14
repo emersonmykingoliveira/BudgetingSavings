@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingSavings.API.Infrastructure.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20260414201825_update")]
+    [Migration("20260414204317_update")]
     partial class update
     {
         /// <inheritdoc />

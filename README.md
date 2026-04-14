@@ -147,6 +147,6 @@ The project includes a `DbInitializer` that automatically seeds the database wit
 
 1.  Clone the repository.
 2.  Ensure you have the .NET 10 SDK installed.
-3.  Configure your connection string in `appsettings.json`. The default is set to use Local SQLite DB, but you can switch to SQL Server or another provider if needed.
-4.  Run the application: `dotnet run --project BudgetingSavings.API`.
-5.  Access the Swagger UI (usually at `https://localhost:{port}/swagger`) to explore the API.
+3.  Run the application: `dotnet run --project BudgetingSavings.API`.
+4.  Access the Swagger UI (usually at `https://localhost:{port}/swagger`) to explore the API.
+5.  Use the Development key: `@MySuperSecretDevKey123`
