@@ -8,10 +8,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BudgetingSavings.BusinessLayer.Migrations
+namespace BudgetingSavings.API.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20260413193647_InitialMigration")]
+    [Migration("20260414091319_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
