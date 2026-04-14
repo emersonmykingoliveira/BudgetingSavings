@@ -134,7 +134,10 @@ namespace BudgetingSavings.Tests.UnitTests
             Assert.NotNull(result);
             Assert.Equal(25m, result.CashBack); // 500 * (5/100)
             Assert.True(reward.Redeemed);
-            await _accountsService.Received(1).UpdateAccountBalanceAsync(account.Id, 25m, Arg.Any<CancellationToken>());
+            
+            var updatedAccount = await _db.Accounts.FindAsync(account.Id);
+            Assert.NotNull(updatedAccount);
+            Assert.Equal(1025m, updatedAccount.Balance);
         }
 
         [Fact]
