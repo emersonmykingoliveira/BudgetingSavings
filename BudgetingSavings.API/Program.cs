@@ -1,7 +1,7 @@
-using BudgetingSavings.BusinessLayer.Infrastructure.Data;
-using BudgetingSavings.BusinessLayer.Interfaces;
-using BudgetingSavings.BusinessLayer.Middleware;
-using BudgetingSavings.BusinessLayer.Services;
+using BudgetingSavings.API.Infrastructure.Data;
+using BudgetingSavings.API.Interfaces;
+using BudgetingSavings.API.Middleware;
+using BudgetingSavings.API.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;

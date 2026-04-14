@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
-using BudgetingSavings.BusinessLayer.Infrastructure.Data;
-using BudgetingSavings.BusinessLayer.Models.Requests;
-using BudgetingSavings.BusinessLayer.Services;
-using BudgetingSavings.BusinessLayer.Infrastructure.Entities;
-using BudgetingSavings.BusinessLayer.Models.Enums;
+using BudgetingSavings.API.Infrastructure.Data;
+using BudgetingSavings.API.Models.Requests;
+using BudgetingSavings.API.Services;
+using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.API.Models.Enums;
 
 namespace BudgetingSavings.Tests.UnitTests
 {

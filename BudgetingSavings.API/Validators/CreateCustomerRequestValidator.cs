@@ -1,7 +1,7 @@
-﻿using BudgetingSavings.BusinessLayer.Models.Requests;
+﻿using BudgetingSavings.API.Models.Requests;
 using FluentValidation;
 
-namespace BudgetingSavings.BusinessLayer.Validators
+namespace BudgetingSavings.API.Validators
 {
     public class CreateCustomerRequestValidator : AbstractValidator<CreateCustomerRequest>
     {

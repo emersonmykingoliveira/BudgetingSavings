@@ -1,0 +1,253 @@
+﻿using BudgetingSavings.API.Infrastructure.Data;
+using BudgetingSavings.API.Infrastructure.Entities;
+using BudgetingSavings.API.Interfaces;
+using BudgetingSavings.API.Models.Enums;
+using BudgetingSavings.API.Models.Requests;
+using BudgetingSavings.API.Models.Responses;
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+
+namespace BudgetingSavings.API.Services
+{
+    public class RewardService(ApiDbContext db,
+                                IAccountService accountsService,
+                                IValidator<CreateRewardRequest> createValidator) : IRewardService
+    {
+        public decimal CashBackFactor { get; set; }
+        public decimal PointsFactor { get; set; }
+
+        public async Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
+        {
+            var customerExists = await db.Customers
+                .AnyAsync(c => c.Id == customerId, cancellationToken);
+
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
+
+            var rewards = await db.Rewards
+                .Where(r => r.CustomerId == customerId)
+                .ToListAsync(cancellationToken);
+
+            return rewards.Select(MapRewardResponse).ToList();
+        }
+
+        public async Task<RewardResponse> GetRewardByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var reward = await GetActiveRewardAsync(id, cancellationToken);
+            return MapRewardResponse(reward);
+        }
+
+        private async Task<Reward> GetActiveRewardAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == id && !r.Redeemed, cancellationToken);
+
+            if (reward is null)
+                throw new ArgumentException("Reward does not exist or has already been redeemed.");
+
+            return reward;
+        }
+
+        public async Task<RedeemRewardResponse> RedeemRewardAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
+        {
+            using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var (account, reward) = await GetRedemptionContextAsync(request, cancellationToken);
+
+                await HandleCashbackRewardAsync(reward, cancellationToken);
+                await accountsService.UpdateAccountBalanceAsync(account.Id, reward.CashBack, cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+                return MapRedeemRewardResponse(reward, account);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        }
+
+        private async Task<(Account Account, Reward Reward)> GetRedemptionContextAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
+        {
+            var account = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId, cancellationToken);
+            if (account is null)
+                throw new ArgumentException("Account not found for the customer.");
+
+            await VerifyCustomerExistsAsync(request.CustomerId, cancellationToken);
+
+            var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == request.Id &&
+                                                                r.CustomerId == request.CustomerId &&
+                                                                !r.Redeemed && r.Points > 0,
+                                                                cancellationToken);
+            if (reward is null)
+                throw new ArgumentException("No rewards available for redemption.");
+
+            return (account, reward);
+        }
+
+        private async Task VerifyCustomerExistsAsync(Guid customerId, CancellationToken cancellationToken)
+        {
+            var exists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
+            if (!exists)
+                throw new ArgumentException("Customer does not exist.");
+        }
+
+        private RedeemRewardResponse MapRedeemRewardResponse(Reward reward, Account account)
+        {
+            return new RedeemRewardResponse
+            {
+                CashBack = reward.CashBack,
+                UpdatedAccountBalance = account.Balance,
+                RedeemedPoints = reward.Points,
+                AccountId = account.Id,
+                CustomerId = account.CustomerId
+            };
+        }
+
+        private async Task HandleCashbackRewardAsync(Reward reward, CancellationToken cancellationToken)
+        {
+            if (CashBackFactor <= 0)
+                throw new ArgumentException("Reward cashback factor is invalid.");
+
+            var cashback = reward.Points * CashBackFactor;
+            if (cashback <= 0)
+                throw new ArgumentException("Reward cashback amount is invalid.");
+
+            reward.CashBack = cashback;
+            reward.RedeemedDate = DateTime.UtcNow;
+            reward.Redeemed = true;
+
+            db.Rewards.Update(reward);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        private RewardResponse MapRewardResponse(Reward? reward)
+        {
+            if (reward is null) return new RewardResponse();
+
+            return new RewardResponse
+            {
+                Id = reward.Id,
+                CashBack = reward.CashBack,
+                Date = reward.Date,
+                Points = reward.Points,
+                Redeemed = reward.Redeemed,
+                RedeemedDate = reward.RedeemedDate,
+                CustomerId = reward.CustomerId
+            };
+        }
+
+        public async Task RewardHandlerAsync(CreateRewardRequest request, CancellationToken cancellationToken)
+        {
+            await createValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+            await VerifyCustomerExistsAsync(request.CustomerId, cancellationToken);
+
+            var points = CalculatePoints(request.Amount);
+            if (points == 0) return;
+
+            if (!IsSavingsTransaction(request)) return;
+
+            using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var existingReward = await db.Rewards
+                    .FirstOrDefaultAsync(r => r.CustomerId == request.CustomerId && !r.Redeemed, cancellationToken);
+
+                if (existingReward is not null)
+                {
+                    await HandleExistingRewardAsync(existingReward, points, request, cancellationToken);
+                }
+                else if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+                {
+                    await HandleNewRewardAsync(points, request, cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        }
+
+        private int CalculatePoints(decimal amount)
+        {
+            if (PointsFactor <= 0)
+                throw new ArgumentException("Reward points factor is invalid.");
+
+            return (int)(amount * PointsFactor);
+        }
+
+        private bool IsSavingsTransaction(CreateRewardRequest request)
+        {
+            bool isSavingsCredit = request.TransactionType == TransactionType.Credit &&
+                                   request.TransactionCategory == TransactionCategory.Savings;
+
+            bool isSavingsDebit = request.TransactionType == TransactionType.Debit &&
+                                  request.TransactionCategory == TransactionCategory.Savings;
+
+            return isSavingsCredit || isSavingsDebit;
+        }
+
+        private async Task HandleExistingRewardAsync(Reward existingReward, int points, CreateRewardRequest request, CancellationToken cancellationToken)
+        {
+            var originalPoints = existingReward.Points;
+
+            if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
+            {
+                if (await IsFirstSavingOfMonthAsync(request.CustomerId, cancellationToken))
+                {
+                    points += 50;
+                }
+
+                existingReward.Points += points;
+            }
+            else if (request.TransactionType == TransactionType.Debit)
+            {
+                existingReward.Points = Math.Max(0, existingReward.Points - points);
+            }
+
+            if (existingReward.Points != originalPoints)
+            {
+                db.Rewards.Update(existingReward);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private async Task HandleNewRewardAsync(int points, CreateRewardRequest request, CancellationToken cancellationToken)
+        {
+            var newReward = new Reward
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = request.CustomerId,
+                Points = points + 100,
+                Date = DateTime.UtcNow,
+                Redeemed = false
+            };
+
+            db.Rewards.Add(newReward);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task<bool> IsFirstSavingOfMonthAsync(Guid customerId, CancellationToken cancellationToken)
+        {
+            var account = await db.Accounts
+                .FirstOrDefaultAsync(a => a.CustomerId == customerId, cancellationToken);
+
+            if (account is null)
+                return false;
+
+            var savingsCount = await db.Transactions.CountAsync(t =>
+                t.AccountId == account.Id &&
+                t.TransactionDateTime.Month == DateTime.UtcNow.Month &&
+                t.TransactionDateTime.Year == DateTime.UtcNow.Year &&
+                t.TransactionCategory == TransactionCategory.Savings,
+                cancellationToken);
+
+            return savingsCount == 1;
+        }
+    }
+}

@@ -1,5 +1,4 @@
 <Solution>
   <Project Path="BudgetingSavings.API/BudgetingSavings.API.csproj" />
-  <Project Path="BudgetingSavings.BusinessLayer/BudgetingSavings.BusinessLayer.csproj" Id="49030400-1c48-49bd-bac9-397c4a77a02b" />
   <Project Path="BudgetingSavings.Tests/BudgetingSavings.Tests.csproj" Id="d402edc5-f0e9-45a2-a369-6419a4fa4fae" />
 </Solution>

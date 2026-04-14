@@ -4,9 +4,9 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 
-namespace BudgetingSavings.BusinessLayer.Middleware;
+namespace BudgetingSavings.API.Middleware;
 
-public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+public class ExceptionHandlingMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context)
     {
