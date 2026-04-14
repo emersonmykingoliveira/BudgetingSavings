@@ -6,11 +6,11 @@ using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Principal;
 
 namespace BudgetingSavings.API.Services
 {
     public class RewardService(ApiDbContext db,
-                                IAccountService accountsService,
                                 IValidator<CreateRewardRequest> createValidator,
                                 IConfiguration config) : IRewardService
     {
@@ -54,7 +54,7 @@ namespace BudgetingSavings.API.Services
                 var (account, reward) = await GetRedemptionContextAsync(request, cancellationToken);
 
                 await HandleCashbackRewardAsync(reward, cancellationToken);
-                await accountsService.UpdateAccountBalanceAsync(account.Id, reward.CashBack, cancellationToken);
+                await AddCashBackToAccountBalance(account, reward);
                 await db.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return MapRedeemRewardResponse(reward, account);
@@ -64,6 +64,13 @@ namespace BudgetingSavings.API.Services
                 await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
+        }
+
+        private async Task AddCashBackToAccountBalance(Account account, Reward reward)
+        {
+            account.Balance += reward.CashBack;
+            account.LastTransactionDate = DateTime.UtcNow;
+            db.Accounts.Update(account);
         }
 
         private async Task<(Account Account, Reward Reward)> GetRedemptionContextAsync(RedeemRewardRequest request, CancellationToken cancellationToken)

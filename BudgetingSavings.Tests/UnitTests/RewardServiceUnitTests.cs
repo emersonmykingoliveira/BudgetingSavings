@@ -23,7 +23,6 @@ namespace BudgetingSavings.Tests.UnitTests
     public class RewardServiceUnitTests : IDisposable
     {
         private readonly ApiDbContext _db;
-        private readonly IAccountService _accountsService;
         private readonly IValidator<CreateRewardRequest> _validator;
         private readonly IConfiguration _config;
         private readonly IRewardService _service;
@@ -36,7 +35,6 @@ namespace BudgetingSavings.Tests.UnitTests
                 .Options;
 
             _db = new ApiDbContext(options);
-            _accountsService = Substitute.For<IAccountService>();
             _validator = Substitute.For<IValidator<CreateRewardRequest>>();
             
             var myConfiguration = new Dictionary<string, string>
@@ -49,7 +47,7 @@ namespace BudgetingSavings.Tests.UnitTests
                 .AddInMemoryCollection(myConfiguration!)
                 .Build();
 
-            _service = new RewardService(_db, _accountsService, _validator, _config);
+            _service = new RewardService(_db, _validator, _config);
         }
 
         public void Dispose()
