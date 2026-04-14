@@ -21,7 +21,7 @@ namespace BudgetingSavings.Tests.UnitTests
         private readonly ApiDbContext _db;
         private readonly IValidator<CreateBudgetRequest> _createValidator;
         private readonly IValidator<UpdateBudgetRequest> _updateValidator;
-        private readonly BudgetService _service;
+        private readonly IBudgetService _service;
 
         public BudgetServiceUnitTests()
         {

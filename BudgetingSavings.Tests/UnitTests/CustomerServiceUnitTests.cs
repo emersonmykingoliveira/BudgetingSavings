@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using BudgetingSavings.API.Interfaces;
 
 namespace BudgetingSavings.Tests.UnitTests
 {
@@ -20,7 +21,7 @@ namespace BudgetingSavings.Tests.UnitTests
         private readonly ApiDbContext _db;
         private readonly IValidator<CreateCustomerRequest> _createValidator;
         private readonly IValidator<UpdateCustomerRequest> _updateValidator;
-        private readonly CustomerService _service;
+        private readonly ICustomerService _service;
 
         public CustomerServiceUnitTests()
         {
