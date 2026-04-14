@@ -43,7 +43,7 @@ namespace BudgetingSavings.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new transaction (deposit, withdrawal, or transfer).
+        /// Creates a new transaction (Debit, Credit).
         /// </summary>
         /// <param name="request">The transaction creation details.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
@@ -63,7 +63,7 @@ namespace BudgetingSavings.API.Controllers
         /// <param name="request">The transfer creation details.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The newly created transfer transaction.</returns>
-        [HttpPost]
+        [HttpPost("Transfer")]
         [ProducesResponseType(typeof(TransactionResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateTransfer([FromBody] CreateTransferRequest request, CancellationToken cancellationToken)
