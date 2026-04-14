@@ -78,21 +78,14 @@ namespace BudgetingSavings.API.Services
         {
             var budget = await GetSpecificBudgetAsync(id, cancellationToken);
 
-            var accounts = await db.Accounts.Where(a => a.CustomerId == budget.CustomerId).ToListAsync(cancellationToken);
-
-            var transactions = await FilterDebitTransactionsForBudget(accounts, budget, cancellationToken);
-
-            var spentAmount = transactions.Where(t => t.Amount > 0).Sum(t => Math.Abs(t.Amount));
+            var spentAmount = await db.Transactions
+                .Where(t => t.CustomerId == budget.CustomerId
+                        && t.TransactionDateTime >= budget.StartTime
+                        && t.TransactionDateTime <= budget.EndTime
+                        && t.TransactionType == TransactionType.Debit)
+                .SumAsync(t => Math.Abs(t.Amount), cancellationToken);
 
             return MapBudgetStatusResponse(budget, spentAmount);
-        }
-
-        private async Task<List<Transaction>> FilterDebitTransactionsForBudget(List<Account> accounts, Budget budget, CancellationToken cancellationToken)
-        {
-            return await db.Transactions.Where(t => accounts.Select(a => a.Id).Contains(t.AccountId) 
-                                            && t.TransactionDateTime >= budget.StartTime
-                                            && t.TransactionDateTime <= budget.EndTime
-                                            && t.TransactionType == TransactionType.Debit).ToListAsync(cancellationToken);
         }
 
         public async Task<BudgetResponse> UpdateBudgetAsync(UpdateBudgetRequest request, CancellationToken cancellationToken)

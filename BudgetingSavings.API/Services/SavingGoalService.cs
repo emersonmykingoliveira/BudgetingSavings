@@ -107,7 +107,6 @@ namespace BudgetingSavings.API.Services
         public async Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, CancellationToken cancellationToken)
         {
             var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
-
             var amountSaved = await GetAmountSavedFromTransactions(savingGoal, cancellationToken);
 
             return MapSavingGoalStatusResponse(savingGoal, amountSaved);
@@ -115,13 +114,10 @@ namespace BudgetingSavings.API.Services
 
         private async Task<decimal> GetAmountSavedFromTransactions(SavingGoal savingGoal, CancellationToken cancellationToken)
         {
-            var accounts = await db.Accounts.Where(a => a.CustomerId == savingGoal.CustomerId).ToListAsync(cancellationToken);
-
             return await db.Transactions
-                        .Where(t => accounts.Select(a => a.Id).Contains(t.AccountId)
+                        .Where(t => t.CustomerId == savingGoal.CustomerId
                         && t.TransactionDateTime >= savingGoal.StartDate
                         && t.TransactionDateTime <= savingGoal.TargetDate
-                        && t.TransactionType == TransactionType.Credit
                         && t.TransactionCategory == TransactionCategory.Savings)
                         .SumAsync(t => t.Amount, cancellationToken);
         }

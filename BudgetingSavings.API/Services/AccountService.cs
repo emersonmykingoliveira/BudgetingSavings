@@ -93,28 +93,27 @@ namespace BudgetingSavings.API.Services
 
         public async Task UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken)
         {
-            var account = await GetSpecificAccountAsync(id, cancellationToken);
-
             if (amount == 0)
                 throw new ArgumentException("Amount must be different than zero.");
+
+            var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+            if (account is null)
+                throw new ArgumentException("Account does not exist.");
 
             if (account.Balance + amount < 0)
                 throw new ArgumentException("Insufficient balance.");
 
             account.Balance += amount;
             account.LastTransactionDate = DateTime.UtcNow;
+
             db.Accounts.Update(account);
             await db.SaveChangesAsync(cancellationToken);
-            
         }
 
         private async Task<string> GenerateUniqueAccountNumberAsync(CancellationToken cancellationToken)
         {
-            int finalNumber = Random.Shared.Next(1000, 10000);
-
-            var number = string.Concat("********", finalNumber);
-
-            if(await db.Accounts.AnyAsync(a => a.AccountNumber == number, cancellationToken))
+            var number = Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
+            if (await db.Accounts.AnyAsync(a => a.AccountNumber == number, cancellationToken))
                 return await GenerateUniqueAccountNumberAsync(cancellationToken);
 
             return number;

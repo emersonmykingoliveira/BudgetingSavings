@@ -184,6 +184,7 @@ namespace BudgetingSavings.Tests.UnitTests
             { 
                 Id = Guid.NewGuid(),
                 AccountId = accountId, 
+                CustomerId = customerId,
                 TransactionDateTime = DateTime.UtcNow, 
                 TransactionCategory = TransactionCategory.Savings,
                 Amount = 10,

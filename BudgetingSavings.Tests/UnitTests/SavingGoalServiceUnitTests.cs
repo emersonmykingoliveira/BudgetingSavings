@@ -140,6 +140,7 @@ namespace BudgetingSavings.Tests.UnitTests
             { 
                 Id = Guid.NewGuid(),
                 AccountId = accountId,
+                CustomerId = customerId,
                 Amount = 200,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.Savings,
@@ -184,10 +185,22 @@ namespace BudgetingSavings.Tests.UnitTests
             { 
                 Id = Guid.NewGuid(),
                 AccountId = accountId,
+                CustomerId = customerId,
                 Amount = 500,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.Savings,
                 TransactionDateTime = DateTime.UtcNow.AddDays(-5),
+                Currency = CurrencyType.USD
+            });
+            await _db.Transactions.AddAsync(new Transaction 
+            { 
+                Id = Guid.NewGuid(),
+                AccountId = accountId,
+                CustomerId = customerId,
+                Amount = -100,
+                TransactionType = TransactionType.Debit,
+                TransactionCategory = TransactionCategory.Savings,
+                TransactionDateTime = DateTime.UtcNow.AddDays(-2),
                 Currency = CurrencyType.USD
             });
             await _db.SaveChangesAsync();
@@ -196,7 +209,7 @@ namespace BudgetingSavings.Tests.UnitTests
             {
                 Id = goalId,
                 Name = "Updated Goal",
-                TargetAmount = 400, // Lower than 500 saved
+                TargetAmount = 350, // Lower than 400 net saved (500 - 100)
                 TargetDate = DateTime.UtcNow.AddDays(20)
             };
 
@@ -215,8 +228,8 @@ namespace BudgetingSavings.Tests.UnitTests
             
             await _db.Transactions.AddRangeAsync(
                 new Transaction { Id = Guid.NewGuid(), CustomerId = customerId, Amount = 5000, TransactionType = TransactionType.Credit, Currency = CurrencyType.USD },
-                new Transaction { Id = Guid.NewGuid(), CustomerId = customerId, Amount = 2000, TransactionType = TransactionType.Debit, Currency = CurrencyType.USD },
-                new Transaction { Id = Guid.NewGuid(), CustomerId = customerId, Amount = 1000, TransactionType = TransactionType.Debit, Currency = CurrencyType.USD }
+                new Transaction { Id = Guid.NewGuid(), CustomerId = customerId, Amount = -2000, TransactionType = TransactionType.Debit, Currency = CurrencyType.USD },
+                new Transaction { Id = Guid.NewGuid(), CustomerId = customerId, Amount = -1000, TransactionType = TransactionType.Debit, Currency = CurrencyType.USD }
             );
             await _db.SaveChangesAsync();
 

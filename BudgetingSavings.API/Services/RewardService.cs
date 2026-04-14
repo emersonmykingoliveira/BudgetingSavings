@@ -234,20 +234,15 @@ namespace BudgetingSavings.API.Services
 
         private async Task<bool> IsFirstSavingOfMonthAsync(Guid customerId, CancellationToken cancellationToken)
         {
-            var account = await db.Accounts
-                .FirstOrDefaultAsync(a => a.CustomerId == customerId, cancellationToken);
+            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
 
-            if (account is null)
-                return false;
-
-            var savingsCount = await db.Transactions.CountAsync(t =>
-                t.AccountId == account.Id &&
-                t.TransactionDateTime.Month == DateTime.UtcNow.Month &&
-                t.TransactionDateTime.Year == DateTime.UtcNow.Year &&
+            var otherSavingsCount = await db.Transactions.CountAsync(t =>
+                t.CustomerId == customerId &&
+                t.TransactionDateTime >= startOfMonth &&
                 t.TransactionCategory == TransactionCategory.Savings,
                 cancellationToken);
 
-            return savingsCount == 1;
+            return otherSavingsCount == 1; // Since current transaction is already saved, 1 means it's the first.
         }
     }
 }

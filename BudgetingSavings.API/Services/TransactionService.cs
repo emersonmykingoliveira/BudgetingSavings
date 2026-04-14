@@ -138,6 +138,10 @@ namespace BudgetingSavings.API.Services
             try
             {
                 var accountOrigin = await db.Accounts.FirstAsync(a => a.Id == request.AccountOriginId, cancellationToken);
+
+                if (accountOrigin.Balance < request.Amount)
+                    throw new ArgumentException("Insufficient balance for transfer.");
+
                 await DebitOriginAccountHandler(request, accountOrigin, cancellationToken);
 
                 var accountDestination = await db.Accounts.FirstAsync(a => a.Id == request.AccountDestinationId, cancellationToken);

@@ -186,7 +186,8 @@ namespace BudgetingSavings.Tests.UnitTests
             {
                 Id = Guid.NewGuid(),
                 AccountId = accountId,
-                Amount = 100m,
+                CustomerId = customerId,
+                Amount = -100m,
                 TransactionType = TransactionType.Debit,
                 TransactionDateTime = DateTime.UtcNow
             });
@@ -194,7 +195,8 @@ namespace BudgetingSavings.Tests.UnitTests
             {
                 Id = Guid.NewGuid(),
                 AccountId = accountId,
-                Amount = 200m,
+                CustomerId = customerId,
+                Amount = -200m,
                 TransactionType = TransactionType.Debit,
                 TransactionDateTime = DateTime.UtcNow
             });
@@ -255,7 +257,8 @@ namespace BudgetingSavings.Tests.UnitTests
             {
                 Id = Guid.NewGuid(),
                 AccountId = accountId,
-                Amount = 150m,
+                CustomerId = customerId,
+                Amount = -150m,
                 TransactionType = TransactionType.Debit,
                 TransactionDateTime = DateTime.Parse("2025-01-15")
             });
