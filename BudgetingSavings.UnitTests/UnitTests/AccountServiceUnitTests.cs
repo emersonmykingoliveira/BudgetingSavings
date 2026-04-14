@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using Xunit;
 
-namespace BudgetingSavings.UnitTests
+namespace BudgetingSavings.Tests.UnitTests
 {
     public class AccountServiceUnitTests : IDisposable
     {
