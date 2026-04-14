@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace BudgetingSavings.API.Migrations
+namespace BudgetingSavings.API.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class update : Migration
