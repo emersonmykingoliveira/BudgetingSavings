@@ -168,7 +168,6 @@ namespace BudgetingSavings.API.Services
                 }
                 else if (isFirstTransaction)
                 {
-                    // For the first transaction, we give points if it's a savings credit, otherwise just the 100 bonus
                     int initialPoints = (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings) ? points : 0;
                     await HandleNewRewardAsync(initialPoints, request, cancellationToken);
                 }

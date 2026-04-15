@@ -399,9 +399,7 @@ namespace BudgetingSavings.Tests.UnitTests
             var checkingAccount = await _db.Accounts.FindAsync(accountId);
             var savingsAccount = await _db.Accounts.FindAsync(savingsAccountId);
 
-            // Checking balance: 1000 - 10.75 - 0.25 (round up) = 989
             Assert.Equal(989m, checkingAccount?.Balance);
-            // Savings balance: 500 + 0.25 = 500.25
             Assert.Equal(500.25m, savingsAccount?.Balance);
         }
     }

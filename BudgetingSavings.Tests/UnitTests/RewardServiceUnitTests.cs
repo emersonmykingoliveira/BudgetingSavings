@@ -324,7 +324,7 @@ namespace BudgetingSavings.Tests.UnitTests
             var request = new CreateRewardRequest
             {
                 CustomerId = customerId,
-                Amount = 1, // Will result in 0 points (1 * 1 / 100)
+                Amount = 1,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.Savings
             };
@@ -337,7 +337,7 @@ namespace BudgetingSavings.Tests.UnitTests
             Assert.True(result.IsSuccess);
             var rewardInDb = await _db.Rewards.FirstOrDefaultAsync(r => r.CustomerId == customerId);
             Assert.NotNull(rewardInDb);
-            Assert.Equal(100, rewardInDb.Points); // 100 points welcome bonus even with 0 transaction points
+            Assert.Equal(100, rewardInDb.Points);
         }
     }
 }

@@ -216,7 +216,7 @@ namespace BudgetingSavings.Tests.UnitTests
             {
                 Id = goalId,
                 Name = "Updated Goal",
-                TargetAmount = 350, // Lower than 400 net saved (500 - 100)
+                TargetAmount = 350,
                 TargetDate = DateTime.UtcNow.AddDays(20)
             };
 
@@ -369,7 +369,7 @@ namespace BudgetingSavings.Tests.UnitTests
                 Name = "Goal",
                 TargetAmount = 100,
                 StartDate = DateTime.UtcNow.AddDays(-20),
-                TargetDate = DateTime.UtcNow.AddDays(-5) // Passed
+                TargetDate = DateTime.UtcNow.AddDays(-5)
             };
             await _db.SavingGoals.AddAsync(goal);
             await _db.Transactions.AddAsync(new Transaction
@@ -407,7 +407,7 @@ namespace BudgetingSavings.Tests.UnitTests
                 Name = "Goal",
                 TargetAmount = 1000,
                 StartDate = DateTime.UtcNow.AddDays(-20),
-                TargetDate = DateTime.UtcNow.AddDays(-5) // Passed
+                TargetDate = DateTime.UtcNow.AddDays(-5)
             };
             await _db.SavingGoals.AddAsync(goal);
             await _db.SaveChangesAsync();
