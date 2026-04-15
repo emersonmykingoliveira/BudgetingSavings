@@ -180,11 +180,11 @@ namespace BudgetingSavings.API.Services
                 return Result<SavingSuggestionsResponse>.Fail("Not enough transaction data to generate saving suggestions.");
 
             var income = await db.Transactions
-                            .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Credit)
+                            .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Credit && t.TransactionCategory != TransactionCategory.Savings)
                             .SumAsync(t => t.Amount, cancellationToken);
 
             var expenses = await db.Transactions
-                            .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Debit)
+                            .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Debit && t.TransactionCategory != TransactionCategory.Savings)
                             .SumAsync(t => Math.Abs(t.Amount), cancellationToken);
 
             var disposable = income - expenses;

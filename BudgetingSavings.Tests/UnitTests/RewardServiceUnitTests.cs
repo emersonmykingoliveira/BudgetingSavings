@@ -314,7 +314,7 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task RewardHandlerAsync_ShouldDoNothing_WhenPointsAreZero()
+        public async Task RewardHandlerAsync_ShouldAwardWelcomeBonus_WhenFirstTransactionAndPointsAreZero()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -336,7 +336,8 @@ namespace BudgetingSavings.Tests.UnitTests
             // Assert
             Assert.True(result.IsSuccess);
             var rewardInDb = await _db.Rewards.FirstOrDefaultAsync(r => r.CustomerId == customerId);
-            Assert.Null(rewardInDb);
+            Assert.NotNull(rewardInDb);
+            Assert.Equal(100, rewardInDb.Points); // 100 points welcome bonus even with 0 transaction points
         }
     }
 }

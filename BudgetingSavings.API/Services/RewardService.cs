@@ -146,11 +146,7 @@ namespace BudgetingSavings.API.Services
 
             var points = pointsResult.Value;
 
-            if (points == 0) return Result.Success();
-
-            if (!IsSavingsTransaction(request)) return Result.Success();
-
-           return await RewardTransactionHandlerAsync(request, points, cancellationToken);
+            return await RewardTransactionHandlerAsync(request, points, cancellationToken);
         }
 
         private async Task<Result> RewardTransactionHandlerAsync(CreateRewardRequest request, int points, CancellationToken cancellationToken)
@@ -161,9 +157,20 @@ namespace BudgetingSavings.API.Services
                 var existingReward = await db.Rewards
                     .FirstOrDefaultAsync(r => r.CustomerId == request.CustomerId && !r.Redeemed, cancellationToken);
 
+                var isFirstTransaction = !await db.Rewards.AnyAsync(r => r.CustomerId == request.CustomerId, cancellationToken);
+
                 if (existingReward is not null)
                 {
-                    await HandleExistingRewardAsync(existingReward, points, request, cancellationToken);
+                    if (IsSavingsTransaction(request))
+                    {
+                        await HandleExistingRewardAsync(existingReward, points, request, cancellationToken);
+                    }
+                }
+                else if (isFirstTransaction)
+                {
+                    // For the first transaction, we give points if it's a savings credit, otherwise just the 100 bonus
+                    int initialPoints = (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings) ? points : 0;
+                    await HandleNewRewardAsync(initialPoints, request, cancellationToken);
                 }
                 else if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
                 {
@@ -186,7 +193,7 @@ namespace BudgetingSavings.API.Services
             if (pointsFactor <= 0)
                 return Task.FromResult(Result<int>.Fail("Reward points factor is invalid."));
 
-            var points = (int)(amount * (pointsFactor / 100));
+            var points = (int)Math.Round(amount * (pointsFactor / 100), MidpointRounding.AwayFromZero);
 
             return Task.FromResult(Result<int>.Success(points));
         }

@@ -73,6 +73,9 @@ namespace BudgetingSavings.API.Services
             if (currentAccount is null)
                 return Result.Fail("Current account not found.");
 
+            if (currentAccount.AccountType != AccountType.Checking)
+                return Result.Success();
+
             if (currentAccount.Balance < roundUpAmount) 
                 return Result.Success();
 
@@ -81,7 +84,7 @@ namespace BudgetingSavings.API.Services
             if (savingsAccount is null)
                 return Result.Fail("Savings account not found for the customer.");
 
-            var debitResult = await UpdateAccountBalanceAsync(currentAccount, -roundUpAmount, TransactionCategory.Savings, cancellationToken);
+            var debitResult = await UpdateAccountBalanceAsync(currentAccount, -roundUpAmount, TransactionCategory.General, cancellationToken);
 
             if (debitResult.IsFailure)
                 return Result.Fail(debitResult.Error ?? "An error occurred while debiting the current account.");
@@ -176,12 +179,15 @@ namespace BudgetingSavings.API.Services
                 if (accountOrigin.Balance < request.Amount)
                     return Result<TransferResponse>.Fail("Insufficient balance for transfer.");
 
-                var debitResult = await UpdateAccountBalanceAsync(accountOrigin, -request.Amount, TransactionCategory.General, cancellationToken);
+                var originCategory = accountOrigin.AccountType == AccountType.Savings ? TransactionCategory.Savings : TransactionCategory.General;
+                var destinationCategory = accountDestination.AccountType == AccountType.Savings ? TransactionCategory.Savings : TransactionCategory.General;
+
+                var debitResult = await UpdateAccountBalanceAsync(accountOrigin, -request.Amount, originCategory, cancellationToken);
 
                 if (debitResult.IsFailure)
                     return Result<TransferResponse>.Fail(debitResult.Error ?? "An error occurred while debiting the origin account.");
 
-                var creditResult = await UpdateAccountBalanceAsync(accountDestination, request.Amount, TransactionCategory.General, cancellationToken);
+                var creditResult = await UpdateAccountBalanceAsync(accountDestination, request.Amount, destinationCategory, cancellationToken);
 
                 if (creditResult.IsFailure)
                     return Result<TransferResponse>.Fail(creditResult.Error ?? "An error occurred while crediting the destination account.");
