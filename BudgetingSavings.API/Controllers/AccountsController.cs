@@ -15,8 +15,9 @@ namespace BudgetingSavings.API.Controllers
         /// <summary>
         /// Retrieves all customer accounts.
         /// </summary>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>A list of accounts.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the list of accounts.</response>
+        /// <response code="400">If an error occurs while retrieving accounts.</response>
         [HttpGet]
         [ProducesResponseType(typeof(List<AccountResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -34,8 +35,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves all accounts for a specific customer.
         /// </summary>
         /// <param name="customerId">The unique identifier of the customer.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>A list of accounts for the customer.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the list of customer accounts.</response>
+        /// <response code="400">If the customer does not exist or an error occurs.</response>
         [HttpGet("customer/{customerId:guid}")]
         [ProducesResponseType(typeof(List<AccountResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -53,8 +55,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves a specific account by its identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the account.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The account details if found.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the requested account.</response>
+        /// <response code="400">If the account does not exist.</response>
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -72,10 +75,11 @@ namespace BudgetingSavings.API.Controllers
         /// Creates a new account.
         /// </summary>
         /// <param name="request">The account creation details.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The newly created account.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="201">Returns the newly created account.</response>
+        /// <response code="400">If the request is invalid or the customer already has this type of account.</response>
         [HttpPost]
-        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
         {
@@ -84,15 +88,16 @@ namespace BudgetingSavings.API.Controllers
             if (result.IsFailure)
                 return BadRequest(new { error = result.Error });
 
-            return CreatedAtAction(nameof(GetAccountById), new { id = result.Value.Id }, result.Value);
+            return CreatedAtAction(nameof(GetAccountById), new { id = result?.Value?.Id }, result?.Value);
         }
 
         /// <summary>
         /// Deletes an account.
         /// </summary>
         /// <param name="id">The unique identifier of the account to delete.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>No content if successful.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="204">If the account was successfully deleted.</response>
+        /// <response code="400">If the account cannot be deleted due to balance or transaction history.</response>
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

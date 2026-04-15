@@ -16,8 +16,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves all budgets for a customer.
         /// </summary>
         /// <param name="customerId">The unique identifier of the customer.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>A list of budgets.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the list of budgets.</response>
+        /// <response code="400">If the customer does not exist or an error occurs.</response>
         [HttpGet("customer/{customerId:guid}")]
         [ProducesResponseType(typeof(List<BudgetResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -35,8 +36,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves a specific budget by its identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the budget.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The budget details.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the requested budget details.</response>
+        /// <response code="400">If the budget does not exist.</response>
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(BudgetResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -54,8 +56,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves the current status and spending progress of a budget.
         /// </summary>
         /// <param name="id">The unique identifier of the budget.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The status and progress of the budget.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the status and progress of the budget.</response>
+        /// <response code="400">If the budget does not exist.</response>
         [HttpGet("{id:guid}/status")]
         [ProducesResponseType(typeof(BudgetStatusResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -73,10 +76,11 @@ namespace BudgetingSavings.API.Controllers
         /// Creates a new budget.
         /// </summary>
         /// <param name="request">The budget creation details.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The newly created budget.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="201">Returns the newly created budget.</response>
+        /// <response code="400">If the request is invalid or the customer already has a budget for this period.</response>
         [HttpPost]
-        [ProducesResponseType(typeof(BudgetResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BudgetResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateBudget([FromBody] CreateBudgetRequest request, CancellationToken cancellationToken)
         {
@@ -85,15 +89,16 @@ namespace BudgetingSavings.API.Controllers
             if (result.IsFailure)
                 return BadRequest(new { error = result.Error });
 
-            return CreatedAtAction(nameof(GetBudgetById), new { id = result.Value.Id }, result.Value);
+            return CreatedAtAction(nameof(GetBudgetById), new { id = result?.Value?.Id }, result?.Value);
         }
 
         /// <summary>
         /// Updates an existing budget's details.
         /// </summary>
         /// <param name="request">The budget update details.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The updated budget details.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the updated budget details.</response>
+        /// <response code="400">If the request is invalid or the budget does not exist.</response>
         [HttpPut]
         [ProducesResponseType(typeof(BudgetResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -111,8 +116,9 @@ namespace BudgetingSavings.API.Controllers
         /// Deletes a budget.
         /// </summary>
         /// <param name="id">The unique identifier of the budget to delete.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>No content if successful.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="204">If the budget was successfully deleted.</response>
+        /// <response code="400">If the budget does not exist.</response>
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

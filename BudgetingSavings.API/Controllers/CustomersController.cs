@@ -15,8 +15,9 @@ namespace BudgetingSavings.API.Controllers
         /// <summary>
         /// Retrieves all customers.
         /// </summary>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>A list of customers.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the list of customers.</response>
+        /// <response code="400">If an error occurs while retrieving customers.</response>
         [HttpGet]
         [ProducesResponseType(typeof(List<CustomerResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -34,8 +35,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves a specific customer by their identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the customer.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The customer details.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the requested customer details.</response>
+        /// <response code="400">If the customer does not exist.</response>
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -53,10 +55,11 @@ namespace BudgetingSavings.API.Controllers
         /// Creates a new customer.
         /// </summary>
         /// <param name="request">The customer creation details.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The newly created customer.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="201">Returns the newly created customer.</response>
+        /// <response code="400">If the request is invalid, under 18 or the email already exists.</response>
         [HttpPost]
-        [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerRequest request, CancellationToken cancellationToken)
         {
@@ -65,15 +68,16 @@ namespace BudgetingSavings.API.Controllers
             if (result.IsFailure)
                 return BadRequest(new { error = result.Error });
 
-            return Ok(result.Value);
+            return CreatedAtAction(nameof(GetCustomerById), new { id = result.Value!.Id }, result.Value);
         }
 
         /// <summary>
         /// Updates an existing customer's details.
         /// </summary>
         /// <param name="request">The customer update details.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The updated customer details.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the updated customer details.</response>
+        /// <response code="400">If the request is invalid or the customer does not exist.</response>
         [HttpPut]
         [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -91,8 +95,9 @@ namespace BudgetingSavings.API.Controllers
         /// Deletes a customer.
         /// </summary>
         /// <param name="id">The unique identifier of the customer to delete.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>No content if successful.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="204">If the customer was successfully deleted.</response>
+        /// <response code="400">If the customer cannot be deleted due to existing accounts.</response>
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

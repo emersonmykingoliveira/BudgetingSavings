@@ -16,8 +16,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves all available rewards for a customer.
         /// </summary>
         /// <param name="customerId">The unique identifier of the customer.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>A list of rewards.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the list of rewards.</response>
+        /// <response code="400">If the customer does not exist or an error occurs.</response>
         [HttpGet("customer/{customerId:guid}")]
         [ProducesResponseType(typeof(List<RewardResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -35,8 +36,9 @@ namespace BudgetingSavings.API.Controllers
         /// Retrieves a specific reward by its identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the reward.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The reward details.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the requested reward details.</response>
+        /// <response code="400">If the reward does not exist.</response>
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(RewardResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -54,8 +56,9 @@ namespace BudgetingSavings.API.Controllers
         /// Redeems a reward for a customer.
         /// </summary>
         /// <param name="request">The reward redemption details.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The result of the redemption.</returns>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <response code="200">Returns the result of the redemption.</response>
+        /// <response code="400">If the request is invalid or the reward cannot be redeemed.</response>
         [HttpPost("redeem")]
         [ProducesResponseType(typeof(RedeemRewardResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
