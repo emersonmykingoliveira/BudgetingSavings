@@ -64,24 +64,21 @@ namespace BudgetingSavings.API.Services
                 await dbTransaction.CommitAsync(cancellationToken);
                 return Result<TransactionResponse>.Success(MapTransactionResponse(transaction));
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
                 await dbTransaction.RollbackAsync(cancellationToken);
                 return Result<TransactionResponse>.Fail(ex.Message);
-            }
-            catch (Exception)
-            {
-                await dbTransaction.RollbackAsync(cancellationToken);
-                throw;
             }
         }
 
         private async Task HandleRoundUpToSavingsAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
             var roundUpAmount = Math.Ceiling(request.Amount) - request.Amount;
+
             if (roundUpAmount <= 0) return;
 
             var currentAccount = await db.Accounts.FindAsync([request.AccountId], cancellationToken);
+
             if (currentAccount is null || currentAccount.AccountType == AccountType.Savings) return;
 
             if (currentAccount.Balance < roundUpAmount) return;

@@ -50,29 +50,28 @@ namespace BudgetingSavings.API.Services
 
             try
             {
-                var context = await GetRedemptionContextAsync(request, cancellationToken);
-                
-                if (context.Account is null)
+                var account = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId, cancellationToken);
+
+                if (account is null)
                     return Result<RedeemRewardResponse>.Fail("Account not found for the customer.");
-                
-                if (context.Reward is null)
+
+                var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == request.Id &&
+                                                                r.CustomerId == request.CustomerId &&
+                                                                !r.Redeemed && r.Points > 0,
+                                                                cancellationToken);
+                if (reward is null)
                     return Result<RedeemRewardResponse>.Fail("No rewards available for redemption.");
 
-                await HandleCashbackRewardAsync(context.Reward, cancellationToken);
-                await AddCashBackToAccountBalance(context.Account, context.Reward);
+                await HandleCashbackRewardAsync(reward, cancellationToken);
+                await AddCashBackToAccountBalance(account, reward);
                 await db.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                return Result<RedeemRewardResponse>.Success(MapRedeemRewardResponse(context.Reward, context.Account));
+                return Result<RedeemRewardResponse>.Success(MapRedeemRewardResponse(reward, account));
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 return Result<RedeemRewardResponse>.Fail(ex.Message);
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
             }
         }
 
@@ -81,21 +80,6 @@ namespace BudgetingSavings.API.Services
             account.Balance += reward.CashBack;
             account.LastTransactionDate = DateTime.UtcNow;
             db.Accounts.Update(account);
-        }
-
-        private async Task<(Account? Account, Reward? Reward)> GetRedemptionContextAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
-        {
-            var account = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId, cancellationToken);
-            var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
-
-            if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
-
-            var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == request.Id &&
-                                                                r.CustomerId == request.CustomerId &&
-                                                                !r.Redeemed && r.Points > 0,
-                                                                cancellationToken);
-            return (account, reward);
         }
 
         private RedeemRewardResponse MapRedeemRewardResponse(Reward reward, Account account)
@@ -173,15 +157,10 @@ namespace BudgetingSavings.API.Services
                 await transaction.CommitAsync(cancellationToken);
                 return Result.Success();
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 return Result.Fail(ex.Message);
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
             }
         }
 
