@@ -62,7 +62,11 @@ namespace BudgetingSavings.API.Services
                 if (reward is null)
                     return Result<RedeemRewardResponse>.Fail("No rewards available for redemption.");
 
-                await HandleCashbackRewardAsync(reward, cancellationToken);
+                var cashbackResult = await HandleCashbackRewardAsync(reward, cancellationToken);
+
+                if (cashbackResult.IsFailure)
+                    return Result<RedeemRewardResponse>.Fail(cashbackResult.Error ?? "An error occurred while processing the cashback reward.");
+
                 await AddCashBackToAccountBalance(account, reward);
                 await db.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
