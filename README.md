@@ -35,7 +35,7 @@ The API employs an intelligent approach to encourage better financial habits thr
 - **ORM**: Entity Framework Core
 - **Validation**: FluentValidation
 - **Error Handling**: Custom `ExceptionHandlingMiddleware` using `ProblemDetails`
-- **Tests**: xUnit, NSubstitute, FluentAssertions
+- **Tests**: xUnit, NSubstitute
 
 ## Error Handling
 
