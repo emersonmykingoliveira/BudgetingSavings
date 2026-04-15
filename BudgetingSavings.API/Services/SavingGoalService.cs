@@ -185,7 +185,7 @@ namespace BudgetingSavings.API.Services
 
             var expenses = await db.Transactions
                             .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Debit && t.TransactionCategory != TransactionCategory.Savings)
-                            .SumAsync(t => Math.Abs(t.Amount), cancellationToken);
+                            .SumAsync(t => t.Amount < 0 ? -t.Amount : t.Amount, cancellationToken);
 
             var disposable = income - expenses;
 

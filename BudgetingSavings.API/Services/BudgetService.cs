@@ -87,7 +87,7 @@ namespace BudgetingSavings.API.Services
                         && t.TransactionDateTime >= budget.StartTime
                         && t.TransactionDateTime <= budget.EndTime
                         && t.TransactionType == TransactionType.Debit)
-                .SumAsync(t => Math.Abs(t.Amount), cancellationToken);
+                .SumAsync(t => t.Amount < 0 ? -t.Amount : t.Amount, cancellationToken);
 
             return Result<BudgetStatusResponse>.Success(MapBudgetStatusResponse(budget, spentAmount));
         }
