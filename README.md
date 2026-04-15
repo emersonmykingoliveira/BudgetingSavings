@@ -50,7 +50,6 @@ The API features a centralized error-handling mechanism via `ExceptionHandlingMi
 
 Key features:
 - **Validation Errors**: Catching `ValidationException` from `FluentValidation` and returning a `400 Bad Request` with a detailed list of validation failures.
-- **Business Logic Exceptions**: Catching `ArgumentException` and returning a `400 Bad Request` with the specific error message.
 - **Unexpected Failures**: Catching all other exceptions and returning a `500 Internal Server Error` with a generic message to avoid leaking sensitive system information.
 
 ## Rate Limiting
@@ -65,10 +64,10 @@ The API implements rate limiting to ensure stability and prevent abuse:
 
 The API uses API Key authentication to secure its endpoints:
 - **Development key**: `@MySuperSecretDevKey123`
-- **Header Name**: `X-Api-Key`
+- **Header Name**: `X-API-Key`
 - **Configuration**: The API key is stored in `appsettings.json` under the `Security:ApiKey` path.
 - **Local Development Override**: You can override the default API key by using .NET User Secrets.
-- **Example Usage**: Include the key in your HTTP request headers: `X-Api-Key: @MySuperSecretDevKey123`.
+- **Example Usage**: Include the key in your HTTP request headers: `X-API-Key: @MySuperSecretDevKey123`.
 
 ## Services
 1.  **CustomerService**: Manages customer profiles and information.
@@ -167,7 +166,11 @@ The project includes a `DbInitializer` that automatically seeds the database wit
 2.  Ensure you have the .NET 10 SDK installed.
 3.  Run the application: `dotnet run --project BudgetingSavings.API`.
 4.  Access the Swagger UI (usually at `https://localhost:{port}/swagger`) to explore the API.
-5.  Use the Development key: `@MySuperSecretDevKey123`
+5.  Use the development key in Swagger: 
+    - Click the **Authorize** button.
+    - Enter `@MySuperSecretDevKey123` in the value field for the `ApiKey` (X-API-Key) definition.
+    - Click **Authorize** and then **Close**.
+    - You can now test the endpoints.
 
 ## Running Tests
 
