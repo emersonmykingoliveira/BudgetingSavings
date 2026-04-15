@@ -94,15 +94,15 @@ namespace BudgetingSavings.API.Services
             };
         }
 
-        private async Task HandleCashbackRewardAsync(Reward reward, CancellationToken cancellationToken)
+        private async Task<Result> HandleCashbackRewardAsync(Reward reward, CancellationToken cancellationToken)
         {
             var cashBackFactor = config.GetValue<decimal>("RewardSettings:CashBackFactor");
             if (cashBackFactor <= 0)
-                throw new ArgumentException("Reward cashback factor is invalid.");
+                return Result.Fail("Reward cashback factor is invalid.");
 
             var cashback = reward.Points * (cashBackFactor / 100);
             if (cashback <= 0)
-                throw new ArgumentException("Reward cashback amount is invalid.");
+                return Result.Fail("Reward cashback amount is invalid.");
 
             reward.CashBack = cashback;
             reward.RedeemedDate = DateTime.UtcNow;
@@ -110,6 +110,7 @@ namespace BudgetingSavings.API.Services
 
             db.Rewards.Update(reward);
             await db.SaveChangesAsync(cancellationToken);
+            return Result.Success();
         }
 
         private RewardResponse MapRewardResponse(Reward reward)
