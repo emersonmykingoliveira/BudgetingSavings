@@ -145,7 +145,7 @@ The project includes a `DbInitializer` that automatically seeds the database wit
 
 ## Future Improvements
 
-- Add JWT-based authentication and authorization, deriving customer identity from the authenticated user instead of request payloads.
+- Add JWT-based authentication and authorization using Azure Entra ID, deriving customer identity from the authenticated user instead of request payloads.
 - Expand business validation and standardize error responses further.
 - Refine the reward system into a more explicit points ledger and reward history model.
 - Integrate with an open banking provider to import real transactions and balances.
