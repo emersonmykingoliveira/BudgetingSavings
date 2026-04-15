@@ -6,6 +6,7 @@ using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 
 namespace BudgetingSavings.API.Services
 {
@@ -41,20 +42,10 @@ namespace BudgetingSavings.API.Services
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var transaction = new Transaction
-                {
-                    AccountId = request.AccountId,
-                    CustomerId = request.CustomerId,
-                    Amount = request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount,
-                    Currency = request.Currency,
-                    TransactionType = request.TransactionType,
-                    TransactionCategory = request.TransactionCategory,
-                    TransactionDateTime = DateTime.UtcNow
-                };
+                var updateResult = await UpdateAccountBalanceAsync(account, request.TransactionType == TransactionType.Credit ? request.Amount : -request.Amount, cancellationToken);
 
-                await db.Transactions.AddAsync(transaction, cancellationToken);
- 
-                UpdateAccountBalance(account, request.TransactionType == TransactionType.Debit ? -request.Amount : request.Amount);
+                if (updateResult.Value is null || updateResult.IsFailure)
+                    return Result<TransactionResponse>.Fail(updateResult.Error ?? "An error occurred while updating the account balance.");
 
                 if (request.TransactionType == TransactionType.Debit)
                     await HandleRoundUpToSavingsAsync(request, cancellationToken);
@@ -62,7 +53,7 @@ namespace BudgetingSavings.API.Services
                 await db.SaveChangesAsync(cancellationToken);
                 await ApplyRewardsForTransactionAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
-                return Result<TransactionResponse>.Success(MapTransactionResponse(transaction));
+                return Result<TransactionResponse>.Success(MapTransactionResponse(updateResult.Value));
             }
             catch (Exception ex)
             {
@@ -71,49 +62,36 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        private async Task HandleRoundUpToSavingsAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
+        private async Task<Result> HandleRoundUpToSavingsAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
             var roundUpAmount = Math.Ceiling(request.Amount) - request.Amount;
 
-            if (roundUpAmount <= 0) return;
+            if (roundUpAmount <= 0) return Result.Success();
 
             var currentAccount = await db.Accounts.FindAsync([request.AccountId], cancellationToken);
 
-            if (currentAccount is null || currentAccount.AccountType == AccountType.Savings) return;
+            if (currentAccount is null)
+                return Result.Fail("Current account not found.");
 
-            if (currentAccount.Balance < roundUpAmount) return;
+            if (currentAccount.Balance < roundUpAmount) 
+                return Result.Success();
 
             var savingsAccount = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId
                                                                             && a.AccountType == AccountType.Savings, cancellationToken);
-            if (savingsAccount is null) return;
+            if (savingsAccount is null)
+                return Result.Fail("Savings account not found for the customer.");
 
-            UpdateAccountBalance(currentAccount, -roundUpAmount);
+            var debitResult = await UpdateAccountBalanceAsync(currentAccount, -roundUpAmount, cancellationToken);
 
-            var debitTransaction = new Transaction
-            {
-                AccountId = request.AccountId,
-                CustomerId = request.CustomerId,
-                Amount = -roundUpAmount,
-                Currency = request.Currency,
-                TransactionType = TransactionType.Debit,
-                TransactionCategory = TransactionCategory.Savings,
-                TransactionDateTime = DateTime.UtcNow
-            };
-            await db.Transactions.AddAsync(debitTransaction, cancellationToken);
+            if (debitResult.IsFailure)
+                return Result.Fail(debitResult.Error ?? "An error occurred while debiting the current account.");
 
-            UpdateAccountBalance(savingsAccount, roundUpAmount);
+            var creditResult = await UpdateAccountBalanceAsync(savingsAccount, roundUpAmount, cancellationToken);
 
-            var creditTransaction = new Transaction
-            {
-                AccountId = savingsAccount.Id,
-                CustomerId = request.CustomerId,
-                Amount = roundUpAmount,
-                Currency = request.Currency,
-                TransactionType = TransactionType.Credit,
-                TransactionCategory = TransactionCategory.Savings,
-                TransactionDateTime = DateTime.UtcNow
-            };
-            await db.Transactions.AddAsync(creditTransaction, cancellationToken);
+            if (creditResult.IsFailure)
+                return Result.Fail(creditResult.Error ?? "An error occurred while crediting the savings account.");
+
+            return Result.Success();
         }
 
         private async Task ApplyRewardsForTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
@@ -198,8 +176,15 @@ namespace BudgetingSavings.API.Services
                 if (accountOrigin.Balance < request.Amount)
                     return Result<TransferResponse>.Fail("Insufficient balance for transfer.");
 
-                await DebitOriginAccountHandler(request, accountOrigin, cancellationToken);
-                await CreditDestinationAccountHandler(request, accountDestination, cancellationToken);
+                var debitResult = await UpdateAccountBalanceAsync(accountOrigin, -request.Amount, cancellationToken);
+
+                if (debitResult.IsFailure)
+                    return Result<TransferResponse>.Fail(debitResult.Error ?? "An error occurred while debiting the origin account.");
+
+                var creditResult = await UpdateAccountBalanceAsync(accountDestination, request.Amount, cancellationToken);
+
+                if (creditResult.IsFailure)
+                    return Result<TransferResponse>.Fail(creditResult.Error ?? "An error occurred while crediting the destination account.");
 
                 await db.SaveChangesAsync(cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
@@ -220,50 +205,30 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        private async Task CreditDestinationAccountHandler(CreateTransferRequest request, Account accountDestination, CancellationToken cancellationToken)
+        private async Task<Result<Transaction>> UpdateAccountBalanceAsync(Account account, decimal amount, CancellationToken cancellationToken)
         {
-            UpdateAccountBalance(accountDestination, request.Amount);
-
             var destinyTransaction = new Transaction
             {
-                AccountId = request.AccountDestinationId,
-                CustomerId = accountDestination.CustomerId,
-                Amount = request.Amount,
-                Currency = request.Currency,
+                AccountId = account.Id,
+                CustomerId = account.CustomerId,
+                Amount = amount,
+                Currency = account.Currency,
                 TransactionType = TransactionType.Credit,
                 TransactionCategory = TransactionCategory.General,
                 TransactionDateTime = DateTime.UtcNow
             };
             await db.Transactions.AddAsync(destinyTransaction, cancellationToken);
-        }
 
-        private async Task DebitOriginAccountHandler(CreateTransferRequest request, Account accountOrigin, CancellationToken cancellationToken)
-        {
-            UpdateAccountBalance(accountOrigin, -request.Amount);
-
-            var originTransaction = new Transaction
-            {
-                AccountId = request.AccountOriginId,
-                CustomerId = accountOrigin.CustomerId,
-                Amount = -request.Amount,
-                Currency = request.Currency,
-                TransactionType = TransactionType.Debit,
-                TransactionCategory = TransactionCategory.General,
-                TransactionDateTime = DateTime.UtcNow
-            };
-            await db.Transactions.AddAsync(originTransaction, cancellationToken);
-        }
-
-        private static void UpdateAccountBalance(Account account, decimal amount)
-        {
             if (amount == 0)
-                throw new ArgumentException("Amount must be different from zero.");
+                return Result<Transaction>.Fail("Amount must be non-zero.");
 
             if (account.Balance + amount < 0)
-                throw new ArgumentException("Insufficient balance.");
+                return Result<Transaction>.Fail("Insufficient balance.");
 
             account.Balance += amount;
             account.LastTransactionDate = DateTime.UtcNow;
+
+            return Result<Transaction>.Success(destinyTransaction);
         }
     }
 }
