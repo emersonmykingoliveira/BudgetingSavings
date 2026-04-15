@@ -41,7 +41,7 @@ namespace BudgetingSavings.API.Services
 
             await db.Customers.AddAsync(customer, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
-            return await MapCustomerResponse(customer);
+            return Result<CustomerResponse>.Success(MapCustomerResponse(customer));
         }
 
         public async Task<Result> DeleteCustomerAsync(Guid id, CancellationToken cancellationToken)
@@ -64,18 +64,8 @@ namespace BudgetingSavings.API.Services
         public async Task<Result<List<CustomerResponse>>> GetAllCustomersAsync(CancellationToken cancellationToken)
         {
             var customers = await db.Customers.ToListAsync(cancellationToken);
-            var customerResponses = new List<CustomerResponse>();
-
-            foreach (var customer in customers)
-            {
-                var responseResult = await MapCustomerResponse(customer);
-                if (responseResult.Value != null)
-                {
-                    customerResponses.Add(responseResult.Value);
-                }
-            }
-
-            return Result<List<CustomerResponse>>.Success(customerResponses);
+           
+            return Result<List<CustomerResponse>>.Success(customers.Select(MapCustomerResponse).ToList());
         }
 
         public async Task<Result<CustomerResponse>> GetCustomerByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -85,7 +75,7 @@ namespace BudgetingSavings.API.Services
             if(customer is null)
                 return Result<CustomerResponse>.Fail("Customer does not exist.");
 
-            return await MapCustomerResponse(customer);
+            return Result<CustomerResponse>.Success(MapCustomerResponse(customer));
         }
 
         private async Task<Customer?> GetSpecificCustomerAsync(Guid id, CancellationToken cancellationToken)
@@ -123,12 +113,12 @@ namespace BudgetingSavings.API.Services
             db.Customers.Update(customer);
             await db.SaveChangesAsync(cancellationToken);
 
-            return await MapCustomerResponse(customer);
+            return Result<CustomerResponse>.Success(MapCustomerResponse(customer));
         }
 
-        private Task<Result<CustomerResponse>> MapCustomerResponse(Customer customer)
+        private CustomerResponse MapCustomerResponse(Customer customer)
         {
-            var response = new CustomerResponse
+            return new CustomerResponse
             {
                 Id = customer.Id,
                 Name = customer.Name,
@@ -136,8 +126,6 @@ namespace BudgetingSavings.API.Services
                 PhoneNumber = customer.PhoneNumber,
                 Email = customer.Email
             };
-
-            return Task.FromResult(Result<CustomerResponse>.Success(response));
         }
     }
 }

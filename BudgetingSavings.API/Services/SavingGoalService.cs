@@ -129,10 +129,8 @@ namespace BudgetingSavings.API.Services
                         .SumAsync(t => t.Amount, cancellationToken);
         }
 
-        private SavingGoalResponse MapSavingGoalResponse(SavingGoal? savingGoal)
+        private SavingGoalResponse MapSavingGoalResponse(SavingGoal savingGoal)
         {
-            if (savingGoal is null) return new SavingGoalResponse();
-
             return new SavingGoalResponse
             {
                 Id = savingGoal.Id,

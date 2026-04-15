@@ -158,9 +158,8 @@ namespace BudgetingSavings.API.Services
             return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         }
 
-        private TransactionResponse MapTransactionResponse(Transaction? transaction)
+        private TransactionResponse MapTransactionResponse(Transaction transaction)
         {
-            if (transaction is null) return new TransactionResponse();
             return new TransactionResponse
             {
                 Id = transaction.Id,

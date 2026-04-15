@@ -98,13 +98,6 @@ namespace BudgetingSavings.API.Services
             return (account, reward);
         }
 
-        private async Task VerifyCustomerExistsAsync(Guid customerId, CancellationToken cancellationToken)
-        {
-            var exists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
-            if (!exists)
-                throw new ArgumentException("Customer does not exist.");
-        }
-
         private RedeemRewardResponse MapRedeemRewardResponse(Reward reward, Account account)
         {
             return new RedeemRewardResponse
@@ -135,10 +128,8 @@ namespace BudgetingSavings.API.Services
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        private RewardResponse MapRewardResponse(Reward? reward)
+        private RewardResponse MapRewardResponse(Reward reward)
         {
-            if (reward is null) return new RewardResponse();
-
             return new RewardResponse
             {
                 Id = reward.Id,
