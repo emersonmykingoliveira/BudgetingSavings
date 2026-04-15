@@ -34,7 +34,7 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task CreateBudgetAsync_ShouldReturnBudget_WhenValidRequest()
+        public async Task CreateBudgetAsync_ShouldReturnBudget_WhenValid()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -54,19 +54,25 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.CreateBudgetAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(customerId, result.CustomerId);
-            Assert.Equal(1000m, result.LimitAmount);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(customerId, result.Value.CustomerId);
+            Assert.Equal(1000m, result.Value.LimitAmount);
+            Assert.Equal(CurrencyType.USD, result.Value.Currency);
         }
 
         [Fact]
-        public async Task CreateBudgetAsync_ShouldThrowException_WhenCustomerDoesNotExist()
+        public async Task CreateBudgetAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
         {
             // Arrange
             var request = new CreateBudgetRequest { CustomerId = Guid.NewGuid() };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateBudgetAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateBudgetAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
         }
 
         [Fact]
@@ -89,16 +95,21 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetBudgetByIdAsync(budgetId, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(budgetId, result.Id);
-            Assert.Equal(500m, result.LimitAmount);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(budgetId, result.Value.Id);
+            Assert.Equal(500m, result.Value.LimitAmount);
         }
 
         [Fact]
-        public async Task GetBudgetByIdAsync_ShouldThrowException_WhenNotExists()
+        public async Task GetBudgetByIdAsync_ShouldReturnFailure_WhenNotExists()
         {
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => _service.GetBudgetByIdAsync(Guid.NewGuid(), CancellationToken.None));
+            // Act
+            var result = await _service.GetBudgetByIdAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Budget does not exist.", result.Error);
         }
 
         [Fact]
@@ -119,7 +130,7 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task UpdateBudgetAsync_ShouldUpdate_WhenExists()
+        public async Task UpdateBudgetAsync_ShouldUpdate_WhenValid()
         {
             // Arrange
             var budgetId = Guid.NewGuid();
@@ -140,8 +151,13 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.UpdateBudgetAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.Equal(200m, result.LimitAmount);
-            Assert.Equal(CurrencyType.EUR, result.Currency);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(200m, result.Value.LimitAmount);
+            Assert.Equal(CurrencyType.EUR, result.Value.Currency);
+            
+            var updated = await _db.Budgets.FindAsync(budgetId);
+            Assert.Equal(200m, updated?.LimitAmount);
         }
 
         [Fact]
@@ -161,7 +177,7 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task GetBudgetStatusAsync_ShouldCalculateSpentAmountCorrectly()
+        public async Task GetBudgetStatusAsync_ShouldReturnCorrectStatus_WhenWithinLimit()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -227,13 +243,15 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetBudgetStatusAsync(budgetId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(300m, result.SpentAmount); // Only 100 + 200
-            Assert.Equal(700m, result.RemainingAmount);
-            Assert.False(result.IsExceeded);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(300m, result.Value.SpentAmount); // Only 100 + 200
+            Assert.Equal(700m, result.Value.RemainingAmount);
+            Assert.False(result.Value.IsExceeded);
         }
 
         [Fact]
-        public async Task GetBudgetStatusAsync_ShouldMarkAsExceeded_WhenSpentMoreThanLimit()
+        public async Task GetBudgetStatusAsync_ShouldReturnExceeded_WhenOverLimit()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -268,9 +286,11 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetBudgetStatusAsync(budgetId, CancellationToken.None);
 
             // Assert
-            Assert.True(result.IsExceeded);
-            Assert.Equal(150m, result.SpentAmount);
-            Assert.Equal(-50m, result.RemainingAmount);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.IsExceeded);
+            Assert.Equal(150m, result.Value.SpentAmount);
+            Assert.Equal(-50m, result.Value.RemainingAmount);
         }
     }
 }

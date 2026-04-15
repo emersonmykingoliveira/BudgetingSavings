@@ -14,20 +14,20 @@ namespace BudgetingSavings.API.Services
                                     IValidator<CreateSavingGoalRequest> createValidator,
                                     IValidator<UpdateSavingGoalRequest> updateValidator) : ISavingGoalService
     {
-        public async Task<SavingGoalResponse> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<Result<SavingGoalResponse>> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return Result<SavingGoalResponse>.Fail("Customer does not exist.");
 
             var activeGoalsCount = await db.SavingGoals
                 .CountAsync(g => g.CustomerId == request.CustomerId && g.TargetDate >= DateTime.UtcNow, cancellationToken);
 
             if (activeGoalsCount >= 5)
-                throw new ArgumentException("Customer cannot have more than 5 active saving goals.");
+                return Result<SavingGoalResponse>.Fail("Customer cannot have more than 5 active saving goals.");
 
             var savingGoal = new SavingGoal
             {
@@ -42,57 +42,60 @@ namespace BudgetingSavings.API.Services
             await db.SavingGoals.AddAsync(savingGoal, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
 
-            return MapSavingGoalResponse(savingGoal);
+            return Result<SavingGoalResponse>.Success(MapSavingGoalResponse(savingGoal));
         }
 
-        public async Task DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result> DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken)
         {
             var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
 
-            if (savingGoal is not null)
-            {
-                db.SavingGoals.Remove(savingGoal);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            if (savingGoal is null)
+                return Result.Fail("Saving goal not found.");
+
+            db.SavingGoals.Remove(savingGoal);
+            await db.SaveChangesAsync(cancellationToken);
+            return Result.Success();
         }
 
-        public async Task<List<SavingGoalResponse>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<List<Result<SavingGoalResponse>>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return [Result<SavingGoalResponse>.Fail("Customer does not exist.")];
 
             var savingGoals = await db.SavingGoals.Where(s => s.CustomerId == customerId).ToListAsync(cancellationToken);
-            return savingGoals.Select(s => MapSavingGoalResponse(s)).ToList();
+            return savingGoals.Select(s => Result<SavingGoalResponse>.Success(MapSavingGoalResponse(s))).ToList();
         }
 
-        public async Task<SavingGoalResponse> GetSavingGoalByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<SavingGoalResponse>> GetSavingGoalByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
-            return MapSavingGoalResponse(savingGoal);
+            
+            if (savingGoal is null)
+                return Result<SavingGoalResponse>.Fail("Saving goal not found.");
+
+            return Result<SavingGoalResponse>.Success(MapSavingGoalResponse(savingGoal));
         }
 
-        private async Task<SavingGoal> GetSpecificSavingGoalAsync(Guid id, CancellationToken cancellationToken)
+        private async Task<SavingGoal?> GetSpecificSavingGoalAsync(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-
-            if(savingGoal is null)
-                throw new ArgumentException("Saving goal not found.");
-
-            return savingGoal;
+            return await db.SavingGoals.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         }
 
-        public async Task<SavingGoalResponse> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
+        public async Task<Result<SavingGoalResponse>> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
             await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var savingGoal = await GetSpecificSavingGoalAsync(request.Id, cancellationToken);
 
+            if (savingGoal is null)
+                return Result<SavingGoalResponse>.Fail("Saving goal not found.");
+
             var amountSaved = await GetAmountSavedFromTransactions(savingGoal, cancellationToken);
 
             if (request.TargetAmount < amountSaved)
-                throw new ArgumentException("Target amount cannot be lower than the amount already saved.");
+                return Result<SavingGoalResponse>.Fail("Target amount cannot be lower than the amount already saved.");
 
             savingGoal.Name = request.Name;
             savingGoal.TargetAmount = request.TargetAmount;
@@ -101,15 +104,19 @@ namespace BudgetingSavings.API.Services
             db.SavingGoals.Update(savingGoal);
             await db.SaveChangesAsync(cancellationToken);
 
-            return MapSavingGoalResponse(savingGoal);
+            return Result<SavingGoalResponse>.Success(MapSavingGoalResponse(savingGoal));
         }
 
-        public async Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<SavingGoalStatusResponse>> GetSavingGoalStatusAsync(Guid id, CancellationToken cancellationToken)
         {
             var savingGoal = await GetSpecificSavingGoalAsync(id, cancellationToken);
+
+            if (savingGoal is null)
+                return Result<SavingGoalStatusResponse>.Fail("Saving goal not found.");
+
             var amountSaved = await GetAmountSavedFromTransactions(savingGoal, cancellationToken);
 
-            return MapSavingGoalStatusResponse(savingGoal, amountSaved);
+            return Result<SavingGoalStatusResponse>.Success(MapSavingGoalStatusResponse(savingGoal, amountSaved));
         }
 
         private async Task<decimal> GetAmountSavedFromTransactions(SavingGoal savingGoal, CancellationToken cancellationToken)
@@ -162,17 +169,17 @@ namespace BudgetingSavings.API.Services
                 : (savedAmount > 0 ? SavingGoalStatus.InProgress : SavingGoalStatus.NotStarted);
         }
 
-        public async Task<SavingSuggestionsResponse> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken)
+        public async Task<Result<SavingSuggestionsResponse>> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return Result<SavingSuggestionsResponse>.Fail("Customer does not exist.");
 
             var hasTransactions = await db.Transactions.AnyAsync(t => t.CustomerId == customerId, cancellationToken);
 
             if (!hasTransactions)
-                throw new ArgumentException("Not enough transaction data to generate saving suggestions.");
+                return Result<SavingSuggestionsResponse>.Fail("Not enough transaction data to generate saving suggestions.");
 
             var income = await db.Transactions
                             .Where(t => t.CustomerId == customerId && t.TransactionType == TransactionType.Credit)
@@ -186,16 +193,16 @@ namespace BudgetingSavings.API.Services
 
             if (disposable <= 0)
             {
-                return new SavingSuggestionsResponse
+                return Result<SavingSuggestionsResponse>.Success(new SavingSuggestionsResponse
                 {
                     CustomerId = customerId,
                     Income = income,
                     Expenses = expenses,
                     Disposable = disposable
-                };
+                });
             }
 
-            return CalculateSavingSuggestions(customerId, income, expenses, disposable);
+            return Result<SavingSuggestionsResponse>.Success(CalculateSavingSuggestions(customerId, income, expenses, disposable));
         }
 
         private SavingSuggestionsResponse CalculateSavingSuggestions(Guid customerId, decimal income, decimal expenses, decimal disposable)

@@ -50,7 +50,7 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task CreateSavingGoalAsync_ShouldReturnGoal_WhenValidRequest()
+        public async Task CreateSavingGoalAsync_ShouldReturnSavingGoal_WhenValid()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -69,53 +69,58 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.CreateSavingGoalAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(request.Name, result.Name);
-            Assert.Equal(request.TargetAmount, result.TargetAmount);
-            var goalInDb = await _db.SavingGoals.FindAsync(result.Id);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(request.Name, result.Value.Name);
+            Assert.Equal(request.TargetAmount, result.Value.TargetAmount);
+            var goalInDb = await _db.SavingGoals.FindAsync(result.Value.Id);
             Assert.NotNull(goalInDb);
         }
 
         [Fact]
-        public async Task CreateSavingGoalAsync_ShouldThrow_WhenCustomerDoesNotExist()
+        public async Task CreateSavingGoalAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
         {
             // Arrange
             var request = new CreateSavingGoalRequest { CustomerId = Guid.NewGuid() };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateSavingGoalAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateSavingGoalAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
         }
 
         [Fact]
-        public async Task CreateSavingGoalAsync_ShouldThrow_WhenActiveGoalsLimitReached()
+        public async Task CreateSavingGoalAsync_ShouldReturnFailure_WhenActiveGoalsLimitReached()
         {
             // Arrange
             var customerId = Guid.NewGuid();
-            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test", DateOfBirth = DateTime.UtcNow.AddYears(-20) });
-            
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Limiter", Email = "l@l.com", PhoneNumber = "1", DateOfBirth = DateTime.Now });
             for (int i = 0; i < 5; i++)
             {
-                await _db.SavingGoals.AddAsync(new SavingGoal 
-                { 
-                    Id = Guid.NewGuid(), 
-                    CustomerId = customerId, 
-                    Name = $"Goal {i}", 
-                    TargetDate = DateTime.UtcNow.AddYears(1) 
+                await _db.SavingGoals.AddAsync(new SavingGoal
+                {
+                    Id = Guid.NewGuid(),
+                    CustomerId = customerId,
+                    TargetDate = DateTime.UtcNow.AddMonths(1),
+                    Name = $"Goal {i}"
                 });
             }
             await _db.SaveChangesAsync();
 
-            var request = new CreateSavingGoalRequest { CustomerId = customerId, TargetDate = DateTime.UtcNow.AddYears(1) };
+            var request = new CreateSavingGoalRequest { CustomerId = customerId };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateSavingGoalAsync(request, CancellationToken.None));
-            Assert.Equal("Customer cannot have more than 5 active saving goals.", exception.Message);
+            // Act
+            var result = await _service.CreateSavingGoalAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer cannot have more than 5 active saving goals.", result.Error);
         }
 
         [Fact]
-        public async Task GetSavingGoalStatusAsync_ShouldReturnCorrectStatus_InProgress()
+        public async Task GetSavingGoalStatusAsync_ShouldReturnCorrectStatus()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -153,14 +158,16 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetSavingGoalStatusAsync(goalId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(SavingGoalStatus.InProgress, result.Status);
-            Assert.Equal(200, result.SavedAmount);
-            Assert.Equal(20, result.ProgressPercentage);
-            Assert.Equal(800, result.RemainingAmount);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(SavingGoalStatus.InProgress, result.Value.Status);
+            Assert.Equal(200, result.Value.SavedAmount);
+            Assert.Equal(20, result.Value.ProgressPercentage);
+            Assert.Equal(800, result.Value.RemainingAmount);
         }
 
         [Fact]
-        public async Task UpdateSavingGoalAsync_ShouldThrow_WhenTargetLowerThanSaved()
+        public async Task UpdateSavingGoalAsync_ShouldReturnFailure_WhenTargetLowerThanSaved()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -213,14 +220,16 @@ namespace BudgetingSavings.Tests.UnitTests
                 TargetDate = DateTime.UtcNow.AddDays(20)
             };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.UpdateSavingGoalAsync(request, CancellationToken.None));
-            Assert.Equal("Target amount cannot be lower than the amount already saved.", exception.Message);
+            // Act
+            var result = await _service.UpdateSavingGoalAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Target amount cannot be lower than the amount already saved.", result.Error);
         }
 
         [Fact]
-        public async Task GetSavingSuggestions_ShouldCalculateCorrectly()
+        public async Task GetSavingSuggestions_ShouldReturnCorrectSuggestions()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -237,13 +246,16 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetSavingSuggestions(customerId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(5000, result.Income);
-            Assert.Equal(3000, result.Expenses);
-            Assert.Equal(2000, result.Disposable);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(5000, result.Value.Income);
+            Assert.Equal(3000, result.Value.Expenses);
+            Assert.Equal(2000, result.Value.Disposable);
+            Assert.Equal(0.20m, result.Value.SavingPercentage);
         }
 
         [Fact]
-        public async Task GetAllSavingGoalsAsync_ShouldReturnList_WhenCustomerExists()
+        public async Task GetAllSavingGoalsAsync_ShouldReturnList()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -259,8 +271,8 @@ namespace BudgetingSavings.Tests.UnitTests
 
             // Assert
             Assert.Equal(2, result.Count);
-            Assert.Contains(result, g => g.Name == "Goal 1");
-            Assert.Contains(result, g => g.Name == "Goal 2");
+            Assert.Contains(result, g => g.Value.Name == "Goal 1");
+            Assert.Contains(result, g => g.Value.Name == "Goal 2");
         }
 
         [Fact]
@@ -276,8 +288,10 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetSavingGoalByIdAsync(goalId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(goalId, result.Id);
-            Assert.Equal("Travel", result.Name);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(goalId, result.Value.Id);
+            Assert.Equal("Travel", result.Value.Name);
         }
 
         [Fact]
@@ -298,7 +312,7 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task UpdateSavingGoalAsync_ShouldUpdateFields_WhenValid()
+        public async Task UpdateSavingGoalAsync_ShouldUpdate_WhenValid()
         {
             // Arrange
             var goalId = Guid.NewGuid();
@@ -318,10 +332,13 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.UpdateSavingGoalAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.Equal("Updated Name", result.Name);
-            Assert.Equal(2000, result.TargetAmount);
-            var goalInDb = await _db.SavingGoals.FindAsync(goalId);
-            Assert.Equal("Updated Name", goalInDb!.Name);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal("Updated Name", result.Value.Name);
+            Assert.Equal(2000, result.Value.TargetAmount);
+            
+            var updated = await _db.SavingGoals.FindAsync(goalId);
+            Assert.Equal("Updated Name", updated?.Name);
         }
     }
 }

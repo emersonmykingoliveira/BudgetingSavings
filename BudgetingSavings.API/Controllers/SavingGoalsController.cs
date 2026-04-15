@@ -24,8 +24,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAllSavingGoals(Guid customerId, CancellationToken cancellationToken)
         {
-            var savingGoals = await service.GetAllSavingGoalsAsync(customerId, cancellationToken);
-            return Ok(savingGoals);
+            var result = await service.GetAllSavingGoalsAsync(customerId, cancellationToken);
+            
+            if (result.Any(r => r.IsFailure))
+                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+
+            return Ok(result.Select(r => r.Value));
         }
 
         /// <summary>
@@ -39,8 +43,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetSuggestions(Guid customerId, CancellationToken cancellationToken)
         {
-            var savingSuggestions = await service.GetSavingSuggestions(customerId, cancellationToken);
-            return Ok(savingSuggestions);
+            var result = await service.GetSavingSuggestions(customerId, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -54,8 +62,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetSavingGoalById(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.GetSavingGoalByIdAsync(id, cancellationToken);
-            return Ok(savingGoal);
+            var result = await service.GetSavingGoalByIdAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -69,8 +81,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetSavingGoalStatus(Guid id, CancellationToken cancellationToken)
         {
-            var savingGoalStatus = await service.GetSavingGoalStatusAsync(id, cancellationToken);
-            return Ok(savingGoalStatus);
+            var result = await service.GetSavingGoalStatusAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -84,8 +100,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateSavingGoal([FromBody] CreateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.CreateSavingGoalAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetSavingGoalById), new { id = savingGoal.Id }, savingGoal);
+            var result = await service.CreateSavingGoalAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return CreatedAtAction(nameof(GetSavingGoalById), new { id = result.Value.Id }, result.Value);
         }
 
         /// <summary>
@@ -99,8 +119,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateSavingGoal([FromBody] UpdateSavingGoalRequest request, CancellationToken cancellationToken)
         {
-            var savingGoal = await service.UpdateSavingGoalAsync(request, cancellationToken);
-            return Ok(savingGoal);
+            var result = await service.UpdateSavingGoalAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -114,7 +138,11 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteSavingGoal(Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteSavingGoalAsync(id, cancellationToken);
+            var result = await service.DeleteSavingGoalAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
             return NoContent();
         }
     }

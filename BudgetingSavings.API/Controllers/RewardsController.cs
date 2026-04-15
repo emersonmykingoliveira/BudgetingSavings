@@ -23,8 +23,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAllRewards(Guid customerId, CancellationToken cancellationToken)
         {
-            var rewards = await service.GetAllRewardsAsync(customerId, cancellationToken);
-            return Ok(rewards);
+            var result = await service.GetAllRewardsAsync(customerId, cancellationToken);
+            
+            if (result.Any(r => r.IsFailure))
+                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+
+            return Ok(result.Select(r => r.Value));
         }
 
         /// <summary>
@@ -38,8 +42,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetRewardById(Guid id, CancellationToken cancellationToken)
         {
-            var reward = await service.GetRewardByIdAsync(id, cancellationToken);
-            return Ok(reward);
+            var result = await service.GetRewardByIdAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -53,8 +61,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RedeemReward([FromBody] RedeemRewardRequest request, CancellationToken cancellationToken)
         {
-            var reward = await service.RedeemRewardAsync(request, cancellationToken);
-            return Ok(reward);
+            var result = await service.RedeemRewardAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
     }
 }

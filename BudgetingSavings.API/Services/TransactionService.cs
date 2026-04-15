@@ -13,30 +13,30 @@ namespace BudgetingSavings.API.Services
                                     IRewardService rewardService,
                                     IValidator<CreateTransactionRequest> createValidator) : ITransactionService
     {
-        public async Task<TransactionResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<Result<TransactionResponse>> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken)
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return Result<TransactionResponse>.Fail("Customer does not exist.");
 
             var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == request.AccountId, cancellationToken);
 
             if (account is null)
-                throw new ArgumentException("Account does not exist.");
+                return Result<TransactionResponse>.Fail("Account does not exist.");
 
             if (account.CustomerId != request.CustomerId)
-                throw new ArgumentException("Account does not belong to the customer.");
+                return Result<TransactionResponse>.Fail("Account does not belong to the customer.");
 
             if (account.Currency != request.Currency)
-                throw new ArgumentException("Transaction currency must match account currency.");
+                return Result<TransactionResponse>.Fail("Transaction currency must match account currency.");
 
             return await TransactionHandler(request, account, cancellationToken);
         }
 
-        private async Task<TransactionResponse> TransactionHandler(CreateTransactionRequest request, Account account, CancellationToken cancellationToken)
+        private async Task<Result<TransactionResponse>> TransactionHandler(CreateTransactionRequest request, Account account, CancellationToken cancellationToken)
         {
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
@@ -62,7 +62,12 @@ namespace BudgetingSavings.API.Services
                 await db.SaveChangesAsync(cancellationToken);
                 await ApplyRewardsForTransactionAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
-                return MapTransactionResponse(transaction);
+                return Result<TransactionResponse>.Success(MapTransactionResponse(transaction));
+            }
+            catch (ArgumentException ex)
+            {
+                await dbTransaction.RollbackAsync(cancellationToken);
+                return Result<TransactionResponse>.Fail(ex.Message);
             }
             catch (Exception)
             {
@@ -127,31 +132,30 @@ namespace BudgetingSavings.API.Services
             await rewardService.RewardHandlerAsync(rewardRequest, cancellationToken);
         }
 
-        public async Task<List<TransactionResponse>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
+        public async Task<List<Result<TransactionResponse>>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
         {
             var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
 
             if (!accountExists)
-                throw new ArgumentException("Account does not exist.");
+                return [Result<TransactionResponse>.Fail("Account does not exist.")];
 
             var transactions = await db.Transactions.Where(s => s.AccountId == accountId).ToListAsync(cancellationToken);
-            return transactions.Select(MapTransactionResponse).ToList();
+            return transactions.Select(t => Result<TransactionResponse>.Success(MapTransactionResponse(t))).ToList();
         }
 
-        public async Task<TransactionResponse> GetTransactionByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<TransactionResponse>> GetTransactionByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var transaction = await GetSpecificTransactionAsync(id, cancellationToken);
-            return MapTransactionResponse(transaction);
+
+            if (transaction is null)
+                return Result<TransactionResponse>.Fail("Transaction does not exist.");
+
+            return Result<TransactionResponse>.Success(MapTransactionResponse(transaction));
         }
 
-        private async Task<Transaction> GetSpecificTransactionAsync(Guid id, CancellationToken cancellationToken)
+        private async Task<Transaction?> GetSpecificTransactionAsync(Guid id, CancellationToken cancellationToken)
         {
-            var transaction = await db.Transactions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-
-            if(transaction is null)
-                throw new ArgumentException("Transaction does not exist.");
-
-            return transaction;
+            return await db.Transactions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         }
 
         private TransactionResponse MapTransactionResponse(Transaction? transaction)
@@ -170,24 +174,33 @@ namespace BudgetingSavings.API.Services
             };
         }
 
-        public async Task<TransferResponse> CreateTransferAsync(CreateTransferRequest request, CancellationToken cancellationToken)
+        public async Task<Result<TransferResponse>> CreateTransferAsync(CreateTransferRequest request, CancellationToken cancellationToken)
         {
             if (request.AccountOriginId == request.AccountDestinationId)
-                throw new ArgumentException("Origin and destination accounts cannot be the same.");
+                return Result<TransferResponse>.Fail("Origin and destination accounts cannot be the same.");
 
             if (request.Amount <= 0)
-                throw new ArgumentException("Transfer amount must be greater than zero.");
+                return Result<TransferResponse>.Fail("Transfer amount must be greater than zero.");
 
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var accountOrigin = await db.Accounts.FirstAsync(a => a.Id == request.AccountOriginId, cancellationToken);
+                var accountOrigin = await db.Accounts.FirstOrDefaultAsync(a => a.Id == request.AccountOriginId, cancellationToken);
 
-                var accountDestination = await db.Accounts.FirstAsync(a => a.Id == request.AccountDestinationId, cancellationToken);
+                var accountDestination = await db.Accounts.FirstOrDefaultAsync(a => a.Id == request.AccountDestinationId, cancellationToken);
 
-                if (accountOrigin?.Currency != request.Currency || accountDestination?.Currency != request.Currency)
-                    throw new ArgumentException("Transfer currency must match both account currencies.");
+                if (accountOrigin is null)
+                    return Result<TransferResponse>.Fail("Origin account does not exist.");
+
+                if (accountDestination is null)
+                    return Result<TransferResponse>.Fail("Destination account does not exist.");
+
+                if (accountOrigin.Currency != request.Currency || accountDestination.Currency != request.Currency)
+                    return Result<TransferResponse>.Fail("Transfer currency must match both account currencies.");
+
+                if (accountOrigin.Balance < request.Amount)
+                    return Result<TransferResponse>.Fail("Insufficient balance for transfer.");
 
                 await DebitOriginAccountHandler(request, accountOrigin, cancellationToken);
                 await CreditDestinationAccountHandler(request, accountDestination, cancellationToken);
@@ -195,27 +208,24 @@ namespace BudgetingSavings.API.Services
                 await db.SaveChangesAsync(cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
 
-                return new TransferResponse
+                return Result<TransferResponse>.Success(new TransferResponse
                 {
                     Id = Guid.NewGuid(),
                     AccountDestinyId = request.AccountDestinationId,
                     Amount = request.Amount,
                     Currency = request.Currency,
                     Date = DateTime.UtcNow
-                };
+                });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await dbTransaction.RollbackAsync(cancellationToken);
-                throw;
+                return Result<TransferResponse>.Fail(ex.Message);
             }
         }
 
         private async Task CreditDestinationAccountHandler(CreateTransferRequest request, Account accountDestination, CancellationToken cancellationToken)
         {
-            if (accountDestination is null)
-                throw new ArgumentException("Destination account does not exist.");
-
             UpdateAccountBalance(accountDestination, request.Amount);
 
             var destinyTransaction = new Transaction
@@ -233,12 +243,6 @@ namespace BudgetingSavings.API.Services
 
         private async Task DebitOriginAccountHandler(CreateTransferRequest request, Account accountOrigin, CancellationToken cancellationToken)
         {
-            if (accountOrigin is null)
-                throw new ArgumentException("Origin account does not exist.");
-
-            if (accountOrigin.Balance < request.Amount)
-                throw new ArgumentException("Insufficient balance for transfer.");
-
             UpdateAccountBalance(accountOrigin, -request.Amount);
 
             var originTransaction = new Transaction

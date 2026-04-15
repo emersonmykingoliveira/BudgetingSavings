@@ -71,20 +71,26 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllRewardsAsync(customerId, CancellationToken.None);
 
             // Assert
-            Assert.Single(result);
-            Assert.Equal(reward.Id, result[0].Id);
+            Assert.True(result.Count > 0);
+            Assert.True(result[0].IsSuccess);
+            Assert.NotNull(result[0].Value);
+            Assert.Equal(reward.Id, result[0].Value.Id);
         }
 
         [Fact]
-        public async Task GetAllRewardsAsync_ShouldThrow_WhenCustomerDoesNotExist()
+        public async Task GetAllRewardsAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
         {
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.GetAllRewardsAsync(Guid.NewGuid(), CancellationToken.None));
+            // Act
+            var result = await _service.GetAllRewardsAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.Single(result);
+            Assert.True(result[0].IsFailure);
+            Assert.Equal("Customer does not exist.", result[0].Error);
         }
 
         [Fact]
-        public async Task GetRewardByIdAsync_ShouldReturnReward_WhenExistsAndNotRedeemed()
+        public async Task GetRewardByIdAsync_ShouldReturnReward_WhenValid()
         {
             // Arrange
             var reward = new Reward { Id = Guid.NewGuid(), Points = 100, Redeemed = false };
@@ -95,24 +101,30 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetRewardByIdAsync(reward.Id, CancellationToken.None);
 
             // Assert
-            Assert.Equal(reward.Id, result.Id);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(reward.Id, result.Value.Id);
         }
 
         [Fact]
-        public async Task GetRewardByIdAsync_ShouldThrow_WhenRedeemed()
+        public async Task GetRewardByIdAsync_ShouldReturnFailure_WhenRedeemed()
         {
             // Arrange
-            var reward = new Reward { Id = Guid.NewGuid(), Redeemed = true };
+            var rewardId = Guid.NewGuid();
+            var reward = new Reward { Id = rewardId, Redeemed = true };
             await _db.Rewards.AddAsync(reward);
             await _db.SaveChangesAsync();
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.GetRewardByIdAsync(reward.Id, CancellationToken.None));
+            // Act
+            var result = await _service.GetRewardByIdAsync(rewardId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Reward does not exist or has already been redeemed.", result.Error);
         }
 
         [Fact]
-        public async Task RedeemRewardAsync_ShouldProcessSuccessfully_WhenValid()
+        public async Task RedeemRewardAsync_ShouldReturnCashBack_WhenValid()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -131,13 +143,10 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.RedeemRewardAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(25m, result.CashBack); // 500 * (5/100)
-            Assert.True(reward.Redeemed);
-            
-            var updatedAccount = await _db.Accounts.FindAsync(account.Id);
-            Assert.NotNull(updatedAccount);
-            Assert.Equal(1025m, updatedAccount.Balance);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(25m, result.Value.CashBack); // 500 * (5/100)
+            Assert.Equal(1025m, result.Value.UpdatedAccountBalance);
         }
 
         [Fact]

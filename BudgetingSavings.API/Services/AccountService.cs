@@ -11,14 +11,14 @@ namespace BudgetingSavings.API.Services
 {
     public class AccountService(ApiDbContext db, IValidator<CreateAccountRequest> createValidator) : IAccountService
     {
-        public async Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken)
+        public async Task<Result<AccountResponse>> CreateAccountAsync(CreateAccountRequest request, CancellationToken cancellationToken)
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return Result<AccountResponse>.Fail("Customer does not exist.");
 
             var account = new Account
             {
@@ -35,79 +35,83 @@ namespace BudgetingSavings.API.Services
                                                         && a.AccountType == request.AccountType, cancellationToken);
 
             if (hasSameType)
-                throw new ArgumentException($"Customer already has a {request.AccountType} account.");
+                return Result<AccountResponse>.Fail($"Customer already has a {request.AccountType} account.");
 
             await db.Accounts.AddAsync(account, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
-            return MapAccountResponse(account);
+            return Result<AccountResponse>.Success(MapAccountResponse(account));
         }
 
-        public async Task DeleteAccountAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result> DeleteAccountAsync(Guid id, CancellationToken cancellationToken)
         {
             var account = await GetSpecificAccountAsync(id, cancellationToken);
 
+            if (account is null)
+                return Result.Fail("Account does not exist.");
+
             if (account.Balance > 0)
-                throw new ArgumentException("Cannot delete an account that still contains money.");
+                return Result.Fail("Cannot delete an account that still contains money.");
 
             var hasTransactions = await db.Transactions.AnyAsync(t => t.AccountId == id, cancellationToken);
             if (hasTransactions)
-                throw new ArgumentException("Cannot delete an account with transaction history.");
+                return Result.Fail("Cannot delete an account with transaction history.");
 
             db.Accounts.Remove(account);
             await db.SaveChangesAsync(cancellationToken);
+            return Result.Success();
         }
 
-        public async Task<AccountResponse> GetAccountByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<AccountResponse>> GetAccountByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var account = await GetSpecificAccountAsync(id, cancellationToken);
 
-            return MapAccountResponse(account);
-        }
-
-        private async Task<Account> GetSpecificAccountAsync(Guid id, CancellationToken cancellationToken)
-        {
-            var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
-
             if (account is null)
-                throw new ArgumentException("Account does not exist.");
+                return Result<AccountResponse>.Fail("Account does not exist.");
 
-            return account;
+            return Result<AccountResponse>.Success(MapAccountResponse(account));
         }
 
-        public async Task<List<AccountResponse>> GetAllAccountsAsync(CancellationToken cancellationToken)
+        private async Task<Account?> GetSpecificAccountAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await db.Accounts.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        }
+
+        public async Task<List<Result<AccountResponse>>> GetAllAccountsAsync(CancellationToken cancellationToken)
         {
             var accounts = await db.Accounts.ToListAsync(cancellationToken);
-            return accounts.Select(MapAccountResponse).ToList();
+            return accounts.Select(a => Result<AccountResponse>.Success(MapAccountResponse(a))).ToList();
         }
 
-        public async Task<List<AccountResponse>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<List<Result<AccountResponse>>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return [Result<AccountResponse>.Fail("Customer does not exist.")];
 
             var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
-            return accounts.Select(MapAccountResponse).ToList();
+            return accounts.Select(a => Result<AccountResponse>.Success(MapAccountResponse(a))).ToList();
         }
 
-        public async Task UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken, bool saveChanges = true)
+        public async Task<Result> UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken, bool saveChanges = true)
         {
             if (amount == 0)
-                throw new ArgumentException("Amount must be different than zero.");
+                return Result.Fail("Amount must be different than zero.");
 
             var account = await db.Accounts.FindAsync([id], cancellationToken);
             if (account is null)
-                throw new ArgumentException("Account does not exist.");
+                return Result.Fail("Account does not exist.");
 
             if (account.Balance + amount < 0)
-                throw new ArgumentException("Insufficient balance.");
+                return Result.Fail("Insufficient balance.");
 
             account.Balance += amount;
             account.LastTransactionDate = DateTime.UtcNow;
 
             if (saveChanges)
                 await db.SaveChangesAsync(cancellationToken);
+            
+            return Result.Success();
         }
 
         private async Task<string> GenerateUniqueAccountNumberAsync(CancellationToken cancellationToken)

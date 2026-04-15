@@ -23,8 +23,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetBudgets(Guid customerId, CancellationToken cancellationToken)
         {
-            var budgets = await service.GetAllBudgetsAsync(customerId, cancellationToken);
-            return Ok(budgets);
+            var result = await service.GetAllBudgetsAsync(customerId, cancellationToken);
+            
+            if (result.Any(r => r.IsFailure))
+                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+
+            return Ok(result.Select(r => r.Value));
         }
 
         /// <summary>
@@ -38,8 +42,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetBudgetById(Guid id, CancellationToken cancellationToken)
         {
-            var budget = await service.GetBudgetByIdAsync(id, cancellationToken);
-            return Ok(budget);
+            var result = await service.GetBudgetByIdAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -53,8 +61,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetBudgetStatus(Guid id, CancellationToken cancellationToken)
         {
-            var budgetStatus = await service.GetBudgetStatusAsync(id, cancellationToken);
-            return Ok(budgetStatus);
+            var result = await service.GetBudgetStatusAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -68,8 +80,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateBudget([FromBody] CreateBudgetRequest request, CancellationToken cancellationToken)
         {
-            var budget = await service.CreateBudgetAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetBudgetById), new { id = budget.Id }, budget);
+            var result = await service.CreateBudgetAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return CreatedAtAction(nameof(GetBudgetById), new { id = result.Value.Id }, result.Value);
         }
 
         /// <summary>
@@ -83,8 +99,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateBudget([FromBody] UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
-            var budget = await service.UpdateBudgetAsync(request, cancellationToken);
-            return Ok(budget);
+            var result = await service.UpdateBudgetAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -98,7 +118,11 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteBudget(Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteBudgetAsync(id, cancellationToken);
+            var result = await service.DeleteBudgetAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
             return NoContent();
         }
     }

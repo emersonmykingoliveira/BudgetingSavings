@@ -13,14 +13,14 @@ namespace BudgetingSavings.API.Services
                                 IValidator<CreateBudgetRequest> createValidator,
                                 IValidator<UpdateBudgetRequest> updateValidator) : IBudgetService
     {
-        public async Task<BudgetResponse> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
+        public async Task<Result<BudgetResponse>> CreateBudgetAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return Result<BudgetResponse>.Fail("Customer does not exist.");
 
             var budget = new Budget
             {
@@ -34,49 +34,53 @@ namespace BudgetingSavings.API.Services
 
             await db.Budgets.AddAsync(budget, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
-            return MapBudgetResponse(budget);
+            return Result<BudgetResponse>.Success(MapBudgetResponse(budget));
         }
 
-        public async Task DeleteBudgetAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result> DeleteBudgetAsync(Guid id, CancellationToken cancellationToken)
         {
             var budget = await GetSpecificBudgetAsync(id, cancellationToken);
+
+            if (budget is null)
+                return Result.Fail("Budget does not exist.");
 
             db.Budgets.Remove(budget);
             await db.SaveChangesAsync(cancellationToken);
-
+            return Result.Success();
         }
 
-        public async Task<BudgetResponse> GetBudgetByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<BudgetResponse>> GetBudgetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var budget = await GetSpecificBudgetAsync(id, cancellationToken);
 
-            return MapBudgetResponse(budget);
-        }
-
-        public async Task<Budget> GetSpecificBudgetAsync(Guid id, CancellationToken cancellationToken)
-        {
-            var budget = await db.Budgets.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
-
             if (budget is null)
-                throw new ArgumentException("Budget does not exist.");
+                return Result<BudgetResponse>.Fail("Budget does not exist.");
 
-            return budget;
+            return Result<BudgetResponse>.Success(MapBudgetResponse(budget));
         }
 
-        public async Task<List<BudgetResponse>> GetAllBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<Budget?> GetSpecificBudgetAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await db.Budgets.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+        }
+
+        public async Task<List<Result<BudgetResponse>>> GetAllBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return [Result<BudgetResponse>.Fail("Customer does not exist.")];
 
             var budgets = await db.Budgets.Where(b => b.CustomerId == customerId).ToListAsync(cancellationToken);
-            return budgets.Select(b => MapBudgetResponse(b)).ToList();
+            return budgets.Select(b => Result<BudgetResponse>.Success(MapBudgetResponse(b))).ToList();
         }
 
-        public async Task<BudgetStatusResponse> GetBudgetStatusAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<BudgetStatusResponse>> GetBudgetStatusAsync(Guid id, CancellationToken cancellationToken)
         {
             var budget = await GetSpecificBudgetAsync(id, cancellationToken);
+
+            if (budget is null)
+                return Result<BudgetStatusResponse>.Fail("Budget does not exist.");
 
             var spentAmount = await db.Transactions
                 .Where(t => t.CustomerId == budget.CustomerId
@@ -85,26 +89,26 @@ namespace BudgetingSavings.API.Services
                         && t.TransactionType == TransactionType.Debit)
                 .SumAsync(t => Math.Abs(t.Amount), cancellationToken);
 
-            return MapBudgetStatusResponse(budget, spentAmount);
+            return Result<BudgetStatusResponse>.Success(MapBudgetStatusResponse(budget, spentAmount));
         }
 
-        public async Task<BudgetResponse> UpdateBudgetAsync(UpdateBudgetRequest request, CancellationToken cancellationToken)
+        public async Task<Result<BudgetResponse>> UpdateBudgetAsync(UpdateBudgetRequest request, CancellationToken cancellationToken)
         {
             await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var budget = await GetSpecificBudgetAsync(request.Id, cancellationToken);
 
-            if (budget is not null)
-            {
-                budget.StartTime = request.StartTime;
-                budget.EndTime = request.EndTime;
-                budget.LimitAmount = request.LimitAmount;
-                budget.Currency = request.Currency;
-                db.Budgets.Update(budget);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            if (budget is null)
+                return Result<BudgetResponse>.Fail("Budget does not exist.");
 
-            return MapBudgetResponse(budget);
+            budget.StartTime = request.StartTime;
+            budget.EndTime = request.EndTime;
+            budget.LimitAmount = request.LimitAmount;
+            budget.Currency = request.Currency;
+            db.Budgets.Update(budget);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return Result<BudgetResponse>.Success(MapBudgetResponse(budget));
         }
 
         private BudgetResponse MapBudgetResponse(Budget? budget)

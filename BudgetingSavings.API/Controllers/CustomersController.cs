@@ -22,8 +22,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAllCustomers(CancellationToken cancellationToken)
         {
-            var customers = await service.GetAllCustomersAsync(cancellationToken);
-            return Ok(customers);
+            var result = await service.GetAllCustomersAsync(cancellationToken);
+
+            if (result.Any(r => r.IsFailure))
+                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+
+            return Ok(result.Select(r => r.Value));
         }
 
         /// <summary>
@@ -37,8 +41,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetCustomerById(Guid id, CancellationToken cancellationToken)
         {
-            var customer = await service.GetCustomerByIdAsync(id, cancellationToken);
-            return Ok(customer);
+            var result = await service.GetCustomerByIdAsync(id, cancellationToken);
+
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -52,8 +60,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerRequest request, CancellationToken cancellationToken)
         {
-            var customer = await service.CreateCustomerAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetCustomerById), new { id = customer.Id }, customer);
+            var result = await service.CreateCustomerAsync(request, cancellationToken);
+
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -67,8 +79,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateCustomer([FromBody] UpdateCustomerRequest request, CancellationToken cancellationToken)
         {
-            var customer = await service.UpdateCustomerAsync(request, cancellationToken);
-            return Ok(customer);
+            var result = await service.UpdateCustomerAsync(request, cancellationToken);
+
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -82,7 +98,11 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteCustomer(Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteCustomerAsync(id, cancellationToken);
+            var result = await service.DeleteCustomerAsync(id, cancellationToken);
+
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
             return NoContent();
         }
     }

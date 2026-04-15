@@ -14,52 +14,62 @@ namespace BudgetingSavings.API.Services
                                 IValidator<CreateRewardRequest> createValidator,
                                 IConfiguration config) : IRewardService
     {
-        public async Task<List<RewardResponse>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<List<Result<RewardResponse>>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers
                 .AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                throw new ArgumentException("Customer does not exist.");
+                return [Result<RewardResponse>.Fail("Customer does not exist.")];
 
             var rewards = await db.Rewards
                 .Where(r => r.CustomerId == customerId)
                 .ToListAsync(cancellationToken);
 
-            return rewards.Select(MapRewardResponse).ToList();
+            return rewards.Select(r => Result<RewardResponse>.Success(MapRewardResponse(r))).ToList();
         }
 
-        public async Task<RewardResponse> GetRewardByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<RewardResponse>> GetRewardByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var reward = await GetActiveRewardAsync(id, cancellationToken);
-            return MapRewardResponse(reward);
-        }
-
-        private async Task<Reward> GetActiveRewardAsync(Guid id, CancellationToken cancellationToken)
-        {
-            var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == id && !r.Redeemed, cancellationToken);
-
+            
             if (reward is null)
-                throw new ArgumentException("Reward does not exist or has already been redeemed.");
+                return Result<RewardResponse>.Fail("Reward does not exist or has already been redeemed.");
 
-            return reward;
+            return Result<RewardResponse>.Success(MapRewardResponse(reward));
         }
 
-        public async Task<RedeemRewardResponse> RedeemRewardAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
+        private async Task<Reward?> GetActiveRewardAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await db.Rewards.FirstOrDefaultAsync(r => r.Id == id && !r.Redeemed, cancellationToken);
+        }
+
+        public async Task<Result<RedeemRewardResponse>> RedeemRewardAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
         {
             using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var (account, reward) = await GetRedemptionContextAsync(request, cancellationToken);
+                var context = await GetRedemptionContextAsync(request, cancellationToken);
+                
+                if (context.Account is null)
+                    return Result<RedeemRewardResponse>.Fail("Account not found for the customer.");
+                
+                if (context.Reward is null)
+                    return Result<RedeemRewardResponse>.Fail("No rewards available for redemption.");
 
-                await HandleCashbackRewardAsync(reward, cancellationToken);
-                await AddCashBackToAccountBalance(account, reward);
+                await HandleCashbackRewardAsync(context.Reward, cancellationToken);
+                await AddCashBackToAccountBalance(context.Account, context.Reward);
                 await db.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                return MapRedeemRewardResponse(reward, account);
+                return Result<RedeemRewardResponse>.Success(MapRedeemRewardResponse(context.Reward, context.Account));
             }
-            catch
+            catch (ArgumentException ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Result<RedeemRewardResponse>.Fail(ex.Message);
+            }
+            catch (Exception)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 throw;
@@ -73,21 +83,18 @@ namespace BudgetingSavings.API.Services
             db.Accounts.Update(account);
         }
 
-        private async Task<(Account Account, Reward Reward)> GetRedemptionContextAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
+        private async Task<(Account? Account, Reward? Reward)> GetRedemptionContextAsync(RedeemRewardRequest request, CancellationToken cancellationToken)
         {
             var account = await db.Accounts.FirstOrDefaultAsync(a => a.CustomerId == request.CustomerId, cancellationToken);
-            if (account is null)
-                throw new ArgumentException("Account not found for the customer.");
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
 
-            await VerifyCustomerExistsAsync(request.CustomerId, cancellationToken);
+            if (!customerExists)
+                throw new ArgumentException("Customer does not exist.");
 
             var reward = await db.Rewards.FirstOrDefaultAsync(r => r.Id == request.Id &&
                                                                 r.CustomerId == request.CustomerId &&
                                                                 !r.Redeemed && r.Points > 0,
                                                                 cancellationToken);
-            if (reward is null)
-                throw new ArgumentException("No rewards available for redemption.");
-
             return (account, reward);
         }
 
@@ -144,16 +151,18 @@ namespace BudgetingSavings.API.Services
             };
         }
 
-        public async Task RewardHandlerAsync(CreateRewardRequest request, CancellationToken cancellationToken)
+        public async Task<Result> RewardHandlerAsync(CreateRewardRequest request, CancellationToken cancellationToken)
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
-            await VerifyCustomerExistsAsync(request.CustomerId, cancellationToken);
+            var customerExists = await db.Customers.AnyAsync(c => c.Id == request.CustomerId, cancellationToken);
+            if (!customerExists)
+                return Result.Fail("Customer does not exist.");
 
             var points = CalculatePoints(request.Amount);
-            if (points == 0) return;
+            if (points == 0) return Result.Success();
 
-            if (!IsSavingsTransaction(request)) return;
+            if (!IsSavingsTransaction(request)) return Result.Success();
 
             using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
@@ -171,8 +180,9 @@ namespace BudgetingSavings.API.Services
                 }
 
                 await transaction.CommitAsync(cancellationToken);
+                return Result.Success();
             }
-            catch
+            catch (Exception)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 throw;

@@ -71,80 +71,86 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.CreateTransactionAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(request.Amount * -1, result.Amount);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(request.Amount * -1, result.Value.Amount);
             var account = await _db.Accounts.FindAsync(accountId);
             Assert.Equal(900, account?.Balance);
             await _rewardService.Received(1).RewardHandlerAsync(Arg.Any<CreateRewardRequest>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
-        public async Task CreateTransactionAsync_ShouldThrow_WhenCustomerDoesNotExist()
+        public async Task CreateTransactionAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
         {
             // Arrange
             var request = new CreateTransactionRequest { CustomerId = Guid.NewGuid() };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateTransactionAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateTransactionAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
         }
 
         [Fact]
-        public async Task CreateTransactionAsync_ShouldThrow_WhenAccountDoesNotExist()
+        public async Task CreateTransactionAsync_ShouldReturnFailure_WhenAccountDoesNotExist()
         {
             // Arrange
             var customerId = Guid.NewGuid();
-            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test", DateOfBirth = DateTime.UtcNow.AddYears(-20) });
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "C1", Email = "c1@e.com", PhoneNumber = "1", DateOfBirth = DateTime.Now });
             await _db.SaveChangesAsync();
 
             var request = new CreateTransactionRequest { CustomerId = customerId, AccountId = Guid.NewGuid() };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateTransactionAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateTransactionAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Account does not exist.", result.Error);
         }
 
         [Fact]
-        public async Task CreateTransactionAsync_ShouldThrow_WhenAccountDoesNotBelongToCustomer()
+        public async Task CreateTransactionAsync_ShouldReturnFailure_WhenAccountDoesNotBelongToCustomer()
         {
             // Arrange
-            var customerId = Guid.NewGuid();
-            var otherCustomerId = Guid.NewGuid();
+            var c1Id = Guid.NewGuid();
+            var c2Id = Guid.NewGuid();
             var accountId = Guid.NewGuid();
-            await _db.Customers.AddRangeAsync(
-                new Customer { Id = customerId, Name = "Test", DateOfBirth = DateTime.UtcNow.AddYears(-20) },
-                new Customer { Id = otherCustomerId, Name = "Other", DateOfBirth = DateTime.UtcNow.AddYears(-20) }
-            );
-            await _db.Accounts.AddAsync(new Account { Id = accountId, CustomerId = otherCustomerId, AccountNumber = "123", Currency = CurrencyType.USD });
+            await _db.Customers.AddAsync(new Customer { Id = c1Id, Name = "C1", Email = "c1@e.com", PhoneNumber = "1", DateOfBirth = DateTime.Now });
+            await _db.Customers.AddAsync(new Customer { Id = c2Id, Name = "C2", Email = "c2@e.com", PhoneNumber = "2", DateOfBirth = DateTime.Now });
+            await _db.Accounts.AddAsync(new Account { Id = accountId, CustomerId = c2Id, AccountNumber = "1" });
             await _db.SaveChangesAsync();
 
-            var request = new CreateTransactionRequest { CustomerId = customerId, AccountId = accountId };
+            var request = new CreateTransactionRequest { CustomerId = c1Id, AccountId = accountId };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateTransactionAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateTransactionAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Account does not belong to the customer.", result.Error);
         }
 
         [Fact]
-        public async Task CreateTransactionAsync_ShouldThrow_WhenCurrencyMismatch()
+        public async Task CreateTransactionAsync_ShouldReturnFailure_WhenCurrencyMismatch()
         {
             // Arrange
             var customerId = Guid.NewGuid();
             var accountId = Guid.NewGuid();
-            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test", DateOfBirth = DateTime.UtcNow.AddYears(-20) });
-            await _db.Accounts.AddAsync(new Account { Id = accountId, CustomerId = customerId, AccountNumber = "123", Currency = CurrencyType.USD });
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "C1", Email = "c1@e.com", PhoneNumber = "1", DateOfBirth = DateTime.Now });
+            await _db.Accounts.AddAsync(new Account { Id = accountId, CustomerId = customerId, Currency = CurrencyType.USD, AccountNumber = "1" });
             await _db.SaveChangesAsync();
 
-            var request = new CreateTransactionRequest 
-            { 
-                CustomerId = customerId, 
-                AccountId = accountId, 
-                Currency = CurrencyType.EUR 
-            };
+            var request = new CreateTransactionRequest { CustomerId = customerId, AccountId = accountId, Currency = CurrencyType.EUR };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateTransactionAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateTransactionAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Transaction currency must match account currency.", result.Error);
         }
 
         [Fact]
@@ -179,7 +185,10 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetTransactionByIdAsync(transactionId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(transactionId, result.Id);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(transactionId, result.Value.Id);
+            Assert.Equal(100m, result.Value.Amount);
         }
 
         [Fact]
@@ -221,35 +230,38 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task TransferAsync_ShouldThrow_WhenOriginAndDestinationAreSame()
+        public async Task TransferAsync_ShouldReturnFailure_WhenOriginAndDestinationAreSame()
         {
             // Arrange
             var accountId = Guid.NewGuid();
             var request = new CreateTransferRequest { AccountOriginId = accountId, AccountDestinationId = accountId };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateTransferAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateTransferAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Origin and destination accounts cannot be the same.", result.Error);
         }
 
         [Fact]
-        public async Task TransferAsync_ShouldThrow_WhenAmountIsZeroOrLess()
+        public async Task TransferAsync_ShouldReturnFailure_WhenAmountIsZeroOrLess()
         {
             // Arrange
-            var request = new CreateTransferRequest 
-            { 
-                AccountOriginId = Guid.NewGuid(), 
-                AccountDestinationId = Guid.NewGuid(), 
-                Amount = 0 
-            };
+            var accountOriginId = Guid.NewGuid();
+            var accountDestinationId = Guid.NewGuid();
+            var request = new CreateTransferRequest { AccountOriginId = accountOriginId, AccountDestinationId = accountDestinationId, Amount = 0 };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateTransferAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateTransferAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Transfer amount must be greater than zero.", result.Error);
         }
 
         [Fact]
-        public async Task TransferAsync_ShouldThrow_WhenCurrencyMismatch()
+        public async Task TransferAsync_ShouldReturnFailure_WhenCurrencyMismatch()
         {
             // Arrange
             var originId = Guid.NewGuid();
@@ -269,9 +281,12 @@ namespace BudgetingSavings.Tests.UnitTests
                 Currency = CurrencyType.USD
             };
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateTransferAsync(request, CancellationToken.None));
+            // Act
+            var result = await _service.CreateTransferAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Transfer currency must match both account currencies.", result.Error);
         }
     }
 }

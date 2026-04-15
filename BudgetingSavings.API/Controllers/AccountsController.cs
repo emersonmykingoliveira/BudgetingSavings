@@ -22,8 +22,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAllAccounts(CancellationToken cancellationToken)
         {
-            var accounts = await service.GetAllAccountsAsync(cancellationToken);
-            return Ok(accounts);
+            var result = await service.GetAllAccountsAsync(cancellationToken);
+            
+            if (result.Any(r => r.IsFailure))
+                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+
+            return Ok(result.Select(r => r.Value));
         }
 
         /// <summary>
@@ -33,12 +37,16 @@ namespace BudgetingSavings.API.Controllers
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A list of accounts for the customer.</returns>
         [HttpGet("customer/{customerId:guid}")]
-        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<AccountResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAllAccountsForCustomer(Guid customerId, CancellationToken cancellationToken)
         {
-            var accounts = await service.GetAllAccountsForCustomerAsync(customerId, cancellationToken);
-            return Ok(accounts);
+            var result = await service.GetAllAccountsForCustomerAsync(customerId, cancellationToken);
+            
+            if (result.Any(r => r.IsFailure))
+                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+
+            return Ok(result.Select(r => r.Value));
         }
 
         /// <summary>
@@ -52,8 +60,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAccountById(Guid id, CancellationToken cancellationToken)
         {
-            var account = await service.GetAccountByIdAsync(id, cancellationToken);
-            return Ok(account);
+            var result = await service.GetAccountByIdAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -67,8 +79,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
         {
-            var account = await service.CreateAccountAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetAccountById), new { id = account.Id }, account);
+            var result = await service.CreateAccountAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return CreatedAtAction(nameof(GetAccountById), new { id = result.Value.Id }, result.Value);
         }
 
         /// <summary>
@@ -82,7 +98,11 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteAccount(Guid id, CancellationToken cancellationToken)
         {
-            await service.DeleteAccountAsync(id, cancellationToken);
+            var result = await service.DeleteAccountAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
             return NoContent();
         }
     }

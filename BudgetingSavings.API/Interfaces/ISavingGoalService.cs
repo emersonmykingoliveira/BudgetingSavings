@@ -6,12 +6,12 @@ namespace BudgetingSavings.API.Services
 {
     public interface ISavingGoalService
     {
-        Task<List<SavingGoalResponse>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken);
-        Task<SavingGoalResponse> GetSavingGoalByIdAsync(Guid id, CancellationToken cancellationToken);
-        Task<SavingGoalResponse> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken);
-        Task DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken);
-        Task<SavingGoalResponse> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken);
-        Task<SavingGoalStatusResponse> GetSavingGoalStatusAsync(Guid id, CancellationToken cancellationToken);
-        Task<SavingSuggestionsResponse> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken);
+        Task<List<Result<SavingGoalResponse>>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken);
+        Task<Result<SavingGoalResponse>> GetSavingGoalByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Result<SavingGoalResponse>> CreateSavingGoalAsync(CreateSavingGoalRequest request, CancellationToken cancellationToken);
+        Task<Result> DeleteSavingGoalAsync(Guid id, CancellationToken cancellationToken);
+        Task<Result<SavingGoalResponse>> UpdateSavingGoalAsync(UpdateSavingGoalRequest request, CancellationToken cancellationToken);
+        Task<Result<SavingGoalStatusResponse>> GetSavingGoalStatusAsync(Guid id, CancellationToken cancellationToken);
+        Task<Result<SavingSuggestionsResponse>> GetSavingSuggestions(Guid customerId, CancellationToken cancellationToken);
     }
 }

@@ -33,7 +33,7 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task CreateAccountAsync_ShouldReturnAccount_WhenValidRequest()
+        public async Task CreateAccountAsync_ShouldReturnAccount_WhenValid()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -52,56 +52,45 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.CreateAccountAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(customerId, result.CustomerId);
-            Assert.Equal(request.AccountType, result.AccountType);
-            Assert.Equal(0m, result.Balance);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(customerId, result.Value.CustomerId);
+            Assert.Equal(request.AccountType, result.Value.AccountType);
+            Assert.Equal(0m, result.Value.Balance);
+            Assert.NotNull(result.Value.AccountNumber);
         }
 
         [Fact]
-        public async Task CreateAccountAsync_ShouldThrowException_WhenCustomerDoesNotExist()
+        public async Task CreateAccountAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
         {
             // Arrange
-            var request = new CreateAccountRequest
-            {
-                CustomerId = Guid.NewGuid(),
-                AccountType = AccountType.Savings
-            };
+            var request = new CreateAccountRequest { CustomerId = Guid.NewGuid() };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.CreateAccountAsync(request, CancellationToken.None));
-            Assert.Equal("Customer does not exist.", exception.Message);
+            // Act
+            var result = await _service.CreateAccountAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
         }
 
         [Fact]
-        public async Task CreateAccountAsync_ShouldThrowException_WhenAccountTypeAlreadyExists()
+        public async Task CreateAccountAsync_ShouldReturnFailure_WhenAccountTypeAlreadyExists()
         {
             // Arrange
             var customerId = Guid.NewGuid();
-            var customer = new Customer { Id = customerId, Name = "Test Customer" };
-            await _db.Customers.AddAsync(customer);
-
-            var existingAccount = new Account
-            {
-                Id = Guid.NewGuid(),
-                CustomerId = customerId,
-                AccountType = AccountType.Savings,
-                AccountNumber = "********1234"
-            };
-            await _db.Accounts.AddAsync(existingAccount);
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Existing", Email = "e@e.com", PhoneNumber = "1", DateOfBirth = DateTime.Now });
+            await _db.Accounts.AddAsync(new Account { Id = Guid.NewGuid(), CustomerId = customerId, AccountType = AccountType.Savings, AccountNumber = "1" });
             await _db.SaveChangesAsync();
 
-            var request = new CreateAccountRequest
-            {
-                CustomerId = customerId,
-                AccountType = AccountType.Savings
-            };
+            var request = new CreateAccountRequest { CustomerId = customerId, AccountType = AccountType.Savings };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.CreateAccountAsync(request, CancellationToken.None));
-            Assert.Equal($"Customer already has a {request.AccountType} account.", exception.Message);
+            // Act
+            var result = await _service.CreateAccountAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer already has a Savings account.", result.Error);
         }
 
         [Fact]
@@ -124,26 +113,29 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAccountByIdAsync(accountId, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(accountId, result.Id);
-            Assert.Equal(100m, result.Balance);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(accountId, result.Value.Id);
+            Assert.Equal(100m, result.Value.Balance);
         }
 
         [Fact]
-        public async Task GetAccountByIdAsync_ShouldThrowException_WhenNotExists()
+        public async Task GetAccountByIdAsync_ShouldReturnFailure_WhenNotExists()
         {
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.GetAccountByIdAsync(Guid.NewGuid(), CancellationToken.None));
-            Assert.Equal("Account does not exist.", exception.Message);
+            // Act
+            var result = await _service.GetAccountByIdAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Account does not exist.", result.Error);
         }
 
         [Fact]
         public async Task GetAllAccountsAsync_ShouldReturnList()
         {
             // Arrange
-            await _db.Accounts.AddAsync(new Account { Id = Guid.NewGuid(), AccountNumber = "********1111" });
-            await _db.Accounts.AddAsync(new Account { Id = Guid.NewGuid(), AccountNumber = "********2222" });
+            await _db.Accounts.AddAsync(new Account { Id = Guid.NewGuid(), AccountNumber = "********1111", Currency = CurrencyType.USD });
+            await _db.Accounts.AddAsync(new Account { Id = Guid.NewGuid(), AccountNumber = "********2222", Currency = CurrencyType.USD });
             await _db.SaveChangesAsync();
 
             // Act
@@ -189,17 +181,19 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task UpdateAccountBalanceAsync_ShouldThrow_WhenInsufficientBalance()
+        public async Task UpdateAccountBalanceAsync_ShouldReturnFailure_WhenInsufficientBalance()
         {
             // Arrange
             var accountId = Guid.NewGuid();
-            var account = new Account { Id = accountId, Balance = 50m, AccountNumber = "1" };
-            await _db.Accounts.AddAsync(account);
+            await _db.Accounts.AddAsync(new Account { Id = accountId, Balance = 50m, AccountNumber = "1" });
             await _db.SaveChangesAsync();
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.UpdateAccountBalanceAsync(accountId, -100m, CancellationToken.None));
+            // Act
+            var result = await _service.UpdateAccountBalanceAsync(accountId, -100m, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Insufficient balance.", result.Error);
         }
 
         [Fact]
@@ -220,59 +214,59 @@ namespace BudgetingSavings.Tests.UnitTests
         }
 
         [Fact]
-        public async Task DeleteAccountAsync_ShouldThrow_WhenBalanceExists()
+        public async Task DeleteAccountAsync_ShouldReturnFailure_WhenBalanceExists()
         {
             // Arrange
             var accountId = Guid.NewGuid();
-            var account = new Account { Id = accountId, Balance = 10m, AccountNumber = "1" };
-            await _db.Accounts.AddAsync(account);
+            await _db.Accounts.AddAsync(new Account { Id = accountId, Balance = 10m, AccountNumber = "1" });
             await _db.SaveChangesAsync();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.DeleteAccountAsync(accountId, CancellationToken.None));
-            Assert.Equal("Cannot delete an account that still contains money.", exception.Message);
+            // Act
+            var result = await _service.DeleteAccountAsync(accountId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Cannot delete an account that still contains money.", result.Error);
         }
 
         [Fact]
-        public async Task DeleteAccountAsync_ShouldThrow_WhenHasTransactions()
+        public async Task DeleteAccountAsync_ShouldReturnFailure_WhenHasTransactions()
         {
             // Arrange
             var accountId = Guid.NewGuid();
-            var account = new Account { Id = accountId, Balance = 0m, AccountNumber = "1" };
-            var transaction = new Transaction { Id = Guid.NewGuid(), AccountId = accountId, Amount = 100m, TransactionDateTime = DateTime.UtcNow };
-            await _db.Accounts.AddAsync(account);
-            await _db.Transactions.AddAsync(transaction);
+            await _db.Accounts.AddAsync(new Account { Id = accountId, Balance = 0m, AccountNumber = "1" });
+            await _db.Transactions.AddAsync(new Transaction { Id = Guid.NewGuid(), AccountId = accountId });
             await _db.SaveChangesAsync();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.DeleteAccountAsync(accountId, CancellationToken.None));
-            Assert.Equal("Cannot delete an account with transaction history.", exception.Message);
+            // Act
+            var result = await _service.DeleteAccountAsync(accountId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Cannot delete an account with transaction history.", result.Error);
         }
 
         [Fact]
-        public async Task GetAllAccountsForCustomerAsync_ShouldThrow_WhenCustomerDoesNotExist()
+        public async Task GetAllAccountsForCustomerAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
         {
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.GetAllAccountsForCustomerAsync(Guid.NewGuid(), CancellationToken.None));
-            Assert.Equal("Customer does not exist.", exception.Message);
+            // Act
+            var result = await _service.GetAllAccountsForCustomerAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.Single(result);
+            Assert.True(result[0].IsFailure);
+            Assert.Equal("Customer does not exist.", result[0].Error);
         }
 
         [Fact]
-        public async Task UpdateAccountBalanceAsync_ShouldThrow_WhenAmountIsZero()
+        public async Task UpdateAccountBalanceAsync_ShouldReturnFailure_WhenAmountIsZero()
         {
-            // Arrange
-            var accountId = Guid.NewGuid();
-            var account = new Account { Id = accountId, Balance = 100m, AccountNumber = "1" };
-            await _db.Accounts.AddAsync(account);
-            await _db.SaveChangesAsync();
+            // Act
+            var result = await _service.UpdateAccountBalanceAsync(Guid.NewGuid(), 0m, CancellationToken.None);
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.UpdateAccountBalanceAsync(accountId, 0m, CancellationToken.None));
-            Assert.Equal("Amount must be different than zero.", exception.Message);
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Amount must be different than zero.", result.Error);
         }
     }
 }

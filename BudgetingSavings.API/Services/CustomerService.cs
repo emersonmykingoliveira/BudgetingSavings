@@ -13,22 +13,22 @@ namespace BudgetingSavings.API.Services
                                 IValidator<CreateCustomerRequest> createValidator,
                                 IValidator<UpdateCustomerRequest> updateValidator) : ICustomerService
     {
-        public async Task<CustomerResponse> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken)
+        public async Task<Result<CustomerResponse>> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken)
         {
             await createValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var emailExists = await db.Customers.AnyAsync(c => c.Email == request.Email, cancellationToken);
             
             if (emailExists)
-                throw new ArgumentException("A customer with this email already exists.");
+                return Result<CustomerResponse>.Fail("A customer with this email already exists.");
 
             var phoneExists = await db.Customers.AnyAsync(c => c.PhoneNumber == request.PhoneNumber, cancellationToken);
             
             if (phoneExists)
-                throw new ArgumentException("A customer with this phone number already exists.");
+                return Result<CustomerResponse>.Fail("A customer with this phone number already exists.");
 
             if (request.DateOfBirth > DateTime.UtcNow.AddYears(-18))
-                throw new ArgumentException("Customer must be at least 18 years old.");
+                return Result<CustomerResponse>.Fail("Customer must be at least 18 years old.");
 
             var customer = new Customer
             {
@@ -41,85 +41,88 @@ namespace BudgetingSavings.API.Services
 
             await db.Customers.AddAsync(customer, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
-            return MapCustomerResponse(customer);
+            return await MapCustomerResponse(customer);
         }
 
-        public async Task DeleteCustomerAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result> DeleteCustomerAsync(Guid id, CancellationToken cancellationToken)
         {
             var customer = await GetSpecificCustomerAsync(id, cancellationToken);
+
+            if (customer is null)
+                return Result.Fail("Customer does not exist.");
 
             var hasAccounts = await db.Accounts.AnyAsync(a => a.CustomerId == id, cancellationToken);
             
             if (hasAccounts)
-                throw new ArgumentException("Cannot delete a customer with existing accounts.");
+                return Result.Fail("Cannot delete a customer with existing accounts.");
 
-            if (customer is not null)
-            {
-                db.Customers.Remove(customer);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            db.Customers.Remove(customer);
+            await db.SaveChangesAsync(cancellationToken);
+            return Result.Success();
         }
 
-        public async Task<List<CustomerResponse>> GetAllCustomersAsync(CancellationToken cancellationToken)
+        public async Task<List<Result<CustomerResponse>>> GetAllCustomersAsync(CancellationToken cancellationToken)
         {
             var customers = await db.Customers.ToListAsync(cancellationToken);
-            return customers.Select(MapCustomerResponse).ToList();
+            var customerResponses = new List<Result<CustomerResponse>>();
+
+            foreach (var customer in customers)
+                customerResponses.Add(await MapCustomerResponse(customer));
+
+            return customerResponses;
         }
 
-        public async Task<CustomerResponse> GetCustomerByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Result<CustomerResponse>> GetCustomerByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var customer = await GetSpecificCustomerAsync(id, cancellationToken);
-            return MapCustomerResponse(customer);
-        }
-
-        private async Task<Customer> GetSpecificCustomerAsync(Guid id, CancellationToken cancellationToken)
-        {
-            var customer = await db.Customers.FirstOrDefaultAsync(s => s.Id == id, cancellationToken) ?? new Customer();
-
+            
             if(customer is null)
-                throw new ArgumentException("Customer does not exist.");
+                return Result<CustomerResponse>.Fail("Customer does not exist.");
 
-            return customer;
+            return await MapCustomerResponse(customer);
         }
 
-        public async Task<CustomerResponse> UpdateCustomerAsync(UpdateCustomerRequest request, CancellationToken cancellationToken)
+        private async Task<Customer?> GetSpecificCustomerAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await db.Customers.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        }
+
+        public async Task<Result<CustomerResponse>> UpdateCustomerAsync(UpdateCustomerRequest request, CancellationToken cancellationToken)
         {
             await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
 
             var customer = await GetSpecificCustomerAsync(request.Id, cancellationToken);
 
+            if (customer is null)
+                return Result<CustomerResponse>.Fail("Customer does not exist.");
+
             var emailExists = await db.Customers.AnyAsync(c => c.Id != request.Id && c.Email == request.Email, cancellationToken);
             
             if (emailExists)
-                throw new ArgumentException("A customer with this email already exists.");
+                return Result<CustomerResponse>.Fail("A customer with this email already exists.");
 
             var phoneExists = await db.Customers.AnyAsync(c => c.Id != request.Id && c.PhoneNumber == request.PhoneNumber, cancellationToken);
 
             if (phoneExists)
-                throw new ArgumentException("A customer with this phone number already exists.");
+                return Result<CustomerResponse>.Fail("A customer with this phone number already exists.");
 
             if (request.DateOfBirth > DateTime.UtcNow.AddYears(-18))
-                throw new ArgumentException("Customer must be at least 18 years old.");
+                return Result<CustomerResponse>.Fail("Customer must be at least 18 years old.");
 
-            if (customer is not null)
-            {
-                customer.Name = request.Name;
-                customer.DateOfBirth = request.DateOfBirth;
-                customer.PhoneNumber = request.PhoneNumber;
-                customer.Email = request.Email;
+            customer.Name = request.Name;
+            customer.DateOfBirth = request.DateOfBirth;
+            customer.PhoneNumber = request.PhoneNumber;
+            customer.Email = request.Email;
 
-                db.Customers.Update(customer);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            db.Customers.Update(customer);
+            await db.SaveChangesAsync(cancellationToken);
 
-            return MapCustomerResponse(customer);
+            return await MapCustomerResponse(customer);
         }
 
-        private CustomerResponse MapCustomerResponse(Customer? customer)
+        private Task<Result<CustomerResponse>> MapCustomerResponse(Customer customer)
         {
-            if (customer is null) return new CustomerResponse();
-
-            return new CustomerResponse
+            var response = new CustomerResponse
             {
                 Id = customer.Id,
                 Name = customer.Name,
@@ -127,6 +130,8 @@ namespace BudgetingSavings.API.Services
                 PhoneNumber = customer.PhoneNumber,
                 Email = customer.Email
             };
+
+            return Task.FromResult(Result<CustomerResponse>.Success(response));
         }
     }
 }

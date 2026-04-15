@@ -24,8 +24,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAccountTransactions(Guid accountId, CancellationToken cancellationToken)
         {
-            var transactions = await service.GetAllTransactionsAsync(accountId, cancellationToken);
-            return Ok(transactions);
+            var result = await service.GetAllTransactionsAsync(accountId, cancellationToken);
+            
+            if (result.Any(r => r.IsFailure))
+                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+
+            return Ok(result.Select(r => r.Value));
         }
 
         /// <summary>
@@ -39,8 +43,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetTransactionById(Guid id, CancellationToken cancellationToken)
         {
-            var transaction = await service.GetTransactionByIdAsync(id, cancellationToken);
-            return Ok(transaction);
+            var result = await service.GetTransactionByIdAsync(id, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -54,8 +62,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateTransaction([FromBody] CreateTransactionRequest request, CancellationToken cancellationToken)
         {
-            var transaction = await service.CreateTransactionAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetTransactionById), new { id = transaction.Id }, transaction);
+            var result = await service.CreateTransactionAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return CreatedAtAction(nameof(GetTransactionById), new { id = result.Value.Id }, result.Value);
         }
 
         /// <summary>
@@ -69,8 +81,12 @@ namespace BudgetingSavings.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateTransfer([FromBody] CreateTransferRequest request, CancellationToken cancellationToken)
         {
-            var transfer = await service.CreateTransferAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetTransactionById), new { id = transfer.Id }, transfer);
+            var result = await service.CreateTransferAsync(request, cancellationToken);
+            
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return CreatedAtAction(nameof(GetTransactionById), new { id = result.Value.Id }, result.Value);
         }
     }
 }

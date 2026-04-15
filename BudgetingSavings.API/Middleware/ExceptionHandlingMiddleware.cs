@@ -20,11 +20,6 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
             ex.Errors.ToList().ForEach(error => sb.AppendLine(error.ErrorMessage));
 
             await CreateProblemDetails(context, HttpStatusCode.BadRequest, sb.ToString());
-
-        }
-        catch (ArgumentException ex)
-        {
-            await CreateProblemDetails(context, HttpStatusCode.BadRequest, ex.Message);
         }
         catch (Exception)
         {

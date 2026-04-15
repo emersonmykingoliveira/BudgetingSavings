@@ -49,14 +49,15 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.CreateCustomerAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(request.Name, result.Name);
-            Assert.Equal(request.Email, result.Email);
-            Assert.NotEqual(Guid.Empty, result.Id);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(request.Name, result.Value.Name);
+            Assert.Equal(request.Email, result.Value.Email);
+            Assert.NotEqual(Guid.Empty, result.Value.Id);
         }
 
         [Fact]
-        public async Task CreateCustomerAsync_ShouldThrow_WhenEmailAlreadyExists()
+        public async Task CreateCustomerAsync_ShouldReturnFailure_WhenEmailAlreadyExists()
         {
             // Arrange
             var email = "duplicate@example.com";
@@ -71,14 +72,16 @@ namespace BudgetingSavings.Tests.UnitTests
                 DateOfBirth = DateTime.UtcNow.AddYears(-20)
             };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateCustomerAsync(request, CancellationToken.None));
-            Assert.Equal("A customer with this email already exists.", exception.Message);
+            // Act
+            var result = await _service.CreateCustomerAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("A customer with this email already exists.", result.Error);
         }
 
         [Fact]
-        public async Task CreateCustomerAsync_ShouldThrow_WhenPhoneAlreadyExists()
+        public async Task CreateCustomerAsync_ShouldReturnFailure_WhenPhoneAlreadyExists()
         {
             // Arrange
             var phone = "1234567890";
@@ -93,14 +96,16 @@ namespace BudgetingSavings.Tests.UnitTests
                 DateOfBirth = DateTime.UtcNow.AddYears(-20)
             };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateCustomerAsync(request, CancellationToken.None));
-            Assert.Equal("A customer with this phone number already exists.", exception.Message);
+            // Act
+            var result = await _service.CreateCustomerAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("A customer with this phone number already exists.", result.Error);
         }
 
         [Fact]
-        public async Task CreateCustomerAsync_ShouldThrow_WhenUnder18()
+        public async Task CreateCustomerAsync_ShouldReturnFailure_WhenUnder18()
         {
             // Arrange
             var request = new CreateCustomerRequest
@@ -111,10 +116,12 @@ namespace BudgetingSavings.Tests.UnitTests
                 DateOfBirth = DateTime.UtcNow.AddYears(-17) // Under 18
             };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.CreateCustomerAsync(request, CancellationToken.None));
-            Assert.Equal("Customer must be at least 18 years old.", exception.Message);
+            // Act
+            var result = await _service.CreateCustomerAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer must be at least 18 years old.", result.Error);
         }
 
         [Fact]
@@ -145,8 +152,10 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetCustomerByIdAsync(customerId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(customerId, result.Id);
-            Assert.Equal("John", result.Name);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal(customerId, result.Value.Id);
+            Assert.Equal("John", result.Value.Name);
         }
 
         [Fact]
@@ -171,15 +180,17 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.UpdateCustomerAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.Equal("New Name", result.Name);
-            Assert.Equal("new@e.com", result.Email);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Value);
+            Assert.Equal("New Name", result.Value.Name);
+            Assert.Equal("new@e.com", result.Value.Email);
             
             var updated = await _db.Customers.FindAsync(customerId);
             Assert.Equal("New Name", updated?.Name);
         }
 
         [Fact]
-        public async Task UpdateCustomerAsync_ShouldThrow_WhenEmailExistsOnOtherCustomer()
+        public async Task UpdateCustomerAsync_ShouldReturnFailure_WhenEmailExistsOnOtherCustomer()
         {
             // Arrange
             var c1Id = Guid.NewGuid();
@@ -197,10 +208,12 @@ namespace BudgetingSavings.Tests.UnitTests
                 DateOfBirth = DateTime.UtcNow.AddYears(-25)
             };
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.UpdateCustomerAsync(request, CancellationToken.None));
-            Assert.Equal("A customer with this email already exists.", exception.Message);
+            // Act
+            var result = await _service.UpdateCustomerAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("A customer with this email already exists.", result.Error);
         }
 
         [Fact]
@@ -212,15 +225,16 @@ namespace BudgetingSavings.Tests.UnitTests
             await _db.SaveChangesAsync();
 
             // Act
-            await _service.DeleteCustomerAsync(customerId, CancellationToken.None);
+            var result = await _service.DeleteCustomerAsync(customerId, CancellationToken.None);
 
             // Assert
+            Assert.True(result.IsSuccess);
             var deleted = await _db.Customers.FindAsync(customerId);
             Assert.Null(deleted);
         }
 
         [Fact]
-        public async Task DeleteCustomerAsync_ShouldThrow_WhenHasAccounts()
+        public async Task DeleteCustomerAsync_ShouldReturnFailure_WhenHasAccounts()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -228,10 +242,12 @@ namespace BudgetingSavings.Tests.UnitTests
             await _db.Accounts.AddAsync(new Account { Id = Guid.NewGuid(), CustomerId = customerId, AccountNumber = "1234" });
             await _db.SaveChangesAsync();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
-                _service.DeleteCustomerAsync(customerId, CancellationToken.None));
-            Assert.Equal("Cannot delete a customer with existing accounts.", exception.Message);
+            // Act
+            var result = await _service.DeleteCustomerAsync(customerId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Cannot delete a customer with existing accounts.", result.Error);
         }
     }
 }
