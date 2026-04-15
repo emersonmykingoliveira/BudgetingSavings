@@ -11,7 +11,6 @@ namespace BudgetingSavings.API.Controllers
     [ApiController]
     [Route("api/transactions")]
     [EnableRateLimiting("fixedRateLimiter")]
-    [Authorize]
     public class TransactionsController(ITransactionService service) : ControllerBase
     {
         /// <summary>

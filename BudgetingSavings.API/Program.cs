@@ -1,5 +1,4 @@
 using BudgetingSavings.API.Infrastructure.Data;
-using BudgetingSavings.API.Infrastructure.Security;
 using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.API.Middleware;
 using BudgetingSavings.API.Services;
@@ -20,10 +19,6 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
-builder.Services
-    .AddAuthentication("ApiKey")
-    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", options => { });
 
 builder.Services.AddAuthorization();
 
@@ -52,24 +47,6 @@ builder.Services.AddSwaggerGen(options =>
         Title = "Budgeting & Savings API",
         Version = "v1"
     });
-
-    options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
-    {
-        Description = "API Key needed to access the endpoints. Example: X-Api-Key: your-key",
-        In = ParameterLocation.Header,
-        Name = "X-Api-Key",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "ApiKeyScheme"
-    });
-
-    options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecuritySchemeReference("ApiKey"),
-            new List<string>()
-        }
-    });
-
 });
 
 builder.Services.AddRateLimiter(options =>
@@ -99,8 +76,6 @@ using (var scope = app.Services.CreateScope())
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseRateLimiter();
-app.UseAuthentication();
-app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();

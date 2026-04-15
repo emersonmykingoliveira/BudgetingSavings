@@ -10,7 +10,6 @@ namespace BudgetingSavings.API.Controllers
     [ApiController]
     [Route("api/budgets")]
     [EnableRateLimiting("fixedRateLimiter")]
-    [Authorize]
     public class BudgetsController(IBudgetService service) : ControllerBase
     {
         /// <summary>

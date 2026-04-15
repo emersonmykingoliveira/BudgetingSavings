@@ -10,7 +10,6 @@ namespace BudgetingSavings.API.Controllers
     [ApiController]
     [Route("api/rewards")]
     [EnableRateLimiting("fixedRateLimiter")]
-    [Authorize]
     public class RewardsController(IRewardService service) : ControllerBase
     {
         /// <summary>
