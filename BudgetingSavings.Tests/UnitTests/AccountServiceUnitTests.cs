@@ -269,5 +269,27 @@ namespace BudgetingSavings.Tests.UnitTests
             Assert.True(result.IsFailure);
             Assert.Equal("Amount must be different than zero.", result.Error);
         }
+
+        [Fact]
+        public async Task UpdateAccountBalanceAsync_ShouldReturnFailure_WhenAccountDoesNotExist()
+        {
+            // Act
+            var result = await _service.UpdateAccountBalanceAsync(Guid.NewGuid(), 100m, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Account does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task DeleteAccountAsync_ShouldReturnFailure_WhenAccountDoesNotExist()
+        {
+            // Act
+            var result = await _service.DeleteAccountAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Account does not exist.", result.Error);
+        }
     }
 }

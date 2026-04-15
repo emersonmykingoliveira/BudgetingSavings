@@ -246,5 +246,97 @@ namespace BudgetingSavings.Tests.UnitTests
             // Assert
             Assert.Equal(480, reward.Points); // 500 - (2000 * 1%)
         }
+
+        [Fact]
+        public async Task GetRewardByIdAsync_ShouldReturnFailure_WhenRewardDoesNotExist()
+        {
+            // Act
+            var result = await _service.GetRewardByIdAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Reward does not exist or has already been redeemed.", result.Error);
+        }
+
+        [Fact]
+        public async Task RedeemRewardAsync_ShouldReturnFailure_WhenAccountNotFound()
+        {
+            // Arrange
+            var customerId = Guid.NewGuid();
+            var reward = new Reward { Id = Guid.NewGuid(), CustomerId = customerId, Points = 100, Redeemed = false };
+            await _db.Rewards.AddAsync(reward);
+            await _db.SaveChangesAsync();
+
+            var request = new RedeemRewardRequest { Id = reward.Id, CustomerId = customerId };
+
+            // Act
+            var result = await _service.RedeemRewardAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Account not found for the customer.", result.Error);
+        }
+
+        [Fact]
+        public async Task RedeemRewardAsync_ShouldReturnFailure_WhenRewardNotFoundOrRedeemed()
+        {
+            // Arrange
+            var customerId = Guid.NewGuid();
+            var rewardId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test" });
+            await _db.Accounts.AddAsync(new Account { Id = Guid.NewGuid(), CustomerId = customerId, AccountNumber = "123", Currency = CurrencyType.USD });
+            await _db.Rewards.AddAsync(new Reward { Id = rewardId, CustomerId = customerId, Points = 100, Redeemed = true }); // Already redeemed
+            await _db.SaveChangesAsync();
+
+            var request = new RedeemRewardRequest { Id = rewardId, CustomerId = customerId };
+
+            // Act
+            var result = await _service.RedeemRewardAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("No rewards available for redemption.", result.Error);
+        }
+
+        [Fact]
+        public async Task RewardHandlerAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
+        {
+            // Arrange
+            var request = new CreateRewardRequest { CustomerId = Guid.NewGuid(), Amount = 100 };
+            _validator.ValidateAsync(request, Arg.Any<CancellationToken>()).Returns(new ValidationResult());
+
+            // Act
+            var result = await _service.RewardHandlerAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task RewardHandlerAsync_ShouldDoNothing_WhenPointsAreZero()
+        {
+            // Arrange
+            var customerId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test" });
+            await _db.SaveChangesAsync();
+
+            var request = new CreateRewardRequest
+            {
+                CustomerId = customerId,
+                Amount = 1, // Will result in 0 points (1 * 1 / 100)
+                TransactionType = TransactionType.Credit,
+                TransactionCategory = TransactionCategory.Savings
+            };
+            _validator.ValidateAsync(request, Arg.Any<CancellationToken>()).Returns(new ValidationResult());
+
+            // Act
+            var result = await _service.RewardHandlerAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            var rewardInDb = await _db.Rewards.FirstOrDefaultAsync(r => r.CustomerId == customerId);
+            Assert.Null(rewardInDb);
+        }
     }
 }

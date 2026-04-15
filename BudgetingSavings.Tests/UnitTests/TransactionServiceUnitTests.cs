@@ -289,5 +289,120 @@ namespace BudgetingSavings.Tests.UnitTests
             Assert.True(result.IsFailure);
             Assert.Equal("Transfer currency must match both account currencies.", result.Error);
         }
+
+        [Fact]
+        public async Task GetAllTransactionsAsync_ShouldReturnFailure_WhenAccountDoesNotExist()
+        {
+            // Act
+            var result = await _service.GetAllTransactionsAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Account does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetTransactionByIdAsync_ShouldReturnFailure_WhenTransactionDoesNotExist()
+        {
+            // Act
+            var result = await _service.GetTransactionByIdAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Transaction does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task TransferAsync_ShouldReturnFailure_WhenInsufficientBalance()
+        {
+            // Arrange
+            var originId = Guid.NewGuid();
+            var destinationId = Guid.NewGuid();
+            await _db.Accounts.AddRangeAsync(
+                new Account { Id = originId, CustomerId = Guid.NewGuid(), Balance = 100, AccountNumber = "1", Currency = CurrencyType.USD },
+                new Account { Id = destinationId, CustomerId = Guid.NewGuid(), Balance = 500, AccountNumber = "2", Currency = CurrencyType.USD }
+            );
+            await _db.SaveChangesAsync();
+
+            var request = new CreateTransferRequest { AccountOriginId = originId, AccountDestinationId = destinationId, Amount = 200, Currency = CurrencyType.USD };
+
+            // Act
+            var result = await _service.CreateTransferAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Insufficient balance for transfer.", result.Error);
+        }
+
+        [Fact]
+        public async Task TransferAsync_ShouldReturnFailure_WhenOriginAccountDoesNotExist()
+        {
+            // Arrange
+            var destId = Guid.NewGuid();
+            await _db.Accounts.AddAsync(new Account { Id = destId, CustomerId = Guid.NewGuid(), AccountNumber = "1" });
+            await _db.SaveChangesAsync();
+            var request = new CreateTransferRequest { AccountOriginId = Guid.NewGuid(), AccountDestinationId = destId, Amount = 10 };
+
+            // Act
+            var result = await _service.CreateTransferAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Origin account does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task TransferAsync_ShouldReturnFailure_WhenDestinationAccountDoesNotExist()
+        {
+            // Arrange
+            var originId = Guid.NewGuid();
+            await _db.Accounts.AddAsync(new Account { Id = originId, CustomerId = Guid.NewGuid(), AccountNumber = "1" });
+            await _db.SaveChangesAsync();
+            var request = new CreateTransferRequest { AccountOriginId = originId, AccountDestinationId = Guid.NewGuid(), Amount = 10 };
+
+            // Act
+            var result = await _service.CreateTransferAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Destination account does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task CreateTransactionAsync_ShouldHandleRoundUp_WhenValidDebit()
+        {
+            // Arrange
+            var customerId = Guid.NewGuid();
+            var accountId = Guid.NewGuid();
+            var savingsAccountId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test", Email = "a@a.com", PhoneNumber = "1", DateOfBirth = DateTime.Now });
+            await _db.Accounts.AddRangeAsync(
+                new Account { Id = accountId, CustomerId = customerId, AccountNumber = "1", Currency = CurrencyType.USD, Balance = 1000, AccountType = AccountType.Checking },
+                new Account { Id = savingsAccountId, CustomerId = customerId, AccountNumber = "2", Currency = CurrencyType.USD, Balance = 500, AccountType = AccountType.Savings }
+            );
+            await _db.SaveChangesAsync();
+
+            var request = new CreateTransactionRequest
+            {
+                CustomerId = customerId,
+                AccountId = accountId,
+                Amount = 10.75m,
+                Currency = CurrencyType.USD,
+                TransactionType = TransactionType.Debit,
+                TransactionCategory = TransactionCategory.General
+            };
+
+            // Act
+            await _service.CreateTransactionAsync(request, CancellationToken.None);
+
+            // Assert
+            var checkingAccount = await _db.Accounts.FindAsync(accountId);
+            var savingsAccount = await _db.Accounts.FindAsync(savingsAccountId);
+
+            // Checking balance: 1000 - 10.75 - 0.25 (round up) = 989
+            Assert.Equal(989m, checkingAccount?.Balance);
+            // Savings balance: 500 + 0.25 = 500.25
+            Assert.Equal(500.25m, savingsAccount?.Balance);
+        }
     }
 }

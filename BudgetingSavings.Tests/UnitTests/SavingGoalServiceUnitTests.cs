@@ -341,5 +341,207 @@ namespace BudgetingSavings.Tests.UnitTests
             var updated = await _db.SavingGoals.FindAsync(goalId);
             Assert.Equal("Updated Name", updated?.Name);
         }
+
+        [Fact]
+        public async Task GetSavingGoalStatusAsync_ShouldReturnFailure_WhenGoalNotFound()
+        {
+            // Act
+            var result = await _service.GetSavingGoalStatusAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Saving goal not found.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetSavingGoalStatusAsync_ShouldReturnCompleted_WhenTargetReachedAndDatePassed()
+        {
+            // Arrange
+            var customerId = Guid.NewGuid();
+            var accountId = Guid.NewGuid();
+            var goalId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test", DateOfBirth = DateTime.UtcNow.AddYears(-20) });
+            await _db.Accounts.AddAsync(new Account { Id = accountId, CustomerId = customerId, AccountNumber = "123", Currency = CurrencyType.USD });
+            var goal = new SavingGoal
+            {
+                Id = goalId,
+                CustomerId = customerId,
+                Name = "Goal",
+                TargetAmount = 100,
+                StartDate = DateTime.UtcNow.AddDays(-20),
+                TargetDate = DateTime.UtcNow.AddDays(-5) // Passed
+            };
+            await _db.SavingGoals.AddAsync(goal);
+            await _db.Transactions.AddAsync(new Transaction
+            {
+                Id = Guid.NewGuid(),
+                AccountId = accountId,
+                CustomerId = customerId,
+                Amount = 150,
+                TransactionType = TransactionType.Credit,
+                TransactionCategory = TransactionCategory.Savings,
+                TransactionDateTime = DateTime.UtcNow.AddDays(-10),
+                Currency = CurrencyType.USD
+            });
+            await _db.SaveChangesAsync();
+
+            // Act
+            var result = await _service.GetSavingGoalStatusAsync(goalId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.Equal(SavingGoalStatus.Completed, result.Value.Status);
+        }
+
+        [Fact]
+        public async Task GetSavingGoalStatusAsync_ShouldReturnFailed_WhenTargetNotReachedAndDatePassed()
+        {
+            // Arrange
+            var goalId = Guid.NewGuid();
+            var customerId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test", DateOfBirth = DateTime.UtcNow.AddYears(-20) });
+            var goal = new SavingGoal
+            {
+                Id = goalId,
+                CustomerId = customerId,
+                Name = "Goal",
+                TargetAmount = 1000,
+                StartDate = DateTime.UtcNow.AddDays(-20),
+                TargetDate = DateTime.UtcNow.AddDays(-5) // Passed
+            };
+            await _db.SavingGoals.AddAsync(goal);
+            await _db.SaveChangesAsync();
+
+            // Act
+            var result = await _service.GetSavingGoalStatusAsync(goalId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.Equal(SavingGoalStatus.Failed, result.Value.Status);
+        }
+
+        [Fact]
+        public async Task GetSavingGoalStatusAsync_ShouldReturnNotStarted_WhenNoSavings()
+        {
+            // Arrange
+            var goalId = Guid.NewGuid();
+            var customerId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test", DateOfBirth = DateTime.UtcNow.AddYears(-20) });
+            var goal = new SavingGoal
+            {
+                Id = goalId,
+                CustomerId = customerId,
+                Name = "Goal",
+                TargetAmount = 1000,
+                StartDate = DateTime.UtcNow.AddDays(-5),
+                TargetDate = DateTime.UtcNow.AddDays(20)
+            };
+            await _db.SavingGoals.AddAsync(goal);
+            await _db.SaveChangesAsync();
+
+            // Act
+            var result = await _service.GetSavingGoalStatusAsync(goalId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.Equal(SavingGoalStatus.NotStarted, result.Value.Status);
+            Assert.Equal(0, result.Value.SavedAmount);
+        }
+
+        [Fact]
+        public async Task GetSavingSuggestions_ShouldReturnFailure_WhenCustomerDoesNotExist()
+        {
+            // Act
+            var result = await _service.GetSavingSuggestions(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetSavingSuggestions_ShouldReturnFailure_WhenNoTransactions()
+        {
+            // Arrange
+            var customerId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "No Transactions" });
+            await _db.SaveChangesAsync();
+
+            // Act
+            var result = await _service.GetSavingSuggestions(customerId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Not enough transaction data to generate saving suggestions.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetSavingSuggestions_ShouldReturnDisposableOnly_WhenDisposableIsZeroOrNegative()
+        {
+            // Arrange
+            var customerId = Guid.NewGuid();
+            await _db.Customers.AddAsync(new Customer { Id = customerId, Name = "Test" });
+            await _db.Transactions.AddRangeAsync(
+                new Transaction { Id = Guid.NewGuid(), CustomerId = customerId, Amount = 1000, TransactionType = TransactionType.Credit, Currency = CurrencyType.USD },
+                new Transaction { Id = Guid.NewGuid(), CustomerId = customerId, Amount = -1500, TransactionType = TransactionType.Debit, Currency = CurrencyType.USD }
+            );
+            await _db.SaveChangesAsync();
+
+            // Act
+            var result = await _service.GetSavingSuggestions(customerId, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.Equal(-500, result.Value.Disposable);
+            Assert.Equal(0, result.Value.SavingPercentage);
+            Assert.Equal(0, result.Value.RecommendedMontlySaving);
+        }
+
+        [Fact]
+        public async Task DeleteSavingGoalAsync_ShouldReturnFailure_WhenGoalNotFound()
+        {
+            // Act
+            var result = await _service.DeleteSavingGoalAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Saving goal not found.", result.Error);
+        }
+
+        [Fact]
+        public async Task UpdateSavingGoalAsync_ShouldReturnFailure_WhenGoalNotFound()
+        {
+            // Arrange
+            var request = new UpdateSavingGoalRequest { Id = Guid.NewGuid(), Name = "Name", TargetAmount = 100, TargetDate = DateTime.UtcNow };
+
+            // Act
+            var result = await _service.UpdateSavingGoalAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Saving goal not found.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetAllSavingGoalsAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
+        {
+            // Act
+            var result = await _service.GetAllSavingGoalsAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetSavingGoalByIdAsync_ShouldReturnFailure_WhenGoalNotFound()
+        {
+            // Act
+            var result = await _service.GetSavingGoalByIdAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Saving goal not found.", result.Error);
+        }
     }
 }

@@ -42,7 +42,7 @@ namespace BudgetingSavings.API.Services
             await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var updateResult = await UpdateAccountBalanceAsync(account, request.TransactionType == TransactionType.Credit ? request.Amount : -request.Amount, cancellationToken);
+                var updateResult = await UpdateAccountBalanceAsync(account, request.TransactionType == TransactionType.Credit ? request.Amount : -request.Amount, request.TransactionCategory, cancellationToken);
 
                 if (updateResult.Value is null || updateResult.IsFailure)
                     return Result<TransactionResponse>.Fail(updateResult.Error ?? "An error occurred while updating the account balance.");
@@ -81,12 +81,12 @@ namespace BudgetingSavings.API.Services
             if (savingsAccount is null)
                 return Result.Fail("Savings account not found for the customer.");
 
-            var debitResult = await UpdateAccountBalanceAsync(currentAccount, -roundUpAmount, cancellationToken);
+            var debitResult = await UpdateAccountBalanceAsync(currentAccount, -roundUpAmount, TransactionCategory.Savings, cancellationToken);
 
             if (debitResult.IsFailure)
                 return Result.Fail(debitResult.Error ?? "An error occurred while debiting the current account.");
 
-            var creditResult = await UpdateAccountBalanceAsync(savingsAccount, roundUpAmount, cancellationToken);
+            var creditResult = await UpdateAccountBalanceAsync(savingsAccount, roundUpAmount, TransactionCategory.Savings, cancellationToken);
 
             if (creditResult.IsFailure)
                 return Result.Fail(creditResult.Error ?? "An error occurred while crediting the savings account.");
@@ -176,12 +176,12 @@ namespace BudgetingSavings.API.Services
                 if (accountOrigin.Balance < request.Amount)
                     return Result<TransferResponse>.Fail("Insufficient balance for transfer.");
 
-                var debitResult = await UpdateAccountBalanceAsync(accountOrigin, -request.Amount, cancellationToken);
+                var debitResult = await UpdateAccountBalanceAsync(accountOrigin, -request.Amount, TransactionCategory.General, cancellationToken);
 
                 if (debitResult.IsFailure)
                     return Result<TransferResponse>.Fail(debitResult.Error ?? "An error occurred while debiting the origin account.");
 
-                var creditResult = await UpdateAccountBalanceAsync(accountDestination, request.Amount, cancellationToken);
+                var creditResult = await UpdateAccountBalanceAsync(accountDestination, request.Amount, TransactionCategory.General, cancellationToken);
 
                 if (creditResult.IsFailure)
                     return Result<TransferResponse>.Fail(creditResult.Error ?? "An error occurred while crediting the destination account.");
@@ -205,7 +205,7 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        private async Task<Result<Transaction>> UpdateAccountBalanceAsync(Account account, decimal amount, CancellationToken cancellationToken)
+        private async Task<Result<Transaction>> UpdateAccountBalanceAsync(Account account, decimal amount, TransactionCategory category, CancellationToken cancellationToken)
         {
             var destinyTransaction = new Transaction
             {
@@ -213,8 +213,8 @@ namespace BudgetingSavings.API.Services
                 CustomerId = account.CustomerId,
                 Amount = amount,
                 Currency = account.Currency,
-                TransactionType = TransactionType.Credit,
-                TransactionCategory = TransactionCategory.General,
+                TransactionType = amount >= 0 ? TransactionType.Credit : TransactionType.Debit,
+                TransactionCategory = category,
                 TransactionDateTime = DateTime.UtcNow
             };
             await db.Transactions.AddAsync(destinyTransaction, cancellationToken);

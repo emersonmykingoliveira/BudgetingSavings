@@ -293,5 +293,52 @@ namespace BudgetingSavings.Tests.UnitTests
             Assert.Equal(150m, result.Value.SpentAmount);
             Assert.Equal(-50m, result.Value.RemainingAmount);
         }
+
+        [Fact]
+        public async Task UpdateBudgetAsync_ShouldReturnFailure_WhenBudgetNotFound()
+        {
+            // Arrange
+            var request = new UpdateBudgetRequest { Id = Guid.NewGuid(), LimitAmount = 100m };
+
+            // Act
+            var result = await _service.UpdateBudgetAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Budget does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task DeleteBudgetAsync_ShouldReturnFailure_WhenBudgetNotFound()
+        {
+            // Act
+            var result = await _service.DeleteBudgetAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Budget does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetBudgetStatusAsync_ShouldReturnFailure_WhenBudgetNotFound()
+        {
+            // Act
+            var result = await _service.GetBudgetStatusAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Budget does not exist.", result.Error);
+        }
+
+        [Fact]
+        public async Task GetAllBudgetsAsync_ShouldReturnFailure_WhenCustomerDoesNotExist()
+        {
+            // Act
+            var result = await _service.GetAllBudgetsAsync(Guid.NewGuid(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
+        }
     }
 }

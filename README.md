@@ -24,18 +24,25 @@ The API employs an intelligent approach to encourage better financial habits thr
     - `Models/`: Contains Data Transfer Objects (DTOs) for requests and responses, as well as enums.
     - `Validators/`: Contains FluentValidation rules to ensure incoming data is correct.
     - `Middleware/`: Custom logic injected into the ASP.NET Core request pipeline (e.g., exception handling, rate limiting).
-- **BudgetingSavings.Tests**: The testing project to ensure the reliability of the application.
-    - `UnitTests/`: Contains isolated tests for the business logic in the `Services/` folder.
-
+- **BudgetingSavings.Tests**: The testing project ensuring high reliability.
+    - `UnitTests/`: Contains isolated tests for all business services, including 90+ test cases covering valid flows, validation failures, and complex edge cases (like round-up logic and reward bonuses).
 
 ## Technology Stack
 
 - **Framework**: .NET 10
 - **Language**: C# 14
-- **ORM**: Entity Framework Core
+- **ORM**: Entity Framework Core (In-Memory for development/testing)
 - **Validation**: FluentValidation
+- **Patterns**: Result Pattern for functional-style error handling and flow control.
 - **Error Handling**: Custom `ExceptionHandlingMiddleware` using `ProblemDetails`
-- **Tests**: xUnit, NSubstitute
+- **Tests**: xUnit, NSubstitute (90+ Unit Tests)
+
+## Result Pattern
+
+The application uses a centralized `Result` and `Result<T>` pattern for business logic flow control. This ensures that:
+- Service methods explicitly return success or failure states.
+- Failure reasons are clearly propagated without relying solely on exceptions.
+- Domain logic is kept clean and predictable.
 
 ## Error Handling
 
@@ -146,10 +153,10 @@ The project includes a `DbInitializer` that automatically seeds the database wit
 ## Future Improvements
 
 - Add JWT-based authentication and authorization using Azure Entra ID, deriving customer identity from the authenticated user instead of request payloads.
-- Expand business validation and standardize error responses further.
-- Refine the reward system into a more explicit points ledger and reward history model.
+- Expand business validation and integrate with external APIs for currency conversion.
+- Add integration tests and end-to-end (E2E) tests.
 - Integrate with an open banking provider to import real transactions and balances.
-- Add integration tests and broader edge-case coverage.
+- Refine the reward system into a more explicit points ledger and reward history model.
 - Improve production readiness with structured logging, health checks, and a production-grade database.
 - Use Azure Key Vault or similar secret vaults to securely store application settings and keys in Azure.
 - Eventually integrate a message bus (e.g., Azure Service Bus) to queue requests and handle background processing.
@@ -161,3 +168,11 @@ The project includes a `DbInitializer` that automatically seeds the database wit
 3.  Run the application: `dotnet run --project BudgetingSavings.API`.
 4.  Access the Swagger UI (usually at `https://localhost:{port}/swagger`) to explore the API.
 5.  Use the Development key: `@MySuperSecretDevKey123`
+
+## Running Tests
+
+The solution includes a comprehensive set of unit tests (90+) covering all business services.
+
+1.  To run all tests: `dotnet test`.
+2.  To run specific project tests: `dotnet test BudgetingSavings.Tests/BudgetingSavings.Tests.csproj`.
+3.  Tests use `InMemoryDatabase` to avoid dependencies on external databases during the run.
