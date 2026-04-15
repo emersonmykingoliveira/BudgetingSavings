@@ -17,8 +17,10 @@ The API employs an intelligent approach to encourage better financial habits thr
     - `Services/`: Contains the business logic for the application, such as calculations and processing data.
     - `Interfaces/`: Defines the service abstractions for loose coupling and easier testing.
     - `Infrastructure/`:
-        - `Data/`: Manages database connections, context, migrations, and data initialization.
+        - `Data/`: Manages database connections, context, and data initialization.
+        - `Migrations/`: Contains Entity Framework Core migration history.
         - `Entities/`: Defines the core data models used by Entity Framework.
+        - `Security/`: Custom authentication logic, including API Key handling.
     - `Models/`: Contains Data Transfer Objects (DTOs) for requests and responses, as well as enums.
     - `Validators/`: Contains FluentValidation rules to ensure incoming data is correct.
     - `Middleware/`: Custom logic injected into the ASP.NET Core request pipeline (e.g., exception handling, rate limiting).
@@ -32,8 +34,17 @@ The API employs an intelligent approach to encourage better financial habits thr
 - **Language**: C# 14
 - **ORM**: Entity Framework Core
 - **Validation**: FluentValidation
-- **Middleware**: ExceptionHandlingMiddleware, RateLimiting
+- **Error Handling**: Custom `ExceptionHandlingMiddleware` using `ProblemDetails`
 - **Tests**: xUnit, NSubstitute, FluentAssertions
+
+## Error Handling
+
+The API features a centralized error-handling mechanism via `ExceptionHandlingMiddleware`. This ensures that all errors are returned in a consistent, machine-readable format using the `ProblemDetails` standard (RFC 7807).
+
+Key features:
+- **Validation Errors**: Catching `ValidationException` from `FluentValidation` and returning a `400 Bad Request` with a detailed list of validation failures.
+- **Business Logic Exceptions**: Catching `ArgumentException` and returning a `400 Bad Request` with the specific error message.
+- **Unexpected Failures**: Catching all other exceptions and returning a `500 Internal Server Error` with a generic message to avoid leaking sensitive system information.
 
 ## Rate Limiting
 

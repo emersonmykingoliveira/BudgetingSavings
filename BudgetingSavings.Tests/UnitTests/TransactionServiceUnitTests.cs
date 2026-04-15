@@ -10,6 +10,7 @@ using BudgetingSavings.API.Models.Enums;
 using BudgetingSavings.API.Models.Requests;
 using BudgetingSavings.API.Models.Responses;
 using BudgetingSavings.API.Services;
+using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
@@ -71,10 +72,10 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.CreateTransactionAsync(request, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(request.Amount * -1, result.Amount);
+            result.Should().NotBeNull();
+            result.Amount.Should().Be(request.Amount * -1);
             var account = await _db.Accounts.FindAsync(accountId);
-            Assert.Equal(900, account?.Balance);
+            account?.Balance.Should().Be(900);
             await _rewardService.Received(1).RewardHandlerAsync(Arg.Any<CreateRewardRequest>(), Arg.Any<CancellationToken>());
         }
 
