@@ -70,7 +70,7 @@ namespace BudgetingSavings.API.Controllers
             if (result.IsFailure)
                 return BadRequest(new { error = result.Error });
 
-            return CreatedAtAction(nameof(GetTransactionById), new { id = result?.Value?.Id }, result?.Value);
+            return CreatedAtAction(nameof(GetTransactionById), new { id = result.Value?.Id }, result.Value);
         }
 
         /// <summary>
