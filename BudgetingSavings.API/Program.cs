@@ -2,11 +2,11 @@ using BudgetingSavings.API.Infrastructure.Data;
 using BudgetingSavings.API.Interfaces;
 using BudgetingSavings.API.Middleware;
 using BudgetingSavings.API.Services;
+using BudgetingSavings.API.Infrastructure.Security;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -22,6 +22,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddAuthentication("ApiKey")
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", null);
+
 builder.Services.AddDbContext<ApiDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -32,22 +35,8 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IRewardService, RewardService>();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-    if (File.Exists(xmlPath))
-    {
-        options.IncludeXmlComments(xmlPath);
-    }
-
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Budgeting & Savings API",
-        Version = "v1"
-    });
-});
+builder.Services.AddSwaggerGenAuth();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -75,6 +64,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseRateLimiter();
 app.UseHttpsRedirection();
 app.MapControllers();

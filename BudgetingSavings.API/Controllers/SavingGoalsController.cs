@@ -11,6 +11,7 @@ namespace BudgetingSavings.API.Controllers
     [ApiController]
     [Route("api/saving-goals")]
     [EnableRateLimiting("fixedRateLimiter")]
+    [Authorize]
     public class SavingGoalsController(ISavingGoalService service) : ControllerBase
     {
         /// <summary>
