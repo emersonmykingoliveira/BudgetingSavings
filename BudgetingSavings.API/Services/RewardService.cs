@@ -139,11 +139,22 @@ namespace BudgetingSavings.API.Services
             if (!customerExists)
                 return Result.Fail("Customer does not exist.");
 
-            var points = CalculatePoints(request.Amount);
+            var pointsResult = await CalculatePoints(request.Amount);
+
+            if (pointsResult.IsFailure) 
+                return Result.Fail(pointsResult.Error ?? "An error occurred while calculating points.");
+
+            var points = pointsResult.Value;
+
             if (points == 0) return Result.Success();
 
             if (!IsSavingsTransaction(request)) return Result.Success();
 
+           return await RewardTransactionHandlerAsync(request, points, cancellationToken);
+        }
+
+        private async Task<Result> RewardTransactionHandlerAsync(CreateRewardRequest request, int points, CancellationToken cancellationToken)
+        {
             using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
@@ -169,13 +180,15 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        private int CalculatePoints(decimal amount)
+        private Task<Result<int>> CalculatePoints(decimal amount)
         {
             var pointsFactor = config.GetValue<decimal>("RewardSettings:PointsFactor");
             if (pointsFactor <= 0)
-                throw new ArgumentException("Reward points factor is invalid.");
+                return Task.FromResult(Result<int>.Fail("Reward points factor is invalid."));
 
-            return (int)(amount * (pointsFactor / 100));
+            var points = (int)(amount * (pointsFactor / 100));
+
+            return Task.FromResult(Result<int>.Success(points));
         }
 
         private bool IsSavingsTransaction(CreateRewardRequest request)
