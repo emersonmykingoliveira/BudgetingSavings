@@ -25,11 +25,11 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> GetAccountTransactions(Guid accountId, CancellationToken cancellationToken)
         {
             var result = await service.GetAllTransactionsAsync(accountId, cancellationToken);
-            
-            if (result.Any(r => r.IsFailure))
-                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
 
-            return Ok(result.Select(r => r.Value));
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>

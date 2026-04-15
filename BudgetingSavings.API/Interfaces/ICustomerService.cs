@@ -5,7 +5,7 @@ namespace BudgetingSavings.API.Interfaces
 {
     public interface ICustomerService
     {
-        Task<List<Result<CustomerResponse>>> GetAllCustomersAsync(CancellationToken cancellationToken);
+        Task<Result<List<CustomerResponse>>> GetAllCustomersAsync(CancellationToken cancellationToken);
         Task<Result<CustomerResponse>> GetCustomerByIdAsync(Guid id, CancellationToken cancellationToken);
         Task<Result<CustomerResponse>> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken);
         Task<Result> DeleteCustomerAsync(Guid id, CancellationToken cancellationToken);

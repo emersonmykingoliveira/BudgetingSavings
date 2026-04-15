@@ -61,15 +61,21 @@ namespace BudgetingSavings.API.Services
             return Result.Success();
         }
 
-        public async Task<List<Result<CustomerResponse>>> GetAllCustomersAsync(CancellationToken cancellationToken)
+        public async Task<Result<List<CustomerResponse>>> GetAllCustomersAsync(CancellationToken cancellationToken)
         {
             var customers = await db.Customers.ToListAsync(cancellationToken);
-            var customerResponses = new List<Result<CustomerResponse>>();
+            var customerResponses = new List<CustomerResponse>();
 
             foreach (var customer in customers)
-                customerResponses.Add(await MapCustomerResponse(customer));
+            {
+                var responseResult = await MapCustomerResponse(customer);
+                if (responseResult.Value != null)
+                {
+                    customerResponses.Add(responseResult.Value);
+                }
+            }
 
-            return customerResponses;
+            return Result<List<CustomerResponse>>.Success(customerResponses);
         }
 
         public async Task<Result<CustomerResponse>> GetCustomerByIdAsync(Guid id, CancellationToken cancellationToken)

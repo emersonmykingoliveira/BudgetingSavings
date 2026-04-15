@@ -23,11 +23,11 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> GetAllAccounts(CancellationToken cancellationToken)
         {
             var result = await service.GetAllAccountsAsync(cancellationToken);
-            
-            if (result.Any(r => r.IsFailure))
-                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
 
-            return Ok(result.Select(r => r.Value));
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -42,11 +42,11 @@ namespace BudgetingSavings.API.Controllers
         public async Task<IActionResult> GetAllAccountsForCustomer(Guid customerId, CancellationToken cancellationToken)
         {
             var result = await service.GetAllAccountsForCustomerAsync(customerId, cancellationToken);
-            
-            if (result.Any(r => r.IsFailure))
-                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
 
-            return Ok(result.Select(r => r.Value));
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
+
+            return Ok(result.Value);
         }
 
         /// <summary>

@@ -59,20 +59,20 @@ namespace BudgetingSavings.API.Services
             return Result<BudgetResponse>.Success(MapBudgetResponse(budget));
         }
 
-        public async Task<Budget?> GetSpecificBudgetAsync(Guid id, CancellationToken cancellationToken)
+        private async Task<Budget?> GetSpecificBudgetAsync(Guid id, CancellationToken cancellationToken)
         {
             return await db.Budgets.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
         }
 
-        public async Task<List<Result<BudgetResponse>>> GetAllBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<Result<List<BudgetResponse>>> GetAllBudgetsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                return [Result<BudgetResponse>.Fail("Customer does not exist.")];
+                return Result<List<BudgetResponse>>.Fail("Customer does not exist.");
 
             var budgets = await db.Budgets.Where(b => b.CustomerId == customerId).ToListAsync(cancellationToken);
-            return budgets.Select(b => Result<BudgetResponse>.Success(MapBudgetResponse(b))).ToList();
+            return Result<List<BudgetResponse>>.Success(budgets.Select(MapBudgetResponse).ToList());
         }
 
         public async Task<Result<BudgetStatusResponse>> GetBudgetStatusAsync(Guid id, CancellationToken cancellationToken)

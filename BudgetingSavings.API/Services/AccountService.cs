@@ -76,21 +76,21 @@ namespace BudgetingSavings.API.Services
             return await db.Accounts.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
         }
 
-        public async Task<List<Result<AccountResponse>>> GetAllAccountsAsync(CancellationToken cancellationToken)
+        public async Task<Result<List<AccountResponse>>> GetAllAccountsAsync(CancellationToken cancellationToken)
         {
             var accounts = await db.Accounts.ToListAsync(cancellationToken);
-            return accounts.Select(a => Result<AccountResponse>.Success(MapAccountResponse(a))).ToList();
+            return Result<List<AccountResponse>>.Success(accounts.Select(MapAccountResponse).ToList());
         }
 
-        public async Task<List<Result<AccountResponse>>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<Result<List<AccountResponse>>> GetAllAccountsForCustomerAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                return [Result<AccountResponse>.Fail("Customer does not exist.")];
+                return Result<List<AccountResponse>>.Fail("Customer does not exist.");
 
             var accounts = await db.Accounts.Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
-            return accounts.Select(a => Result<AccountResponse>.Success(MapAccountResponse(a))).ToList();
+            return Result<List<AccountResponse>>.Success(accounts.Select(MapAccountResponse).ToList());
         }
 
         public async Task<Result> UpdateAccountBalanceAsync(Guid id, decimal amount, CancellationToken cancellationToken, bool saveChanges = true)

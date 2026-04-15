@@ -142,7 +142,8 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllAccountsAsync(CancellationToken.None);
 
             // Assert
-            Assert.Equal(2, result.Count);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count);
         }
 
         [Fact]
@@ -159,7 +160,8 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllAccountsForCustomerAsync(customerId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(2, result.Count);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count);
         }
 
         [Fact]
@@ -253,9 +255,8 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllAccountsForCustomerAsync(Guid.NewGuid(), CancellationToken.None);
 
             // Assert
-            Assert.Single(result);
-            Assert.True(result[0].IsFailure);
-            Assert.Equal("Customer does not exist.", result[0].Error);
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
         }
 
         [Fact]

@@ -270,9 +270,10 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllSavingGoalsAsync(customerId, CancellationToken.None);
 
             // Assert
-            Assert.Equal(2, result.Count);
-            Assert.Contains(result, g => g.Value.Name == "Goal 1");
-            Assert.Contains(result, g => g.Value.Name == "Goal 2");
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count);
+            Assert.Contains(result.Value, g => g.Name == "Goal 1");
+            Assert.Contains(result.Value, g => g.Name == "Goal 2");
         }
 
         [Fact]

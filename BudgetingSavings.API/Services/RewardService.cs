@@ -14,19 +14,19 @@ namespace BudgetingSavings.API.Services
                                 IValidator<CreateRewardRequest> createValidator,
                                 IConfiguration config) : IRewardService
     {
-        public async Task<List<Result<RewardResponse>>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<Result<List<RewardResponse>>> GetAllRewardsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers
                 .AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                return [Result<RewardResponse>.Fail("Customer does not exist.")];
+                return Result<List<RewardResponse>>.Fail("Customer does not exist.");
 
             var rewards = await db.Rewards
                 .Where(r => r.CustomerId == customerId)
                 .ToListAsync(cancellationToken);
 
-            return rewards.Select(r => Result<RewardResponse>.Success(MapRewardResponse(r))).ToList();
+            return Result<List<RewardResponse>>.Success(rewards.Select(MapRewardResponse).ToList());
         }
 
         public async Task<Result<RewardResponse>> GetRewardByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -181,6 +181,11 @@ namespace BudgetingSavings.API.Services
 
                 await transaction.CommitAsync(cancellationToken);
                 return Result.Success();
+            }
+            catch (ArgumentException ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Result.Fail(ex.Message);
             }
             catch (Exception)
             {

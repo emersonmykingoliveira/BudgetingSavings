@@ -62,7 +62,7 @@ namespace BudgetingSavings.Tests.UnitTests
             var customerId = Guid.NewGuid();
             var customer = new Customer { Id = customerId, Name = "Test" };
             var reward = new Reward { Id = Guid.NewGuid(), CustomerId = customerId, Points = 100 };
-            
+
             await _db.Customers.AddAsync(customer);
             await _db.Rewards.AddAsync(reward);
             await _db.SaveChangesAsync();
@@ -71,10 +71,9 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllRewardsAsync(customerId, CancellationToken.None);
 
             // Assert
-            Assert.True(result.Count > 0);
-            Assert.True(result[0].IsSuccess);
-            Assert.NotNull(result[0].Value);
-            Assert.Equal(reward.Id, result[0].Value.Id);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Value.Count > 0);
+            Assert.Equal(reward.Id, result.Value[0].Id);
         }
 
         [Fact]
@@ -84,9 +83,8 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllRewardsAsync(Guid.NewGuid(), CancellationToken.None);
 
             // Assert
-            Assert.Single(result);
-            Assert.True(result[0].IsFailure);
-            Assert.Equal("Customer does not exist.", result[0].Error);
+            Assert.True(result.IsFailure);
+            Assert.Equal("Customer does not exist.", result.Error);
         }
 
         [Fact]

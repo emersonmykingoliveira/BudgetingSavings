@@ -57,15 +57,15 @@ namespace BudgetingSavings.API.Services
             return Result.Success();
         }
 
-        public async Task<List<Result<SavingGoalResponse>>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
+        public async Task<Result<List<SavingGoalResponse>>> GetAllSavingGoalsAsync(Guid customerId, CancellationToken cancellationToken)
         {
             var customerExists = await db.Customers.AnyAsync(c => c.Id == customerId, cancellationToken);
 
             if (!customerExists)
-                return [Result<SavingGoalResponse>.Fail("Customer does not exist.")];
+                return Result<List<SavingGoalResponse>>.Fail("Customer does not exist.");
 
             var savingGoals = await db.SavingGoals.Where(s => s.CustomerId == customerId).ToListAsync(cancellationToken);
-            return savingGoals.Select(s => Result<SavingGoalResponse>.Success(MapSavingGoalResponse(s))).ToList();
+            return Result<List<SavingGoalResponse>>.Success(savingGoals.Select(MapSavingGoalResponse).ToList());
         }
 
         public async Task<Result<SavingGoalResponse>> GetSavingGoalByIdAsync(Guid id, CancellationToken cancellationToken)

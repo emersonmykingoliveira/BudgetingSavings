@@ -24,10 +24,10 @@ namespace BudgetingSavings.API.Controllers
         {
             var result = await service.GetAllCustomersAsync(cancellationToken);
 
-            if (result.Any(r => r.IsFailure))
-                return BadRequest(new { error = result.First(r => r.IsFailure).Error });
+            if (result.IsFailure)
+                return BadRequest(new { error = result.Error });
 
-            return Ok(result.Select(r => r.Value));
+            return Ok(result.Value);
         }
 
         /// <summary>

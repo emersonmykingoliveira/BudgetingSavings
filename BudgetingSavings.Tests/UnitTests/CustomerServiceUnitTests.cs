@@ -136,7 +136,8 @@ namespace BudgetingSavings.Tests.UnitTests
             var result = await _service.GetAllCustomersAsync(CancellationToken.None);
 
             // Assert
-            Assert.Equal(2, result.Count);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count);
         }
 
         [Fact]

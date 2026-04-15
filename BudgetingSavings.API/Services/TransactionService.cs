@@ -132,15 +132,15 @@ namespace BudgetingSavings.API.Services
             await rewardService.RewardHandlerAsync(rewardRequest, cancellationToken);
         }
 
-        public async Task<List<Result<TransactionResponse>>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
+        public async Task<Result<List<TransactionResponse>>> GetAllTransactionsAsync(Guid accountId, CancellationToken cancellationToken)
         {
             var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
 
             if (!accountExists)
-                return [Result<TransactionResponse>.Fail("Account does not exist.")];
+                return Result<List<TransactionResponse>>.Fail("Account does not exist.");
 
             var transactions = await db.Transactions.Where(s => s.AccountId == accountId).ToListAsync(cancellationToken);
-            return transactions.Select(t => Result<TransactionResponse>.Success(MapTransactionResponse(t))).ToList();
+            return Result<List<TransactionResponse>>.Success(transactions.Select(MapTransactionResponse).ToList());
         }
 
         public async Task<Result<TransactionResponse>> GetTransactionByIdAsync(Guid id, CancellationToken cancellationToken)
