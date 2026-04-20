@@ -166,14 +166,9 @@ namespace BudgetingSavings.API.Services
                         await HandleExistingRewardAsync(existingReward, points, request, cancellationToken);
                     }
                 }
-                else if (isFirstTransaction)
+                else
                 {
-                    int initialPoints = (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings) ? points : 0;
-                    await HandleNewRewardAsync(initialPoints, request, cancellationToken);
-                }
-                else if (request.TransactionType == TransactionType.Credit && request.TransactionCategory == TransactionCategory.Savings)
-                {
-                    await HandleNewRewardAsync(points, request, cancellationToken);
+                    await HandleNewRewardAsync(points, isFirstTransaction, request, cancellationToken);
                 }
 
                 await transaction.CommitAsync(cancellationToken);
@@ -233,13 +228,13 @@ namespace BudgetingSavings.API.Services
             }
         }
 
-        private async Task HandleNewRewardAsync(int points, CreateRewardRequest request, CancellationToken cancellationToken)
+        private async Task HandleNewRewardAsync(int points, bool isFirstSavingOfMonth, CreateRewardRequest request, CancellationToken cancellationToken)
         {
             var newReward = new Reward
             {
                 Id = Guid.NewGuid(),
                 CustomerId = request.CustomerId,
-                Points = points + 100,
+                Points = points + (isFirstSavingOfMonth ? 100 : 0),
                 Date = DateTime.UtcNow,
                 Redeemed = false
             };
