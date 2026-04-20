@@ -1,4 +1,4 @@
-# Budgeting and Savings
+# Budgeting and Savings API
 
 A .NET 10 backend project Web API designed to help users manage their finances, track saving goals, set budgets, and earn rewards for saving.
 
