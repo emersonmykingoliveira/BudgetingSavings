@@ -34,7 +34,10 @@ namespace BudgetingSavings.API.Services
             if (account.Currency != request.Currency)
                 return Result<TransactionResponse>.Fail("Transaction currency must match account currency.");
 
-            return await TransactionHandler(request, account, cancellationToken);
+            var response = await TransactionHandler(request, account, cancellationToken);
+            await ApplyRewardsForTransactionAsync(request, cancellationToken);
+
+            return response;
         }
 
         private async Task<Result<TransactionResponse>> TransactionHandler(CreateTransactionRequest request, Account account, CancellationToken cancellationToken)
@@ -51,7 +54,6 @@ namespace BudgetingSavings.API.Services
                     await HandleRoundUpToSavingsAsync(request, cancellationToken);
 
                 await db.SaveChangesAsync(cancellationToken);
-                await ApplyRewardsForTransactionAsync(request, cancellationToken);
                 await dbTransaction.CommitAsync(cancellationToken);
                 return Result<TransactionResponse>.Success(MapTransactionResponse(updateResult.Value));
             }
